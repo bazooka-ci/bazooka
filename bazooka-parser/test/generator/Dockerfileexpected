@@ -1,0 +1,11 @@
+FROM testbazooka
+
+ADD . /bazooka
+
+RUN chmod +x /bazooka/bazooka_run0.sh
+
+ENV TEST1 test1a
+ENV TEST2 test2b
+WORKDIR /bazooka
+
+CMD ./bazooka_run0.sh
