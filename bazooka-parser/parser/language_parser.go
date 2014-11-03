@@ -29,7 +29,7 @@ func (p *LanguageParser) Parse() error {
 	if err != nil {
 		return err
 	}
-	bazookaHome := fmt.Sprintf("%s/%s/%s", os.Getenv("BZK_HOME"), os.Getenv("BZK_PROJECT_ID"), os.Getenv("BZK_JOB_ID"))
+	bazookaHome := os.Getenv("BZK_HOME")
 	containerID, err := client.Run(&docker.RunOptions{
 		Image: p.Options.Image,
 		VolumeBinds: []string{

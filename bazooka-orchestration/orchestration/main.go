@@ -8,8 +8,8 @@ import (
 )
 
 const (
-	CheckoutFolderPattern = "%s/%s/%s/source"
-	WorkdirFolderPattern  = "%s/%s/%s/work"
+	CheckoutFolderPattern = "%s/source"
+	WorkdirFolderPattern  = "%s/work"
 
 	BazookaInput   = "/bazooka"
 	DockerSock     = "/var/run/docker.sock"
@@ -40,7 +40,7 @@ func main() {
 		BazookaEnvDockerSock:   os.Getenv(BazookaEnvDockerSock),
 	}
 
-	checkoutFolder := fmt.Sprintf(CheckoutFolderPattern, env[BazookaEnvHome], env[BazookaEnvProjectID], env[BazookaEnvJobID])
+	checkoutFolder := fmt.Sprintf(CheckoutFolderPattern, env[BazookaEnvHome])
 	f := &SCMFetcher{
 		Options: &FetchOptions{
 			Scm:         env[BazookaEnvSCM],
@@ -58,7 +58,7 @@ func main() {
 	p := &Parser{
 		Options: &ParseOptions{
 			InputFolder:    checkoutFolder,
-			OutputFolder:   fmt.Sprintf(WorkdirFolderPattern, env[BazookaEnvHome], env[BazookaEnvProjectID], env[BazookaEnvJobID]),
+			OutputFolder:   fmt.Sprintf(WorkdirFolderPattern, env[BazookaEnvHome]),
 			DockerSock:     env[BazookaEnvDockerSock],
 			HostBaseFolder: checkoutFolder,
 			Env:            env,
@@ -69,8 +69,8 @@ func main() {
 	}
 	b := &Builder{
 		Options: &BuildOptions{
-			DockerfileFolder: fmt.Sprintf(WorkdirFolderPattern, BazookaInput, env[BazookaEnvProjectID], env[BazookaEnvJobID]),
-			SourceFolder:     fmt.Sprintf(CheckoutFolderPattern, BazookaInput, env[BazookaEnvProjectID], env[BazookaEnvJobID]),
+			DockerfileFolder: fmt.Sprintf(WorkdirFolderPattern, BazookaInput),
+			SourceFolder:     fmt.Sprintf(CheckoutFolderPattern, BazookaInput),
 			JobID:            env[BazookaEnvProjectID],
 			VariantID:        env[BazookaEnvJobID],
 		},
