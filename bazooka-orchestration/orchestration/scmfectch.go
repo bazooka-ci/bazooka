@@ -33,7 +33,7 @@ func (f *SCMFetcher) Fetch() error {
 	if err != nil {
 		return err
 	}
-	containerID, err := client.Run(&docker.RunOptions{
+	container, err := client.Run(&docker.RunOptions{
 		Image:       image,
 		VolumeBinds: []string{fmt.Sprintf("%s:/bazooka", f.Options.LocalFolder), fmt.Sprintf("%s:/bazooka-key", f.Options.KeyFile)},
 		Env:         f.Options.Env,
@@ -42,18 +42,16 @@ func (f *SCMFetcher) Fetch() error {
 		return err
 	}
 
-	details, err := client.Inspect(containerID)
+	details, err := container.Inspect()
 	if err != nil {
 		return err
 	}
 	if details.State.ExitCode != 0 {
-		return fmt.Errorf("Error during execution of SCM container %s\n Check Docker container logs, id is %s\n", image, containerID)
+		return fmt.Errorf("Error during execution of SCM container %s\n Check Docker container logs, id is %s\n", image, container.ID())
 	}
 
 	log.Printf("SCM Source Repo Fetched in %s\n", f.Options.LocalFolder)
-	return client.Rm(&docker.RmOptions{
-		Container: []string{containerID},
-	})
+	return container.Remove()
 }
 
 func resolveSCMImage(scm string) (string, error) {

@@ -84,20 +84,20 @@ func (b *Builder) Build() error {
 }
 
 func runContainer(client *docker.Docker, buildImage string, successChan chan bool, errChan chan error) {
-	containerID, err := client.Run(&docker.RunOptions{
+	container, err := client.Run(&docker.RunOptions{
 		Image: buildImage,
 	})
 	if err != nil {
 		errChan <- err
 		return
 	}
-	details, err := client.Inspect(containerID)
+	details, err := container.Inspect()
 	if err != nil {
 		errChan <- err
 		return
 	}
 	if details.State.ExitCode != 0 {
-		errChan <- fmt.Errorf("Build failed\n Check Docker container logs, id is %s\n", containerID)
+		errChan <- fmt.Errorf("Build failed\n Check Docker container logs, id is %s\n", container.ID())
 		return
 	}
 	successChan <- true

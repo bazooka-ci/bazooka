@@ -30,7 +30,7 @@ func (p *Parser) Parse() error {
 	if err != nil {
 		return err
 	}
-	containerID, err := client.Run(&docker.RunOptions{
+	container, err := client.Run(&docker.RunOptions{
 		Image: BazookaParseImage,
 		Env:   p.Options.Env,
 		VolumeBinds: []string{fmt.Sprintf("%s:/bazooka", p.Options.InputFolder), fmt.Sprintf("%s:/bazooka-output", p.Options.OutputFolder),
@@ -40,17 +40,15 @@ func (p *Parser) Parse() error {
 		return err
 	}
 
-	details, err := client.Inspect(containerID)
+	details, err := container.Inspect()
 	if err != nil {
 		return err
 	}
 	if details.State.ExitCode != 0 {
-		return fmt.Errorf("Error during execution of Parser container %s/parser\n Check Docker container logs, id is %s\n", BazookaParseImage, containerID)
+		return fmt.Errorf("Error during execution of Parser container %s/parser\n Check Docker container logs, id is %s\n", BazookaParseImage, container.ID())
 	}
 
-	err = client.Rm(&docker.RmOptions{
-		Container: []string{containerID},
-	})
+	err = container.Remove()
 	if err != nil {
 		return err
 	}

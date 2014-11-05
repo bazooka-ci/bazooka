@@ -30,7 +30,7 @@ func (p *LanguageParser) Parse() error {
 		return err
 	}
 	bazookaHome := os.Getenv("BZK_HOME")
-	containerID, err := client.Run(&docker.RunOptions{
+	container, err := client.Run(&docker.RunOptions{
 		Image: p.Options.Image,
 		VolumeBinds: []string{
 			fmt.Sprintf("%s/source/:/bazooka", bazookaHome),
@@ -40,15 +40,13 @@ func (p *LanguageParser) Parse() error {
 		return err
 	}
 
-	details, err := client.Inspect(containerID)
+	details, err := container.Inspect()
 	if err != nil {
 		return err
 	}
 	if details.State.ExitCode != 0 {
-		return fmt.Errorf("Error during execution of Language Parser container %s/parser\n Check Docker container logs, id is %s\n", p.Options.Image, containerID)
+		return fmt.Errorf("Error during execution of Language Parser container %s/parser\n Check Docker container logs, id is %s\n", p.Options.Image, container.ID())
 	}
 
-	return client.Rm(&docker.RmOptions{
-		Container: []string{containerID},
-	})
+	return container.Remove()
 }
