@@ -37,16 +37,19 @@ func (f *SCMFetcher) Fetch() error {
 		Image:       image,
 		VolumeBinds: []string{fmt.Sprintf("%s:/bazooka", f.Options.LocalFolder), fmt.Sprintf("%s:/bazooka-key", f.Options.KeyFile)},
 		Env:         f.Options.Env,
+		Detach:      true,
 	})
 	if err != nil {
 		return err
 	}
 
-	details, err := container.Inspect()
+	container.Logs(image)
+
+	exitCode, err := container.Wait()
 	if err != nil {
 		return err
 	}
-	if details.State.ExitCode != 0 {
+	if exitCode != 0 {
 		return fmt.Errorf("Error during execution of SCM container %s\n Check Docker container logs, id is %s\n", image, container.ID())
 	}
 
