@@ -28,6 +28,7 @@ const (
 func main() {
 	// TODO add validation
 	start := time.Now()
+	log.SetFlags(0)
 
 	env := map[string]string{
 		BazookaEnvSCM:          os.Getenv(BazookaEnvSCM),
