@@ -47,7 +47,7 @@ func TestGenerate(t *testing.T) {
 
 	g := &Generator{
 		Config:       config,
-		OutputFolder: "../test/generator/",
+		OutputFolder: "test/generator/",
 	}
 	err := g.GenerateDockerfile()
 	if err != nil {

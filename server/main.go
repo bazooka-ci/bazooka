@@ -5,10 +5,10 @@ import (
 	"net/http"
 	"os"
 
-	"bitbucket.org/bywan/bazooka-api/bazooka-server/server/context"
-	"bitbucket.org/bywan/bazooka-api/bazooka-server/server/fetcher"
-	"bitbucket.org/bywan/bazooka-api/bazooka-server/server/project"
 	"github.com/gorilla/mux"
+	"github.com/haklop/bazooka/server/context"
+	"github.com/haklop/bazooka/server/fetcher"
+	"github.com/haklop/bazooka/server/project"
 	mgo "gopkg.in/mgo.v2"
 )
 

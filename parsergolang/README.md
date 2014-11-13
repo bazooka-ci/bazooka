@@ -1,4 +1,4 @@
-Bazooka-parser-golang is a component of the Bazooka project
+parser-golang is a component of the Bazooka project
 
 # Contract
 

@@ -1,4 +1,4 @@
-Bazooka-parser-java is a component of the Bazooka project
+parser-java is a component of the Bazooka project
 
 # Contract
 

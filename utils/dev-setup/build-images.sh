@@ -6,14 +6,13 @@ if [ "$(uname)" != "Darwin" ]; then
   s=sudo
 fi
 
-go_projects=( "bazooka-scm-based-build/bazooka-parser" "bazooka-scm-based-build/bazooka-parser-golang" \
-"bazooka-scm-based-build/bazooka-parser-java" "bazooka-scm-based-build/bazooka-orchestration" "bazooka-api/bazooka-server" \
-"bazooka-scm-based-build/bazooka-runner-golang" "bazooka-scm-based-build/bazooka-runner-java" \
-"bazooka-scm-based-build/bazooka-scm-git")
+go_projects=( "bazooka/parser" "bazooka/parsergolang" "bazooka/parserjava" \
+"bazooka/orchestration" "bazooka/server" "bazooka/runnergolang" \
+"bazooka/runnerjava" "bazooka/scmgit")
 
 for project in "${go_projects[@]}"
 do
-  pushd "$GOPATH/src/bitbucket.org/bywan/$project"
+  pushd "$GOPATH/src/github.com/haklop/$project"
     $s make
   popd
 done

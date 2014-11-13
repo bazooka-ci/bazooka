@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"bitbucket.org/bywan/bazooka-api/bazooka-server/server/context"
 	"github.com/gorilla/mux"
+	"github.com/haklop/bazooka/server/context"
 )
 
 type Handlers struct {

@@ -2,19 +2,19 @@
 
 : ${GOPATH:?"GOPATH has to be set. See https://golang.org/doc/code.html#GOPATH for more information."}
 
-go_projects=( "bazooka-scm-based-build/bazooka-parser" "bazooka-scm-based-build/bazooka-parser-golang" \
-"bazooka-scm-based-build/bazooka-parser-java" "bazooka-scm-based-build/bazooka-orchestration" "bazooka-api/bazooka-server" \
-"bazooka-api/bazooka-cli")
+go_projects=( "bazooka/parser" "bazooka/parsergolang" "bazooka/parserjava" \
+"bazooka/orchestration" "bazooka/server" "bazooka/runnergolang" \
+"bazooka/runnerjava" "bazooka/scmgit" "bazooka-cli" )
 
-git_projects=( "bazooka-scm-based-build" "bazooka-api")
+git_projects=( "bazooka" )
 
-mkdir -p "$GOPATH/src/bitbucket.org/bywan"
+mkdir -p "$GOPATH/src/github.com/haklop"
 
 for project in "${git_projects[@]}"
 do
-  pushd "$GOPATH/src/bitbucket.org/bywan"
+  pushd "$GOPATH/src/github.com/haklop"
   if [ ! -d "$project" ]; then
-    git clone git@bitbucket.org:bywan/$project.git
+    git clone git@github.com:haklop/$project.git
   else
     pushd $project
     git pull --rebase
@@ -25,7 +25,7 @@ done
 
 for project in "${go_projects[@]}"
 do
-  pushd "$GOPATH/src/bitbucket.org/bywan/$project"
+  pushd "$GOPATH/src/github.com/haklop/$project"
     go get -u -v ./...
   popd
 done

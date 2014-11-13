@@ -1,4 +1,4 @@
-Bazooka-orchestration is a component of the Bazooka project
+orchestration is a component of the Bazooka project
 
 It is an autonomous Docker container used to orchestrate a bazooka build.
 

@@ -11,10 +11,10 @@ import (
 	"strconv"
 	"time"
 
-	"bitbucket.org/bywan/bazooka-api/bazooka-server/server/context"
 	lib "github.com/bazooka-ci/bazooka-lib"
 	docker "github.com/bywan/go-dockercommand"
 	"github.com/gorilla/mux"
+	"github.com/haklop/bazooka/server/context"
 )
 
 const (

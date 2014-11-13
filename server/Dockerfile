@@ -2,9 +2,9 @@ FROM golang:1.3.3
 
 VOLUME ["/bazooka"]
 
-ADD . /go/src/bitbucket.org/bywan/bazooka-api/bazooka-server
+ADD . /go/src/github.com/haklop/bazooka/server
 RUN go get -d -v ./...
-RUN go install -v bitbucket.org/bywan/bazooka-api/bazooka-server/server
+RUN go install -v github.com/haklop/bazooka/server
 
 CMD ["/go/bin/server"]
 EXPOSE 3000

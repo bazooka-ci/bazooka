@@ -1,4 +1,4 @@
-Bazooka-parser is a component of the Bazooka project
+parser is a component of the Bazooka project
 
 It is an autonomous Docker container used to convert a bazooka configuration
 file to one or more Dockerfile

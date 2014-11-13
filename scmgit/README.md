@@ -1,4 +1,4 @@
-##Clone a git repo with Docker
+## Clone a git repo with Docker
 
 ### Without Authentication
 
