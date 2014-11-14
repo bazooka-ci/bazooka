@@ -7,7 +7,7 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	bazooka "github.com/haklop/bazooka/commons"
+	lib "github.com/bazooka-ci/bazooka-lib"
 )
 
 type Client struct {
@@ -20,7 +20,7 @@ func NewClient(endpoint string) (*Client, error) {
 	}, nil
 }
 
-func (c *Client) ListProjects() ([]bazooka.Project, error) {
+func (c *Client) ListProjects() ([]lib.Project, error) {
 	resp, err := http.Get(fmt.Sprintf("%s/project/", c.URL))
 	if err != nil {
 		return nil, err
@@ -33,7 +33,7 @@ func (c *Client) ListProjects() ([]bazooka.Project, error) {
 	if err != nil {
 		return nil, err
 	}
-	var projects []bazooka.Project
+	var projects []lib.Project
 	err = json.Unmarshal(body, &projects)
 	if err != nil {
 		return nil, err
@@ -41,8 +41,8 @@ func (c *Client) ListProjects() ([]bazooka.Project, error) {
 	return projects, nil
 }
 
-func (c *Client) CreateProject(name, scm, scmUri string) (*bazooka.Project, error) {
-	project := bazooka.Project{
+func (c *Client) CreateProject(name, scm, scmUri string) (*lib.Project, error) {
+	project := lib.Project{
 		Name:    name,
 		ScmType: scm,
 		ScmURI:  scmUri,
@@ -63,7 +63,7 @@ func (c *Client) CreateProject(name, scm, scmUri string) (*bazooka.Project, erro
 	if err != nil {
 		return nil, err
 	}
-	createdProject := &bazooka.Project{}
+	createdProject := &lib.Project{}
 	err = json.Unmarshal(body, createdProject)
 	if err != nil {
 		return nil, err
@@ -71,8 +71,8 @@ func (c *Client) CreateProject(name, scm, scmUri string) (*bazooka.Project, erro
 	return createdProject, nil
 }
 
-func (c *Client) StartJob(projectID, scmReference string) (*bazooka.Job, error) {
-	startJob := bazooka.StartJob{
+func (c *Client) StartJob(projectID, scmReference string) (*lib.Job, error) {
+	startJob := lib.StartJob{
 		ScmReference: scmReference,
 	}
 	p, err := json.Marshal(startJob)
@@ -91,7 +91,7 @@ func (c *Client) StartJob(projectID, scmReference string) (*bazooka.Job, error) 
 	if err != nil {
 		return nil, err
 	}
-	createJob := &bazooka.Job{}
+	createJob := &lib.Job{}
 	err = json.Unmarshal(body, createJob)
 	if err != nil {
 		return nil, err

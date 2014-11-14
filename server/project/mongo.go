@@ -3,7 +3,7 @@ package project
 import (
 	"fmt"
 
-	bazooka "github.com/haklop/bazooka/commons"
+	lib "github.com/bazooka-ci/bazooka-lib"
 	mgo "gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )
@@ -12,8 +12,8 @@ type mongoConnector struct {
 	Database *mgo.Database
 }
 
-func (c *mongoConnector) GetProject(scmType string, scmURI string) (bazooka.Project, error) {
-	result := bazooka.Project{}
+func (c *mongoConnector) GetProject(scmType string, scmURI string) (lib.Project, error) {
+	result := lib.Project{}
 
 	request := bson.M{
 		"scm_uri":  scmURI,
@@ -24,8 +24,8 @@ func (c *mongoConnector) GetProject(scmType string, scmURI string) (bazooka.Proj
 	return result, err
 }
 
-func (c *mongoConnector) GetProjectById(id string) (bazooka.Project, error) {
-	result := bazooka.Project{}
+func (c *mongoConnector) GetProjectById(id string) (lib.Project, error) {
+	result := lib.Project{}
 
 	request := bson.M{
 		"id": id,
@@ -35,15 +35,15 @@ func (c *mongoConnector) GetProjectById(id string) (bazooka.Project, error) {
 	return result, err
 }
 
-func (c *mongoConnector) GetProjects() ([]bazooka.Project, error) {
-	result := []bazooka.Project{}
+func (c *mongoConnector) GetProjects() ([]lib.Project, error) {
+	result := []lib.Project{}
 
 	err := c.Database.C("projects").Find(bson.M{}).All(&result)
 	fmt.Printf("retrieve projects: %#v", result)
 	return result, err
 }
 
-func (c *mongoConnector) AddProject(project *bazooka.Project) error {
+func (c *mongoConnector) AddProject(project *lib.Project) error {
 	i := bson.NewObjectId()
 	project.ID = i.Hex()
 
@@ -53,15 +53,15 @@ func (c *mongoConnector) AddProject(project *bazooka.Project) error {
 	return err
 }
 
-func (c *mongoConnector) AddJob(job *bazooka.Job) error {
+func (c *mongoConnector) AddJob(job *lib.Job) error {
 	fmt.Printf("add job: %#v", job)
 	err := c.Database.C("jobs").Insert(job)
 
 	return err
 }
 
-func (c *mongoConnector) GetJobByID(id string) (bazooka.Job, error) {
-	result := bazooka.Job{}
+func (c *mongoConnector) GetJobByID(id string) (lib.Job, error) {
+	result := lib.Job{}
 
 	request := bson.M{
 		"id": id,
@@ -71,8 +71,8 @@ func (c *mongoConnector) GetJobByID(id string) (bazooka.Job, error) {
 	return result, err
 }
 
-func (c *mongoConnector) GetJobs() ([]bazooka.Job, error) {
-	result := []bazooka.Job{}
+func (c *mongoConnector) GetJobs() ([]lib.Job, error) {
+	result := []lib.Job{}
 
 	err := c.Database.C("jobs").Find(bson.M{}).All(&result)
 	fmt.Printf("retrieve jobs: %#v", result)
