@@ -11,9 +11,9 @@ import (
 	"strconv"
 	"time"
 
-	lib "github.com/bazooka-ci/bazooka-lib"
 	docker "github.com/bywan/go-dockercommand"
 	"github.com/gorilla/mux"
+	bazooka "github.com/haklop/bazooka/commons"
 	"github.com/haklop/bazooka/server/context"
 )
 
@@ -46,7 +46,7 @@ func (p *Handlers) SetHandlers(r *mux.Router, serverContext context.Context) {
 }
 
 func (p *Handlers) createProject(res http.ResponseWriter, req *http.Request) {
-	var project lib.Project
+	var project bazooka.Project
 
 	decoder := json.NewDecoder(req.Body)
 	encoder := json.NewEncoder(res)
@@ -153,7 +153,7 @@ func (p *Handlers) getProjects(res http.ResponseWriter, req *http.Request) {
 
 func (p *Handlers) startBuild(res http.ResponseWriter, req *http.Request) {
 	params := mux.Vars(req)
-	var startJob lib.StartJob
+	var startJob bazooka.StartJob
 
 	decoder := json.NewDecoder(req.Body)
 	encoder := json.NewEncoder(res)
@@ -191,7 +191,7 @@ func (p *Handlers) startBuild(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	var runningJob lib.Job
+	var runningJob bazooka.Job
 	runningJob.ID = strconv.FormatInt(time.Now().Unix(), 10)
 	runningJob.ProjectID = project.ID
 

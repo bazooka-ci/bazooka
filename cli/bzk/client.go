@@ -7,7 +7,7 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	lib "github.com/bazooka-ci/bazooka-lib"
+	bazooka "github.com/haklop/bazooka/commons"
 )
 
 type Client struct {
@@ -20,7 +20,7 @@ func NewClient(endpoint string) (*Client, error) {
 	}, nil
 }
 
-func (c *Client) ListProjects() ([]lib.Project, error) {
+func (c *Client) ListProjects() ([]bazooka.Project, error) {
 	resp, err := http.Get(fmt.Sprintf("%s/project/", c.URL))
 	if err != nil {
 		return nil, err
@@ -33,7 +33,7 @@ func (c *Client) ListProjects() ([]lib.Project, error) {
 	if err != nil {
 		return nil, err
 	}
-	var projects []lib.Project
+	var projects []bazooka.Project
 	err = json.Unmarshal(body, &projects)
 	if err != nil {
 		return nil, err
@@ -41,8 +41,8 @@ func (c *Client) ListProjects() ([]lib.Project, error) {
 	return projects, nil
 }
 
-func (c *Client) CreateProject(name, scm, scmUri string) (*lib.Project, error) {
-	project := lib.Project{
+func (c *Client) CreateProject(name, scm, scmUri string) (*bazooka.Project, error) {
+	project := bazooka.Project{
 		Name:    name,
 		ScmType: scm,
 		ScmURI:  scmUri,
@@ -63,7 +63,7 @@ func (c *Client) CreateProject(name, scm, scmUri string) (*lib.Project, error) {
 	if err != nil {
 		return nil, err
 	}
-	createdProject := &lib.Project{}
+	createdProject := &bazooka.Project{}
 	err = json.Unmarshal(body, createdProject)
 	if err != nil {
 		return nil, err
@@ -71,8 +71,8 @@ func (c *Client) CreateProject(name, scm, scmUri string) (*lib.Project, error) {
 	return createdProject, nil
 }
 
-func (c *Client) StartJob(projectID, scmReference string) (*lib.Job, error) {
-	startJob := lib.StartJob{
+func (c *Client) StartJob(projectID, scmReference string) (*bazooka.Job, error) {
+	startJob := bazooka.StartJob{
 		ScmReference: scmReference,
 	}
 	p, err := json.Marshal(startJob)
@@ -91,7 +91,7 @@ func (c *Client) StartJob(projectID, scmReference string) (*lib.Job, error) {
 	if err != nil {
 		return nil, err
 	}
-	createJob := &lib.Job{}
+	createJob := &bazooka.Job{}
 	err = json.Unmarshal(body, createJob)
 	if err != nil {
 		return nil, err

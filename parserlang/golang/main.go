@@ -5,7 +5,7 @@ import (
 	"log"
 	"os"
 
-	bazooka "github.com/bazooka-ci/bazooka-lib"
+	bazooka "github.com/haklop/bazooka/commons"
 )
 
 const (
