@@ -1,4 +1,4 @@
 default: docker
 
 docker:
-	. build_all.sh
+	./build_all.sh
