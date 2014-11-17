@@ -17,6 +17,7 @@ type FetchOptions struct {
 	Reference   string
 	LocalFolder string
 	KeyFile     string
+	MetaFolder  string
 	Env         map[string]string
 }
 
@@ -34,10 +35,14 @@ func (f *SCMFetcher) Fetch() error {
 		return err
 	}
 	container, err := client.Run(&docker.RunOptions{
-		Image:       image,
-		VolumeBinds: []string{fmt.Sprintf("%s:/bazooka", f.Options.LocalFolder), fmt.Sprintf("%s:/bazooka-key", f.Options.KeyFile)},
-		Env:         f.Options.Env,
-		Detach:      true,
+		Image: image,
+		VolumeBinds: []string{
+			fmt.Sprintf("%s:/bazooka", f.Options.LocalFolder),
+			fmt.Sprintf("%s:/bazooka-key", f.Options.KeyFile),
+			fmt.Sprintf("%s:/meta", f.Options.MetaFolder),
+		},
+		Env:    f.Options.Env,
+		Detach: true,
 	})
 	if err != nil {
 		return err

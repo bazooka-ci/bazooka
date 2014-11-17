@@ -5,3 +5,6 @@ if [ -e "/bazooka-key" ]; then
 fi
 
 git clone "$BZK_SCM_URL" --recursive --branch "$BZK_SCM_REFERENCE" /bazooka
+pushd /bazooka
+  git rev-parse HEAD > /meta/reference
+popd

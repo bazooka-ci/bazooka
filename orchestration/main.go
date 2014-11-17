@@ -10,6 +10,7 @@ import (
 const (
 	CheckoutFolderPattern = "%s/source"
 	WorkdirFolderPattern  = "%s/work"
+	MetaFolderPattern     = "%s/meta"
 
 	BazookaInput   = "/bazooka"
 	DockerSock     = "/var/run/docker.sock"
@@ -42,12 +43,14 @@ func main() {
 	}
 
 	checkoutFolder := fmt.Sprintf(CheckoutFolderPattern, env[BazookaEnvHome])
+	metaFolder := fmt.Sprintf(MetaFolderPattern, env[BazookaEnvHome])
 	f := &SCMFetcher{
 		Options: &FetchOptions{
 			Scm:         env[BazookaEnvSCM],
 			URL:         env[BazookaEnvSCMUrl],
 			Reference:   env[BazookaEnvSCMReference],
 			LocalFolder: checkoutFolder,
+			MetaFolder:  metaFolder,
 			KeyFile:     env[BazookaEnvSCMKeyfile],
 			Env:         env,
 		},
