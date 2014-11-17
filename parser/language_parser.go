@@ -13,17 +13,12 @@ const (
 )
 
 type LanguageParser struct {
-	Options *LanguageParseOptions
-}
-
-type LanguageParseOptions struct {
-	InputFolder string
-	Image       string
+	Image string
 }
 
 func (p *LanguageParser) Parse() error {
 
-	log.Printf("Lauching language parser %s in %s\n", p.Options.Image, p.Options.InputFolder)
+	log.Printf("Lauching language parser %s\n", p.Image)
 
 	client, err := docker.NewDocker(dockerEndpoint)
 	if err != nil {
@@ -31,7 +26,7 @@ func (p *LanguageParser) Parse() error {
 	}
 	bazookaHome := os.Getenv("BZK_HOME")
 	container, err := client.Run(&docker.RunOptions{
-		Image: p.Options.Image,
+		Image: p.Image,
 		VolumeBinds: []string{
 			fmt.Sprintf("%s/source/:/bazooka", bazookaHome),
 			fmt.Sprintf("%s/work/:/bazooka-output", bazookaHome)},
@@ -45,7 +40,7 @@ func (p *LanguageParser) Parse() error {
 		return err
 	}
 	if details.State.ExitCode != 0 {
-		return fmt.Errorf("Error during execution of Language Parser container %s/parser\n Check Docker container logs, id is %s\n", p.Options.Image, container.ID())
+		return fmt.Errorf("Error during execution of Language Parser container %s/parser\n Check Docker container logs, id is %s\n", p.Image, container.ID())
 	}
 
 	return container.Remove()

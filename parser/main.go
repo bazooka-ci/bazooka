@@ -31,10 +31,7 @@ func main() {
 	}
 
 	langParser := &LanguageParser{
-		Options: &LanguageParseOptions{
-			InputFolder: SourceFolder,
-			Image:       image,
-		},
+		Image: image,
 	}
 	err = langParser.Parse()
 	if err != nil {
