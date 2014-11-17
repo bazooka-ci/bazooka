@@ -11,6 +11,7 @@ import (
 const (
 	SourceFolder      = "/bazooka"
 	OutputFolder      = "/bazooka-output"
+	MetaFolder        = "/meta"
 	BazookaConfigFile = ".bazooka.yml"
 	TravisConfigFile  = ".travis.yml"
 )
@@ -52,6 +53,11 @@ func manageGoVersion(i int, conf *ConfigGolang, version string) error {
 	}
 	image, err := resolveGoImage(version)
 	conf.FromImage = image
+	if err != nil {
+		return err
+	}
+
+	err = bazooka.AppendToFile(fmt.Sprintf("%s/%d", MetaFolder, i), fmt.Sprintf("golang: %s\n", version), 0644)
 	if err != nil {
 		return err
 	}

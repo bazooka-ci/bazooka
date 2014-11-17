@@ -29,7 +29,9 @@ func (p *LanguageParser) Parse() error {
 		Image: p.Image,
 		VolumeBinds: []string{
 			fmt.Sprintf("%s/source/:/bazooka", bazookaHome),
-			fmt.Sprintf("%s/work/:/bazooka-output", bazookaHome)},
+			fmt.Sprintf("%s/work/:/bazooka-output", bazookaHome),
+			fmt.Sprintf("%s/meta/:/meta", bazookaHome),
+		},
 	})
 	if err != nil {
 		return err
