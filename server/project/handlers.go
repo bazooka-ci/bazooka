@@ -18,8 +18,8 @@ import (
 )
 
 const (
-	buildFolderPattern = "%s/build/%s/%s" // /$bzk_home/build/$projectId/$buildId
-	logFolderPattern   = "%s/log/%s/%s"   // $bzk_home/log/$projectId/$buildId
+	buildFolderPattern = "%s/build/%s/%s"       // $bzk_home/build/$projectId/$buildId
+	logFolderPattern   = "%s/build/%s/%s/log"   // $bzk_home/build/$projectId/$buildId/log
 	// keyFolderPattern   = "%s/key/%s"         // $bzk_home/key/$keyName
 )
 
@@ -195,14 +195,6 @@ func (p *Handlers) startBuild(res http.ResponseWriter, req *http.Request) {
 	runningJob.ID = strconv.FormatInt(time.Now().Unix(), 10)
 	runningJob.ProjectID = project.ID
 
-	logFolder := fmt.Sprintf(logFolderPattern, context.BazookaHome, runningJob.ProjectID, runningJob.ID)
-	os.MkdirAll(logFolder, 0666)
-
-	logFileWriter, err := os.Create(logFolder + "/job.log")
-	if err != nil {
-		panic(err)
-	}
-
 	buildFolder := fmt.Sprintf(buildFolderPattern, p.env[context.BazookaEnvHome], runningJob.ProjectID, runningJob.ID)
 	orchestrationEnv := map[string]string{
 		"BZK_SCM":           "git",
@@ -221,6 +213,14 @@ func (p *Handlers) startBuild(res http.ResponseWriter, req *http.Request) {
 		Env:         orchestrationEnv,
 		Detach:      true,
 	})
+
+	logFolder := fmt.Sprintf(logFolderPattern, context.BazookaHome, runningJob.ProjectID, runningJob.ID)
+	os.MkdirAll(logFolder, 0755)
+
+	logFileWriter, err := os.Create(logFolder + "/job.log")
+	if err != nil {
+		panic(err)
+	}
 
 	runningJob.OrchestrationID = container.ID()
 	orchestrationLog := log.New(logFileWriter, "", log.LstdFlags)
