@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 
 go_projects=( "parser" "parserlang/golang" "parserlang/java" "orchestration" "server" "cli" )
 

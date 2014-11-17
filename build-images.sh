@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 : ${GOPATH:?"GOPATH has to be set. See https://golang.org/doc/code.html#GOPATH for more information."}
 
 if [ "$(uname)" != "Darwin" ]; then
