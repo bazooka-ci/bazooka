@@ -75,8 +75,8 @@ func main() {
 		Options: &BuildOptions{
 			DockerfileFolder: fmt.Sprintf(WorkdirFolderPattern, BazookaInput),
 			SourceFolder:     fmt.Sprintf(CheckoutFolderPattern, BazookaInput),
-			JobID:            env[BazookaEnvProjectID],
-			VariantID:        env[BazookaEnvJobID],
+			ProjectID:        env[BazookaEnvProjectID],
+			JobID:            env[BazookaEnvJobID],
 		},
 	}
 	buildImages, err := b.Build()
@@ -86,6 +86,7 @@ func main() {
 
 	r := &Runner{
 		BuildImages: buildImages,
+		Env:         env,
 	}
 	err = r.Run()
 	if err != nil {

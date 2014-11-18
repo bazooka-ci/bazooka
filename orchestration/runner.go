@@ -1,14 +1,17 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"log"
+	"os"
 
 	docker "github.com/bywan/go-dockercommand"
 )
 
 type Runner struct {
-	BuildImages []string
+	BuildImages []BuiltImage
+	Env         map[string]string
 }
 
 func (r *Runner) Run() error {
@@ -21,7 +24,7 @@ func (r *Runner) Run() error {
 	successChanRun := make(chan bool)
 	remainingRuns := len(r.BuildImages)
 	for _, buildImage := range r.BuildImages {
-		go runContainer(client, buildImage, successChanRun, errChanRun)
+		go runContainer(client, buildImage, r.Env, successChanRun, errChanRun)
 	}
 
 	for {
@@ -41,9 +44,32 @@ func (r *Runner) Run() error {
 	return nil
 }
 
-func runContainer(client *docker.Docker, buildImage string, successChan chan bool, errChan chan error) {
+func runContainer(client *docker.Docker, buildImage BuiltImage, env map[string]string, successChan chan bool, errChan chan error) {
+	servicesFile := fmt.Sprintf("%s/work/%d/services", BazookaInput, buildImage.VariantID)
+
+	servicesList, err := listServices(servicesFile)
+	if err != nil {
+		errChan <- err
+		return
+	}
+
+	serviceContainers := []*docker.Container{}
+	for _, service := range servicesList {
+		serviceContainer, err := client.Run(&docker.RunOptions{
+			Name:   fmt.Sprintf("service-%s-%s-%d", env[BazookaEnvProjectID], env[BazookaEnvJobID], buildImage.VariantID),
+			Image:  service,
+			Detach: true,
+		})
+		if err != nil {
+			errChan <- err
+			return
+		}
+		serviceContainers = append(serviceContainers, serviceContainer)
+	}
+
+	// TODO link containers
 	container, err := client.Run(&docker.RunOptions{
-		Image:  buildImage,
+		Image:  buildImage.Image,
 		Detach: true,
 	})
 	if err != nil {
@@ -51,7 +77,7 @@ func runContainer(client *docker.Docker, buildImage string, successChan chan boo
 		return
 	}
 
-	container.Logs(buildImage)
+	container.Logs(buildImage.Image)
 
 	exitCode, err := container.Wait()
 	if err != nil {
@@ -63,4 +89,31 @@ func runContainer(client *docker.Docker, buildImage string, successChan chan boo
 		return
 	}
 	successChan <- true
+
+	// TODO Delete services containers
+	// for _, serviceContainer := range serviceContainers {
+	// 	serviceContainer
+	// }
+}
+
+func listServices(servicesFile string) ([]string, error) {
+	file, err := os.Open(servicesFile)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return []string{}, nil
+		}
+		return nil, err
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	var services []string
+	for scanner.Scan() {
+		services = append(services, scanner.Text())
+	}
+
+	if err := scanner.Err(); err != nil {
+		return nil, err
+	}
+	return services, nil
 }

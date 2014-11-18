@@ -19,11 +19,16 @@ type Builder struct {
 type BuildOptions struct {
 	DockerfileFolder string
 	SourceFolder     string
+	ProjectID        string
 	JobID            string
-	VariantID        string
 }
 
-func (b *Builder) Build() ([]string, error) {
+type BuiltImage struct {
+	Image     string
+	VariantID int
+}
+
+func (b *Builder) Build() ([]BuiltImage, error) {
 
 	log.Printf("Starting building Dockerfiles\n")
 	files, err := listBuildfiles(b.Options.DockerfileFolder)
@@ -37,14 +42,14 @@ func (b *Builder) Build() ([]string, error) {
 	}
 
 	errChan := make(chan error)
-	successChan := make(chan string)
+	successChan := make(chan BuiltImage)
 	remainingBuilds := len(files)
 
 	for i, file := range files {
 		go buildContainer(client, i, b, file, successChan, errChan)
 	}
 
-	var buildImages []string
+	var buildImages []BuiltImage
 	for {
 		select {
 		case tag := <-successChan:
@@ -61,13 +66,13 @@ func (b *Builder) Build() ([]string, error) {
 	return buildImages, nil
 }
 
-func buildContainer(client *docker.Docker, i int, b *Builder, file *buildFiles, successChan chan string, errChan chan error) {
+func buildContainer(client *docker.Docker, variantID int, b *Builder, file *buildFiles, successChan chan BuiltImage, errChan chan error) {
 	for _, buildFile := range file.BuildFiles {
 		splitString := strings.Split(buildFile, "/")
 		CopyFile(buildFile, fmt.Sprintf("%s/%s", b.Options.SourceFolder, splitString[len(splitString)-1]))
 	}
 
-	tag := fmt.Sprintf("bazooka/build-%s-%s-%d", b.Options.JobID, b.Options.VariantID, i)
+	tag := fmt.Sprintf("bazooka/build-%s-%s-%d", b.Options.ProjectID, b.Options.JobID, variantID)
 	err := client.Build(&docker.BuildOptions{
 		Tag:        tag,
 		Dockerfile: file.Dockerfile,
@@ -76,7 +81,10 @@ func buildContainer(client *docker.Docker, i int, b *Builder, file *buildFiles, 
 	if err != nil {
 		errChan <- err
 	} else {
-		successChan <- tag
+		successChan <- BuiltImage{
+			Image:     tag,
+			VariantID: variantID,
+		}
 	}
 }
 

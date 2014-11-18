@@ -147,6 +147,13 @@ func (g *Generator) GenerateDockerfile() error {
 		return err
 	}
 
+	if len(g.Config.Services) > 0 {
+		var servicesBuffer bytes.Buffer
+		for _, service := range g.Config.Services {
+			servicesBuffer.WriteString(fmt.Sprintf("%s\n", service))
+		}
+		err = ioutil.WriteFile(fmt.Sprintf("%s/%d/services", g.OutputFolder, g.Index), servicesBuffer.Bytes(), 0644)
+	}
 	return nil
 }
 
