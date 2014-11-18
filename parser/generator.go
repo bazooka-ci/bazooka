@@ -64,7 +64,7 @@ func (g *Generator) GenerateDockerfile() error {
 			commands:  g.Config.BeforeScript,
 			beforeCmd: []string{"set -ev"},
 			runCmd: []string{
-				"./bazooka_install.sh",
+				"./bazooka_before_script.sh",
 				"rc=$?",
 				"if [[ $rc != 0 ]] ; then",
 				"    exit $rc",
