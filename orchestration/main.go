@@ -79,7 +79,16 @@ func main() {
 			VariantID:        env[BazookaEnvJobID],
 		},
 	}
-	if err := b.Build(); err != nil {
+	buildImages, err := b.Build()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	r := &Runner{
+		BuildImages: buildImages,
+	}
+	err = r.Run()
+	if err != nil {
 		log.Fatal(err)
 	}
 

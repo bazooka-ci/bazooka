@@ -9,6 +9,7 @@ type ConfigJava struct {
 	AfterScript   []string "after_script,omitempty"
 	AfterSuccess  []string "after_success,omitempty"
 	AfterFailure  []string "after_failure,omitempty"
+	Services      []string "services,omitempty"
 	Env           []string "env,omitempty"
 	JdkVersions   []string "jdk,omitempty"
 	FromImage     string   "from"

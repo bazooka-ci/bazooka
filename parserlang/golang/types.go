@@ -9,6 +9,7 @@ type ConfigGolang struct {
 	AfterScript   []string "after_script,omitempty"
 	AfterSuccess  []string "after_success,omitempty"
 	AfterFailure  []string "after_failure,omitempty"
+	Services      []string "services,omitempty"
 	Env           []string "env,omitempty"
 	GoVersions    []string "go,omitempty"
 	FromImage     string   "from"

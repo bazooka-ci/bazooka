@@ -23,17 +23,17 @@ type BuildOptions struct {
 	VariantID        string
 }
 
-func (b *Builder) Build() error {
+func (b *Builder) Build() ([]string, error) {
 
 	log.Printf("Starting building Dockerfiles\n")
 	files, err := listBuildfiles(b.Options.DockerfileFolder)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	client, err := docker.NewDocker(DockerEndpoint)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	errChan := make(chan error)
@@ -51,60 +51,14 @@ func (b *Builder) Build() error {
 			buildImages = append(buildImages, tag)
 			remainingBuilds--
 		case err := <-errChan:
-			return err
+			return nil, err
 		}
 
 		if remainingBuilds == 0 {
 			break
 		}
 	}
-
-	errChanRun := make(chan error)
-	successChanRun := make(chan bool)
-	remainingRuns := len(buildImages)
-	for _, buildImage := range buildImages {
-		go runContainer(client, buildImage, successChanRun, errChanRun)
-	}
-
-	for {
-		select {
-		case _ = <-successChanRun:
-			remainingRuns--
-		case err := <-errChanRun:
-			return err
-		}
-
-		if remainingRuns == 0 {
-			break
-		}
-	}
-
-	log.Printf("Dockerfiles builds finished\n")
-	return nil
-}
-
-func runContainer(client *docker.Docker, buildImage string, successChan chan bool, errChan chan error) {
-	container, err := client.Run(&docker.RunOptions{
-		Image:  buildImage,
-		Detach: true,
-	})
-	if err != nil {
-		errChan <- err
-		return
-	}
-
-	container.Logs(buildImage)
-
-	exitCode, err := container.Wait()
-	if err != nil {
-		errChan <- err
-		return
-	}
-	if exitCode != 0 {
-		errChan <- fmt.Errorf("Build failed\n Check Docker container logs, id is %s\n", container.ID())
-		return
-	}
-	successChan <- true
+	return buildImages, nil
 }
 
 func buildContainer(client *docker.Docker, i int, b *Builder, file *buildFiles, successChan chan string, errChan chan error) {
