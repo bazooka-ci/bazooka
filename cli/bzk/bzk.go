@@ -99,8 +99,9 @@ func main() {
 				EnvVar: "BZK_URI",
 			},
 			cli.StringFlag{
-				Name:  "project-id",
-				Usage: "ID of the project to buiod",
+				Name:   "project-id",
+				Usage:  "ID of the project to build",
+				EnvVar: "BZK_PROJECT_ID",
 			},
 			cli.StringFlag{
 				Name:  "scm-ref",
