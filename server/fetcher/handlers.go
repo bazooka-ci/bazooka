@@ -4,19 +4,19 @@ import (
 	"encoding/json"
 	"net/http"
 
+	lib "github.com/bazooka-ci/bazooka-lib"
+	"github.com/bazooka-ci/bazooka-lib/mongo"
 	"github.com/gorilla/mux"
 	"github.com/haklop/bazooka/server/context"
 )
 
 type Handlers struct {
-	mongoConnector *mongoConnector
+	mongoConnector *mongo.MongoConnector
 	env            map[string]string
 }
 
 func (p *Handlers) SetHandlers(r *mux.Router, serverContext context.Context) {
-	p.mongoConnector = &mongoConnector{
-		Database: serverContext.Database,
-	}
+	p.mongoConnector = serverContext.Connector
 	p.env = serverContext.Env
 
 	r.HandleFunc("/", p.createFetcher).Methods("POST")
@@ -25,7 +25,7 @@ func (p *Handlers) SetHandlers(r *mux.Router, serverContext context.Context) {
 }
 
 func (p *Handlers) createFetcher(res http.ResponseWriter, req *http.Request) {
-	var fetcher Fetcher
+	var fetcher lib.ScmFetcher
 
 	decoder := json.NewDecoder(req.Body)
 	encoder := json.NewEncoder(res)

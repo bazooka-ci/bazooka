@@ -12,27 +12,26 @@ import (
 	"time"
 
 	lib "github.com/bazooka-ci/bazooka-lib"
+	"github.com/bazooka-ci/bazooka-lib/mongo"
 	docker "github.com/bywan/go-dockercommand"
 	"github.com/gorilla/mux"
 	"github.com/haklop/bazooka/server/context"
 )
 
 const (
-	buildFolderPattern = "%s/build/%s/%s"       // $bzk_home/build/$projectId/$buildId
-	logFolderPattern   = "%s/build/%s/%s/log"   // $bzk_home/build/$projectId/$buildId/log
+	buildFolderPattern = "%s/build/%s/%s"     // $bzk_home/build/$projectId/$buildId
+	logFolderPattern   = "%s/build/%s/%s/log" // $bzk_home/build/$projectId/$buildId/log
 	// keyFolderPattern   = "%s/key/%s"         // $bzk_home/key/$keyName
 )
 
 type Handlers struct {
-	mongoConnector *mongoConnector
+	mongoConnector *mongo.MongoConnector
 	env            map[string]string
 	dockerEndpoint string
 }
 
 func (p *Handlers) SetHandlers(r *mux.Router, serverContext context.Context) {
-	p.mongoConnector = &mongoConnector{
-		Database: serverContext.Database,
-	}
+	p.mongoConnector = serverContext.Connector
 	p.env = serverContext.Env
 	p.dockerEndpoint = serverContext.DockerEndpoint
 

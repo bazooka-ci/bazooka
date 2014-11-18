@@ -1,7 +1,7 @@
 package context
 
 import (
-	"gopkg.in/mgo.v2"
+	"github.com/bazooka-ci/bazooka-lib/mongo"
 )
 
 type ErrorResponse struct {
@@ -10,7 +10,7 @@ type ErrorResponse struct {
 }
 
 type Context struct {
-	Database       *mgo.Database
+	Connector      *mongo.MongoConnector
 	DockerEndpoint string
 	Env            map[string]string
 }
