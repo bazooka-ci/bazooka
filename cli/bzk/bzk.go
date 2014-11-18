@@ -52,7 +52,10 @@ func main() {
 			if err != nil {
 				log.Fatal(err)
 			}
-			log.Print(res)
+			w := tabwriter.NewWriter(os.Stdout, 15, 1, 3, ' ', 0)
+			fmt.Fprint(w, "JOB ID\tPROJECT ID\tORCHESTRATION ID\n")
+			fmt.Fprintf(w, "%s\t%s\t%s\t%s\t\n", res.ID, res.Name, res.ScmType, res.ScmURI)
+			w.Flush()
 		},
 	}
 
