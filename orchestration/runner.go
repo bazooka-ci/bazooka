@@ -90,10 +90,18 @@ func runContainer(client *docker.Docker, buildImage BuiltImage, env map[string]s
 	}
 	successChan <- true
 
-	// TODO Delete services containers
-	// for _, serviceContainer := range serviceContainers {
-	// 	serviceContainer
-	// }
+	for _, serviceContainer := range serviceContainers {
+		err := serviceContainer.Stop(300)
+		if err != nil {
+			errChan <- err
+			return
+		}
+		_, err = serviceContainer.Wait()
+		if err != nil {
+			errChan <- err
+			return
+		}
+	}
 }
 
 func listServices(servicesFile string) ([]string, error) {
