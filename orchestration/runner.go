@@ -92,9 +92,15 @@ func runContainer(client *docker.Docker, buildImage BuiltImage, env map[string]s
 		errChan <- fmt.Errorf("Run failed\n Check Docker container logs, id is %s\n", container.ID())
 		return
 	}
-	successChan <- true
+	err = container.Remove(docker.RemoveOptions{
+		Force:         true,
+		RemoveVolumes: true,
+	})
+	if err != nil {
+		errChan <- err
+		return
+	}
 
-	fmt.Printf("$$$$$$$$$$$$%s\n", serviceContainers)
 	for _, serviceContainer := range serviceContainers {
 		err = serviceContainer.Remove(docker.RemoveOptions{
 			Force:         true,
@@ -105,6 +111,7 @@ func runContainer(client *docker.Docker, buildImage BuiltImage, env map[string]s
 			return
 		}
 	}
+	successChan <- true
 }
 
 func listServices(servicesFile string) ([]string, error) {
