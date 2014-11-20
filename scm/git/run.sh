@@ -1,7 +1,7 @@
 #!/bin/bash
-# Ensure permissions are right on the key file
 set -e
 
+# Ensure permissions are right on the key file
 if [ -e "/bazooka-key" ]; then
   chmod 0600 /bazooka-key
 fi
