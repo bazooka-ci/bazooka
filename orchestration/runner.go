@@ -94,18 +94,9 @@ func runContainer(client *docker.Docker, buildImage BuiltImage, env map[string]s
 	}
 	successChan <- true
 
+	fmt.Printf("$$$$$$$$$$$$%s\n", serviceContainers)
 	for _, serviceContainer := range serviceContainers {
-		err := serviceContainer.Stop(300)
-		if err != nil {
-			errChan <- err
-			return
-		}
-		_, err = serviceContainer.Wait()
-		if err != nil {
-			errChan <- err
-			return
-		}
-		err = container.Remove(docker.RemoveOptions{
+		err = serviceContainer.Remove(docker.RemoveOptions{
 			Force:         true,
 			RemoveVolumes: true,
 		})
