@@ -51,7 +51,10 @@ func (p *Parser) Parse() error {
 		return fmt.Errorf("Error during execution of Parser container %s/parser\n Check Docker container logs, id is %s\n", BazookaParseImage, container.ID())
 	}
 
-	err = container.Remove()
+	err = container.Remove(docker.RemoveOptions{
+		Force:         true,
+		RemoveVolumes: true,
+	})
 	if err != nil {
 		return err
 	}

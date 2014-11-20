@@ -59,7 +59,10 @@ func (f *SCMFetcher) Fetch() error {
 	}
 
 	log.Printf("SCM Source Repo Fetched in %s\n", f.Options.LocalFolder)
-	return container.Remove()
+	return container.Remove(docker.RemoveOptions{
+		Force:         true,
+		RemoveVolumes: true,
+	})
 }
 
 func resolveSCMImage(scm string) (string, error) {
