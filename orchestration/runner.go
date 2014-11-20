@@ -105,6 +105,11 @@ func runContainer(client *docker.Docker, buildImage BuiltImage, env map[string]s
 			errChan <- err
 			return
 		}
+		err = container.Remove()
+		if err != nil {
+			errChan <- err
+			return
+		}
 	}
 }
 
