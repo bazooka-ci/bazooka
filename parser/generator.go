@@ -17,7 +17,7 @@ type Generator struct {
 }
 
 func (g *Generator) GenerateDockerfile() error {
-	err := os.MkdirAll(fmt.Sprintf("%s/%d", g.OutputFolder, g.Index), 0644)
+	err := os.MkdirAll(fmt.Sprintf("%s/%d", g.OutputFolder, g.Index), 0755)
 	if err != nil {
 		return err
 	}
