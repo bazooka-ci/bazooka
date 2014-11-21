@@ -112,7 +112,7 @@ func (g *Generator) GenerateDockerfile() error {
 			}
 			err = ioutil.WriteFile(fmt.Sprintf("%s/%d/bazooka_%s.sh", g.OutputFolder, g.Index, phase.name), buffer.Bytes(), 0644)
 			if err != nil {
-				return err
+				return fmt.Errorf("Phase [%d/%s]: writing file failed: %v", g.Index, phase.name, err)
 			}
 			if phase.runCmd == nil {
 				bufferRun.WriteString(fmt.Sprintf("./bazooka_%s.sh\n", phase.name))
@@ -126,7 +126,7 @@ func (g *Generator) GenerateDockerfile() error {
 
 	err = ioutil.WriteFile(fmt.Sprintf("%s/%d/bazooka_run.sh", g.OutputFolder, g.Index), bufferRun.Bytes(), 0644)
 	if err != nil {
-		return err
+		return fmt.Errorf("Phase [%d/run]: writing file failed: %v", g.Index, err)
 	}
 
 	for _, phase := range phases {
