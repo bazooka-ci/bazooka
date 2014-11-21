@@ -92,7 +92,7 @@ func runContainer(client *docker.Docker, buildImage BuiltImage, env map[string]s
 		errChan <- fmt.Errorf("Run failed\n Check Docker container logs, id is %s\n", container.ID())
 		return
 	}
-	err = container.Remove(docker.RemoveOptions{
+	err = container.Remove(&docker.RemoveOptions{
 		Force:         true,
 		RemoveVolumes: true,
 	})
@@ -102,7 +102,7 @@ func runContainer(client *docker.Docker, buildImage BuiltImage, env map[string]s
 	}
 
 	for _, serviceContainer := range serviceContainers {
-		err = serviceContainer.Remove(docker.RemoveOptions{
+		err = serviceContainer.Remove(&docker.RemoveOptions{
 			Force:         true,
 			RemoveVolumes: true,
 		})

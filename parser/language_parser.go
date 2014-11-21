@@ -45,5 +45,8 @@ func (p *LanguageParser) Parse() error {
 		return fmt.Errorf("Error during execution of Language Parser container %s/parser\n Check Docker container logs, id is %s\n", p.Image, container.ID())
 	}
 
-	return container.Remove()
+	return container.Remove(&docker.RemoveOptions{
+		Force:         true,
+		RemoveVolumes: true,
+	})
 }
