@@ -6,10 +6,12 @@ import (
 	"io/ioutil"
 	"os"
 	"strings"
+
+	lib "github.com/bazooka-ci/bazooka-lib"
 )
 
 type Generator struct {
-	Config       *Config
+	Config       *lib.Config
 	OutputFolder string
 	Index        int
 }

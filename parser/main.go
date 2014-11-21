@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 
-	bazooka "github.com/bazooka-ci/bazooka-lib"
+	lib "github.com/bazooka-ci/bazooka-lib"
 )
 
 const (
@@ -16,12 +16,12 @@ const (
 
 func main() {
 
-	configFile, err := bazooka.ResolveConfigFile(SourceFolder)
+	configFile, err := lib.ResolveConfigFile(SourceFolder)
 	if err != nil {
 		log.Fatal(err)
 	}
-	config := &Config{}
-	err = bazooka.Parse(configFile, config)
+	config := &lib.Config{}
+	err = lib.Parse(configFile, config)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -38,14 +38,14 @@ func main() {
 		log.Fatal(err)
 	}
 
-	files, err := bazooka.ListFilesWithPrefix(OutputFolder, ".bazooka")
+	files, err := lib.ListFilesWithPrefix(OutputFolder, ".bazooka")
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	for i, file := range files {
-		config := &Config{}
-		err = bazooka.Parse(file, config)
+		config := &lib.Config{}
+		err = lib.Parse(file, config)
 		if err != nil {
 			log.Fatal(err)
 		}
