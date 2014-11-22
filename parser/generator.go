@@ -146,7 +146,7 @@ func (g *Generator) GenerateDockerfile() error {
 
 	err = ioutil.WriteFile(fmt.Sprintf("%s/%d/Dockerfile", g.OutputFolder, g.Index), buffer.Bytes(), 0644)
 	if err != nil {
-		return err
+		return fmt.Errorf("Phase [%d/docker]: writing file failed: %v", g.Index, err)
 	}
 
 	if len(g.Config.Services) > 0 {
@@ -155,6 +155,9 @@ func (g *Generator) GenerateDockerfile() error {
 			servicesBuffer.WriteString(fmt.Sprintf("%s\n", service))
 		}
 		err = ioutil.WriteFile(fmt.Sprintf("%s/%d/services", g.OutputFolder, g.Index), servicesBuffer.Bytes(), 0644)
+		if err != nil {
+			return fmt.Errorf("Phase [%d/services]: writing file failed: %v", g.Index, err)
+		}
 	}
 	return nil
 }
