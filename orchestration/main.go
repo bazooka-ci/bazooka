@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 	"time"
@@ -29,6 +30,14 @@ const (
 func main() {
 	// TODO add validation
 	start := time.Now()
+	err := os.MkdirAll("/bazooka/meta", 0755)
+	if err != nil {
+		log.Fatal(err)
+	}
+	err = ioutil.WriteFile("/bazooka/meta/orchestration_start", []byte(time.Now().String()), 0755)
+	if err != nil {
+		log.Fatal(err)
+	}
 	log.SetFlags(0)
 
 	env := map[string]string{
@@ -93,6 +102,10 @@ func main() {
 		log.Fatal(err)
 	}
 
+	err = ioutil.WriteFile("/bazooka/meta/orchestration_end", []byte(time.Now().String()), 0755)
+	if err != nil {
+		log.Fatal(err)
+	}
 	elapsed := time.Since(start)
 	log.Printf("Job Orchestration took %s", elapsed)
 }

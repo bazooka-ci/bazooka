@@ -223,6 +223,11 @@ func (p *Handlers) startBuild(res http.ResponseWriter, req *http.Request) {
 	logFolder := fmt.Sprintf(logFolderPattern, context.BazookaHome, runningJob.ProjectID, runningJob.ID)
 	os.MkdirAll(logFolder, 0755)
 
+	// Ensure directory exists
+	err = os.MkdirAll(logFolder, 0755)
+	if err != nil {
+		log.Fatal(err)
+	}
 	logFileWriter, err := os.Create(logFolder + "/job.log")
 	if err != nil {
 		panic(err)
