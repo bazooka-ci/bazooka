@@ -41,6 +41,27 @@ func (c *Client) ListProjects() ([]lib.Project, error) {
 	return projects, nil
 }
 
+func (c *Client) ListJobs(projectID string) ([]lib.Job, error) {
+	resp, err := http.Get(fmt.Sprintf("%s/project/%s/job/", c.URL, projectID))
+	if err != nil {
+		return nil, err
+	}
+	err = c.checkResponse(resp)
+	if err != nil {
+		return nil, err
+	}
+	body, err := body(resp)
+	if err != nil {
+		return nil, err
+	}
+	var jobs []lib.Job
+	err = json.Unmarshal(body, &jobs)
+	if err != nil {
+		return nil, err
+	}
+	return jobs, nil
+}
+
 func (c *Client) CreateProject(name, scm, scmUri string) (*lib.Project, error) {
 	project := lib.Project{
 		Name:    name,

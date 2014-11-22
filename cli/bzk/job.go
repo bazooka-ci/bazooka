@@ -47,3 +47,39 @@ func startJobCommand() cli.Command {
 		},
 	}
 }
+
+func listJobsCommand() cli.Command {
+	return cli.Command{
+		Name:  "list",
+		Usage: "list Jobs for the bazooka project",
+		Flags: []cli.Flag{
+			cli.StringFlag{
+				Name:   "bazooka-uri",
+				Value:  "http://localhost:3000",
+				Usage:  "URI for the bazooka server",
+				EnvVar: "BZK_URI",
+			},
+			cli.StringFlag{
+				Name:   "project-id",
+				Usage:  "ID of the project to build",
+				EnvVar: "BZK_PROJECT_ID",
+			},
+		},
+		Action: func(c *cli.Context) {
+			client, err := NewClient(c.String("bazooka-uri"))
+			if err != nil {
+				log.Fatal(err)
+			}
+			res, err := client.ListJobs(c.String("project-id"))
+			if err != nil {
+				log.Fatal(err)
+			}
+			w := tabwriter.NewWriter(os.Stdout, 15, 1, 3, ' ', 0)
+			fmt.Fprint(w, "JOB ID\tPROJECT ID\tORCHESTRATION ID\n")
+			for _, item := range res {
+				fmt.Fprintf(w, "%s\t%s\t%s\t\n", item.ID, item.ProjectID, item.OrchestrationID)
+			}
+			w.Flush()
+		},
+	}
+}

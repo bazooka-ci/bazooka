@@ -17,7 +17,7 @@ func main() {
 		}, {
 			Name:        "job",
 			Usage:       "Actions on projects",
-			Subcommands: []cli.Command{startJobCommand()},
+			Subcommands: []cli.Command{startJobCommand(), listJobsCommand()},
 		},
 	}
 	app.Run(os.Args)
