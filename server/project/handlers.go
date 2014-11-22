@@ -41,7 +41,6 @@ func (p *Handlers) SetHandlers(r *mux.Router, serverContext context.Context) {
 	r.HandleFunc("/{id}/job", p.startBuild).Methods("POST")
 	r.HandleFunc("/{id}/job/", p.getJobs).Methods("GET")
 	r.HandleFunc("/{id}/job/{job_id}", p.getJob).Methods("GET")
-	r.HandleFunc("/{id}/job/{job_id}/logs", p.getJob).Methods("GET")
 }
 
 func (p *Handlers) createProject(res http.ResponseWriter, req *http.Request) {
@@ -180,7 +179,15 @@ func (p *Handlers) startBuild(res http.ResponseWriter, req *http.Request) {
 
 	project, err := p.mongoConnector.GetProjectById(params["id"])
 	if err != nil {
-		context.WriteError(err, res, encoder)
+		if err.Error() != "not found" {
+			context.WriteError(err, res, encoder)
+			return
+		}
+		res.WriteHeader(404)
+		encoder.Encode(&context.ErrorResponse{
+			Code:    404,
+			Message: "project not found",
+		})
 		return
 	}
 
