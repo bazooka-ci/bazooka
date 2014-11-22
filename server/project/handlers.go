@@ -279,10 +279,12 @@ func (p *Handlers) getJob(res http.ResponseWriter, req *http.Request) {
 }
 
 func (p *Handlers) getJobs(res http.ResponseWriter, req *http.Request) {
+	params := mux.Vars(req)
+
 	encoder := json.NewEncoder(res)
 	res.Header().Set("Content-Type", "application/json; charset=utf-8")
 
-	jobs, err := p.mongoConnector.GetJobs()
+	jobs, err := p.mongoConnector.GetJobs(params["id"])
 	if err != nil {
 		context.WriteError(err, res, encoder)
 		return
