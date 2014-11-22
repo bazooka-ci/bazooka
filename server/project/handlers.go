@@ -271,8 +271,14 @@ func (p *Handlers) getJob(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	// TODO: Check projectID in jobID matches the one in the request, if not
-	// return 404
+	if params["project_id"] != job.ProjectID {
+		res.WriteHeader(404)
+		encoder.Encode(&context.ErrorResponse{
+			Code:    404,
+			Message: "project not found",
+		})
+		return
+	}
 
 	res.WriteHeader(200)
 	encoder.Encode(&job)
