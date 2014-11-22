@@ -271,7 +271,7 @@ func (p *Handlers) getJob(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	if params["project_id"] != job.ProjectID {
+	if params["id"] != job.ProjectID {
 		res.WriteHeader(404)
 		encoder.Encode(&context.ErrorResponse{
 			Code:    404,
