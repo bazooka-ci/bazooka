@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Bazooka</title>
+	<link rel=stylesheet href="../vendor/pure/pure.css">
+	<link rel=stylesheet href="../vendor/fontawesome/css/font-awesome.css">
+	<link rel="stylesheet" type="text/css" href="../build/css/styles.css">
+	<link href='http://fonts.googleapis.com/css?family=Roboto:400,100,900,500' rel='stylesheet' type='text/css'>
+	
+	<script src="../vendor/jquery/dist/jquery.js"></script>
+	<script src="../vendor/angular/angular.js"></script>
+	<script src="../vendor/angular-route/angular-route.js"></script>
+	
+	<script src="../vendor/moment/moment.js"></script>
+	<script src="../vendor/lodash/dist/lodash.js"></script>
+	<script src="dev.js"></script>
+	<script src="utils.js"></script>
+	<script src="app.js"></script>
+	<script src="project/project.js"></script>
+</head>
+<body ng-app="bzk" ng-controller="RootController">
+
+<div ng-include="'projects.html'"></div>
+
+
+<div ng-view>
+	BAZOOKA
+</div>
+</body>
+</html>

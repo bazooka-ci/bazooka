@@ -1,0 +1,22 @@
+.col {
+	box-shadow: 2px 0 4px 0 #111;
+
+	h1 {
+
+		a {
+			box-shadow: #333 2px 2px 4px;
+		}
+	}
+}
+
+@import 'nothing';
+
+.projects.wide {
+	h1 {
+		
+	}
+
+	.new {
+		box-shadow: #333 4px 4px 4px;
+	}
+}

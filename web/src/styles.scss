@@ -1,0 +1,224 @@
+@import 'theme/sizing';
+@import 'theme/colors-mono';
+// @import 'theme/material';
+@import 'theme/flat';
+
+#header {
+	position: absolute;
+	left: 0;
+	right: 0;
+	top: 0;
+	height: $header-height;
+	background: $header-bg;
+	padding: 0 10px;
+	z-index: 4;
+
+	h1 {
+		color: #fff;
+		font-size: 24px;
+		line-height: $header-height;
+		margin: 0;
+		text-transform: uppercase;
+		font-weight: normal;
+		letter-spacing: 4px;
+	}
+}
+
+a {
+	outline: none;
+}
+
+.loading {
+	position: absolute;
+	left: 50%;
+	top: 50%;
+	width: 80px;
+	height: 12px;
+	margin-left: -40px;
+	margin-top: -6px;
+}
+
+.col {
+	position: absolute;
+	top: $header-height + $vsep;
+	bottom: 0;
+
+	h1 {
+		font-family: Roboto, sans-serif;
+		// font-family: serif;
+		text-transform: lowercase;
+		font-weight: 100;
+		margin: 0;
+		padding: 10px 5px;
+		font-size: 32px;
+		line-height: 32px;
+		position: relative;
+
+		.meta {
+			font-size: 16px;
+			color: #999;
+			line-height: 16px;
+			font-style: italic;
+		}
+
+		a {
+			outline: none;
+			font-size: 18px;
+			line-height: 18px;
+			font-weight: 100;
+			display: block;
+			text-align: center;
+			vertical-align: middle;
+			width: 18px;
+			height: 18px;
+			padding: 7px;
+			border-radius: 50%;
+			text-decoration: none;
+
+			position: absolute;
+			right: 5px;
+			top: 10px;
+		}
+	}
+
+	.scroll {
+		position: absolute;
+		top: 52px;
+		bottom: 0;
+		left: 0;
+		right: 0;
+		overflow: auto;
+	}
+}
+
+@import 'nothing';
+
+.projects.wide {
+	color: $projects-new-fg;
+	h1 {
+		background: darken($projects-new-bg, 4%);
+		
+		border-bottom: 1px solid darken($projects-new-bg, 8%);
+
+		a {
+			color: $projects-fg;
+			background: $projects-bg;
+		}
+	}
+
+	.new {
+		width: $projects-wide-width - 20px;
+		background: $projects-new-bg;
+		padding: 0 10px 20px 10px;
+		// left: 0;
+		position: relative;
+		// transition: left 1s;
+		z-index: 4;
+
+		.ng-enter {
+			// left: -$projects-wide-width;
+			// opacity: 0;
+		}
+
+		.ng-enter-active {
+			// left: 0;
+		}
+
+		label {
+			display: block;
+			padding: 30px 0 10px 0;
+			text-transform: uppercase;
+			font-size: 24px;
+		}
+
+		input, button {
+			display: block;
+			padding: 10px;
+			font-size: 24px;
+			line-height: 24px;
+			width: $projects-wide-width - 40px;
+			border: none;
+		}
+
+		button {
+			margin: 40px 0 0 0;
+			background: lighten($projects-new-bg, 4%);
+			text-transform: uppercase;
+		}
+	}
+
+}
+
+.projects {
+	left: 0;
+	width: $projects-width;
+	transition: all 0.2s;
+	background: $projects-bg;
+	color: $projects-fg;
+	z-index: 3;
+
+
+	.search {
+		padding: 10px;
+
+		input {
+			background: #95a5a6;
+			border: 1px solid #7f8c8d;
+			color: #fff;
+			padding: 5px;
+			text-transform: uppercase;
+			display: block;
+		}
+	}
+
+	h1 {
+		background: darken($projects-bg, 4%);
+		border-bottom: 1px solid darken($projects-bg, 8%);
+		
+		a {
+			color: $projects-new-fg;
+			background: $projects-new-bg;
+		}
+	}
+	
+
+	ul {
+		list-style-type: none;
+		margin: 0;
+		padding: 0;
+
+		li {
+			padding: 0;
+			margin: 0;
+			border-bottom: 1px solid lighten($projects-bg, 10%);
+
+			a {
+
+				display: block;
+				position: relative;
+				padding: 20px 5px 20px 10px;
+				color: #ecf0f1;
+				font-weight: bold;
+				font-size: 20px;
+				text-transform: lowercase;
+				text-decoration: none;
+
+				// border-right: 4px solid #c0392b;
+				
+
+				
+			}
+
+			a:hover {
+				color: #fff;
+				background: darken($projects-bg, 4%);
+			}
+		}
+
+		li.selected a {
+			background: darken($projects-bg, 12%);
+		}
+	}
+}
+
+@import 'project/project';
