@@ -1,6 +1,10 @@
 #!/bin/bash
 set -e
 
+: ${GOPATH:?"GOPATH has to be set. See https://golang.org/doc/code.html#GOPATH for more information."}
+
+go get -u github.com/mitchellh/gox
+
 go_projects=( "parser" "parserlang/golang" "parserlang/java" "orchestration" "server" "cli" )
 
 for project in "${go_projects[@]}"
