@@ -1,29 +1,23 @@
 #!/bin/bash
-
-# before_install
-gem install bundler -v 1.6.6
-cd source
-
-# install
-travis_retry bundle _1.6.6_ install --without debug
-echo "Test install"
-
-# before_script
-echo "Test before script1"
-echo "Test before script2"
-
-# script
-bundle _1.6.5_ exec rake
-bundle _1.6.6_ exec rake
-
-# after_script
-echo "Test after script1"
-echo "Test after script2"
-
-# after_success
-echo "Test after success1"
-echo "Test after success2"
-
-# after_failure
-echo "Test after failure1"
-echo "Test after failure2"
+./bazooka_before_install.sh
+rc=$?
+if [[ $rc != 0 ]] ; then
+    exit $rc
+fi
+./bazooka_install.sh
+rc=$?
+if [[ $rc != 0 ]] ; then
+    exit $rc
+fi
+./bazooka_before_script.sh
+rc=$?
+if [[ $rc != 0 ]] ; then
+    exit $rc
+fi
+./bazooka_script.sh
+if [[ $? != 0 ]] ; then
+  ./bazooka_after_failure.sh
+else
+  ./bazooka_after_success.sh
+fi
+./bazooka_after_script.sh

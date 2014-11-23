@@ -1,6 +1,7 @@
 package main
 
 import (
+	lib "github.com/bazooka-ci/bazooka-lib"
 	"io/ioutil"
 	"testing"
 
@@ -8,7 +9,7 @@ import (
 )
 
 func TestGenerate(t *testing.T) {
-	config := &Config{
+	config := &lib.Config{
 		Language:  "golang",
 		FromImage: "testbazooka",
 		BeforeInstall: []string{
@@ -47,18 +48,31 @@ func TestGenerate(t *testing.T) {
 
 	g := &Generator{
 		Config:       config,
-		OutputFolder: "test/generator",
+		OutputFolder: "test/generator/output",
 	}
 	err := g.GenerateDockerfile()
 	if err != nil {
 		t.Fatalf("err: %s", err)
 	}
 
-	breal, err := ioutil.ReadFile("../test/generator/Dockerfileexpected")
-	bexpected, err := ioutil.ReadFile("../test/generator/Dockerfile0")
+	breal, err := ioutil.ReadFile("test/generator/Dockerfileexpected")
+	if err != nil {
+		t.Fatalf("err: %s", err)
+	}
+
+	bexpected, err := ioutil.ReadFile("test/generator/output/0/Dockerfile")
+	if err != nil {
+		t.Fatalf("err: %s", err)
+	}
 	assert.Equal(t, breal, bexpected)
 
-	breal, err = ioutil.ReadFile("../test/generator/bazooka_run_expected.sh")
-	bexpected, err = ioutil.ReadFile("../test/generator/bazooka_run0.sh")
+	breal, err = ioutil.ReadFile("test/generator/bazooka_run_expected.sh")
+	if err != nil {
+		t.Fatalf("err: %s", err)
+	}
+	bexpected, err = ioutil.ReadFile("test/generator/output/0/bazooka_run.sh")
+	if err != nil {
+		t.Fatalf("err: %s", err)
+	}
 	assert.Equal(t, breal, bexpected)
 }
