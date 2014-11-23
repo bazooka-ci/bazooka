@@ -14,10 +14,10 @@ type Runner struct {
 	Env         map[string]string
 }
 
-func (r *Runner) Run() error {
+func (r *Runner) Run() (bool, error) {
 	client, err := docker.NewDocker(DockerEndpoint)
 	if err != nil {
-		return err
+		return false, err
 	}
 
 	errChanRun := make(chan error)
@@ -27,12 +27,14 @@ func (r *Runner) Run() error {
 		go runContainer(client, buildImage, r.Env, successChanRun, errChanRun)
 	}
 
+	success := false
 	for {
 		select {
-		case _ = <-successChanRun:
+		case result := <-successChanRun:
+			success = success || result
 			remainingRuns--
 		case err := <-errChanRun:
-			return err
+			return false, err
 		}
 
 		if remainingRuns == 0 {
@@ -41,10 +43,11 @@ func (r *Runner) Run() error {
 	}
 
 	log.Printf("Dockerfiles builds finished\n")
-	return nil
+	return success, nil
 }
 
 func runContainer(client *docker.Docker, buildImage BuiltImage, env map[string]string, successChan chan bool, errChan chan error) {
+	success := true
 	servicesFile := fmt.Sprintf("%s/work/%d/services", BazookaInput, buildImage.VariantID)
 
 	servicesList, err := listServices(servicesFile)
@@ -89,8 +92,11 @@ func runContainer(client *docker.Docker, buildImage BuiltImage, env map[string]s
 		return
 	}
 	if exitCode != 0 {
-		errChan <- fmt.Errorf("Run failed\n Check Docker container logs, id is %s\n", container.ID())
-		return
+		if exitCode == 42 {
+			errChan <- fmt.Errorf("Run failed\n Check Docker container logs, id is %s\n", container.ID())
+			return
+		}
+		success = false
 	}
 	err = container.Remove(&docker.RemoveOptions{
 		Force:         true,
@@ -111,7 +117,7 @@ func runContainer(client *docker.Docker, buildImage BuiltImage, env map[string]s
 			return
 		}
 	}
-	successChan <- true
+	successChan <- success
 }
 
 func listServices(servicesFile string) ([]string, error) {

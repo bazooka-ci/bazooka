@@ -2,11 +2,12 @@ package main
 
 import (
 	"fmt"
-	lib "github.com/bazooka-ci/bazooka-lib"
-	"github.com/bazooka-ci/bazooka-lib/mongo"
 	"log"
 	"os"
 	"time"
+
+	lib "github.com/bazooka-ci/bazooka-lib"
+	"github.com/bazooka-ci/bazooka-lib/mongo"
 )
 
 const (
@@ -99,13 +100,18 @@ func main() {
 		BuildImages: buildImages,
 		Env:         env,
 	}
-	err = r.Run()
+	success, err := r.Run()
 	if err != nil {
-		connector.FinishJob(env[BazookaEnvJobID], lib.JOB_FAILED, time.Now())
+		connector.FinishJob(env[BazookaEnvJobID], lib.JOB_ERRORED, time.Now())
 		log.Fatal(err)
+	}
+	if success {
+		connector.FinishJob(env[BazookaEnvJobID], lib.JOB_SUCCESS, time.Now())
+	} else {
+		connector.FinishJob(env[BazookaEnvJobID], lib.JOB_FAILED, time.Now())
 	}
 
 	elapsed := time.Since(start)
 	log.Printf("Job Orchestration took %s", elapsed)
-	connector.FinishJob(env[BazookaEnvJobID], lib.JOB_SUCCESS, time.Now())
+
 }
