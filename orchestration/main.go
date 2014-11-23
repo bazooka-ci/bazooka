@@ -2,7 +2,8 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
+	lib "github.com/bazooka-ci/bazooka-lib"
+	"github.com/bazooka-ci/bazooka-lib/mongo"
 	"log"
 	"os"
 	"time"
@@ -25,20 +26,18 @@ const (
 	BazookaEnvJobID        = "BZK_JOB_ID"
 	BazookaEnvHome         = "BZK_HOME"
 	BazookaEnvDockerSock   = "BZK_DOCKERSOCK"
+	BazookaEnvMongoAddr    = "MONGO_PORT_27017_TCP_ADDR"
+	BazookaEnvMongoPort    = "MONGO_PORT_27017_TCP_PORT"
 )
 
 func main() {
 	// TODO add validation
 	start := time.Now()
-	err := os.MkdirAll("/bazooka/meta", 0755)
-	if err != nil {
-		log.Fatal(err)
-	}
-	err = ioutil.WriteFile("/bazooka/meta/orchestration_start", []byte(time.Now().String()), 0755)
-	if err != nil {
-		log.Fatal(err)
-	}
 	log.SetFlags(0)
+
+	// Configure Mongo
+	connector := mongo.NewConnector()
+	defer connector.Close()
 
 	env := map[string]string{
 		BazookaEnvSCM:          os.Getenv(BazookaEnvSCM),
@@ -65,6 +64,7 @@ func main() {
 		},
 	}
 	if err := f.Fetch(); err != nil {
+		connector.FinishJob(env[BazookaEnvJobID], lib.JOB_ERRORED, time.Now())
 		log.Fatal(err)
 	}
 
@@ -78,6 +78,7 @@ func main() {
 		},
 	}
 	if err := p.Parse(); err != nil {
+		connector.FinishJob(env[BazookaEnvJobID], lib.JOB_ERRORED, time.Now())
 		log.Fatal(err)
 	}
 	b := &Builder{
@@ -90,6 +91,7 @@ func main() {
 	}
 	buildImages, err := b.Build()
 	if err != nil {
+		connector.FinishJob(env[BazookaEnvJobID], lib.JOB_ERRORED, time.Now())
 		log.Fatal(err)
 	}
 
@@ -99,13 +101,11 @@ func main() {
 	}
 	err = r.Run()
 	if err != nil {
+		connector.FinishJob(env[BazookaEnvJobID], lib.JOB_FAILED, time.Now())
 		log.Fatal(err)
 	}
 
-	err = ioutil.WriteFile("/bazooka/meta/orchestration_end", []byte(time.Now().String()), 0755)
-	if err != nil {
-		log.Fatal(err)
-	}
 	elapsed := time.Since(start)
 	log.Printf("Job Orchestration took %s", elapsed)
+	connector.FinishJob(env[BazookaEnvJobID], lib.JOB_SUCCESS, time.Now())
 }

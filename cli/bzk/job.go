@@ -2,13 +2,34 @@ package main
 
 import (
 	"fmt"
+	lib "github.com/bazooka-ci/bazooka-lib"
 	"log"
 	"os"
 	"text/tabwriter"
+	"time"
 
 	"github.com/codegangsta/cli"
 )
 
+func jobStatus(j lib.JobStatus) string {
+	switch j {
+	case lib.JOB_SUCCESS:
+		return "SUCCESS"
+	case lib.JOB_FAILED:
+		return "FAILED"
+	case lib.JOB_ERRORED:
+		return "ERRORED"
+	default:
+		return "-"
+	}
+}
+
+func fmtTime(t time.Time) string {
+	if t.IsZero() {
+		return "-"
+	}
+	return t.Local().Format("15:04:05 02/01/2006")
+}
 func startJobCommand() cli.Command {
 	return cli.Command{
 		Name:  "start",
@@ -75,9 +96,9 @@ func listJobsCommand() cli.Command {
 				log.Fatal(err)
 			}
 			w := tabwriter.NewWriter(os.Stdout, 15, 1, 3, ' ', 0)
-			fmt.Fprint(w, "JOB ID\tPROJECT ID\tORCHESTRATION ID\n")
+			fmt.Fprint(w, "JOB ID\tSTARTED\tCOMPLETED\tSTATUS\tPROJECT ID\tORCHESTRATION ID\n")
 			for _, item := range res {
-				fmt.Fprintf(w, "%s\t%s\t%s\t\n", item.ID, item.ProjectID, item.OrchestrationID)
+				fmt.Fprintf(w, "%s\t%s\t%v\t%v\t%v\t%s\t\n", item.ID, fmtTime(item.Started), fmtTime(item.Completed), jobStatus(item.Status), item.ProjectID, item.OrchestrationID)
 			}
 			w.Flush()
 		},

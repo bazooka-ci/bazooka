@@ -197,20 +197,29 @@ func (p *Handlers) startBuild(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	var runningJob lib.Job
-	runningJob.ID = strconv.FormatInt(time.Now().Unix(), 10)
-	runningJob.ProjectID = project.ID
+	runningJob := &lib.Job{
+		ID:        strconv.FormatInt(time.Now().Unix(), 10),
+		ProjectID: project.ID,
+		Started:   time.Now(),
+	}
+
+	if err := p.mongoConnector.AddJob(runningJob); err != nil {
+		context.WriteError(err, res, encoder)
+		return
+	}
 
 	buildFolder := fmt.Sprintf(buildFolderPattern, p.env[context.BazookaEnvHome], runningJob.ProjectID, runningJob.ID)
 	orchestrationEnv := map[string]string{
-		"BZK_SCM":           "git",
-		"BZK_SCM_URL":       project.ScmURI,
-		"BZK_SCM_REFERENCE": startJob.ScmReference,
-		"BZK_SCM_KEYFILE":   p.env[context.BazookaEnvSCMKeyfile], //TODO use keyfile per project
-		"BZK_HOME":          buildFolder,
-		"BZK_PROJECT_ID":    project.ID,
-		"BZK_JOB_ID":        runningJob.ID, // TODO handle job number and tasks and save it
-		"BZK_DOCKERSOCK":    p.env[context.BazookaEnvDockerSock],
+		"BZK_SCM":                   "git",
+		"BZK_SCM_URL":               project.ScmURI,
+		"BZK_SCM_REFERENCE":         startJob.ScmReference,
+		"BZK_SCM_KEYFILE":           p.env[context.BazookaEnvSCMKeyfile], //TODO use keyfile per project
+		"BZK_HOME":                  buildFolder,
+		"BZK_PROJECT_ID":            project.ID,
+		"BZK_JOB_ID":                runningJob.ID, // TODO handle job number and tasks and save it
+		"BZK_DOCKERSOCK":            p.env[context.BazookaEnvDockerSock],
+		context.BazookaEnvMongoAddr: p.env[context.BazookaEnvMongoAddr],
+		context.BazookaEnvMongoPort: p.env[context.BazookaEnvMongoPort],
 	}
 
 	container, err := client.Run(&docker.RunOptions{
@@ -236,7 +245,7 @@ func (p *Handlers) startBuild(res http.ResponseWriter, req *http.Request) {
 	runningJob.OrchestrationID = container.ID()
 	orchestrationLog := log.New(logFileWriter, "", log.LstdFlags)
 	orchestrationLog.Printf("Start job %s on project %s with container %s\n", runningJob.ID, runningJob.ProjectID, runningJob.OrchestrationID)
-
+	p.mongoConnector.SetJobOrchestrationId(runningJob.ID, container.ID())
 	if err != nil {
 		orchestrationLog.Println(err.Error())
 		context.WriteError(err, res, encoder)
@@ -256,11 +265,10 @@ func (p *Handlers) startBuild(res http.ResponseWriter, req *http.Request) {
 		logFileWriter.Close()
 	}(r, logFileWriter)
 
-	err = p.mongoConnector.AddJob(&runningJob)
 	res.Header().Set("Location", "/project/"+project.ID+"/job/"+runningJob.ID)
 
 	res.WriteHeader(202)
-	encoder.Encode(&runningJob)
+	encoder.Encode(runningJob)
 }
 
 func (p *Handlers) getJob(res http.ResponseWriter, req *http.Request) {
