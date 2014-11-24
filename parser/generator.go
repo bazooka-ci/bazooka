@@ -38,6 +38,18 @@ func (g *Generator) GenerateDockerfile() error {
 
 	phases := []*buildPhase{
 		&buildPhase{
+			name:      "setup",
+			commands:  g.Config.Setup,
+			beforeCmd: []string{"set -ev"},
+			runCmd: []string{
+				"./bazooka_setup.sh",
+				"rc=$?",
+				"if [[ $rc != 0 ]] ; then",
+				"    exit 42",
+				"fi",
+			},
+		},
+		&buildPhase{
 			name:      "before_install",
 			commands:  g.Config.BeforeInstall,
 			beforeCmd: []string{"set -ev"},

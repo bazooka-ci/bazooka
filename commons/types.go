@@ -41,6 +41,7 @@ type ScmFetcher struct {
 
 type Config struct {
 	Language      string   `yaml:"language"`
+	Setup         []string `yaml:"setup,omitempty"`
 	BeforeInstall []string `yaml:"before_install,omitempty"`
 	Install       []string `yaml:"install,omitempty"`
 	BeforeScript  []string `yaml:"before_script,omitempty"`

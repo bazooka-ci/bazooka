@@ -46,6 +46,7 @@ func main() {
 
 func manageGoVersion(i int, conf *ConfigGolang, version string) error {
 	conf.GoVersions = []string{}
+	setSetupScript(conf)
 	setDefaultInstall(conf)
 	err := setDefaultScript(conf)
 	if err != nil {
@@ -62,6 +63,20 @@ func manageGoVersion(i int, conf *ConfigGolang, version string) error {
 		return err
 	}
 	return bazooka.Flush(conf, fmt.Sprintf("%s/.bazooka.%d.yml", OutputFolder, i))
+}
+
+func setSetupScript(conf *ConfigGolang) {
+	conf.Setup = []string{
+		"if [ -f /bazooka/.godir ]; then",
+		"  d=$(cat /bazooka/.godir)",
+		"  GODIR=/go/src/${d}",
+		"else",
+		"  GODIR=/go/src/app",
+		"fi",
+		"mkdir -p $GODIR",
+		"cp -r /bazooka/* $GODIR",
+		"cd $GODIR",
+	}
 }
 
 func setDefaultInstall(conf *ConfigGolang) {
