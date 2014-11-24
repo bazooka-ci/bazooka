@@ -2,11 +2,12 @@ package main
 
 import (
 	"fmt"
-	lib "github.com/haklop/bazooka/commons"
 	"log"
 	"os"
 	"text/tabwriter"
 	"time"
+
+	lib "github.com/haklop/bazooka/commons"
 
 	"github.com/codegangsta/cli"
 )
@@ -19,6 +20,8 @@ func jobStatus(j lib.JobStatus) string {
 		return "FAILED"
 	case lib.JOB_ERRORED:
 		return "ERRORED"
+	case lib.JOB_RUNNING:
+		return "RUNNING"
 	default:
 		return "-"
 	}

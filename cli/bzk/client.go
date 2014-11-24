@@ -62,6 +62,27 @@ func (c *Client) ListJobs(projectID string) ([]lib.Job, error) {
 	return jobs, nil
 }
 
+func (c *Client) ListVariants(projectID, jobID string) ([]lib.Variant, error) {
+	resp, err := http.Get(fmt.Sprintf("%s/project/%s/job/%s/variant", c.URL, projectID, jobID))
+	if err != nil {
+		return nil, err
+	}
+	err = c.checkResponse(resp)
+	if err != nil {
+		return nil, err
+	}
+	body, err := body(resp)
+	if err != nil {
+		return nil, err
+	}
+	var variants []lib.Variant
+	err = json.Unmarshal(body, &variants)
+	if err != nil {
+		return nil, err
+	}
+	return variants, nil
+}
+
 func (c *Client) CreateProject(name, scm, scmUri string) (*lib.Project, error) {
 	project := lib.Project{
 		Name:    name,
