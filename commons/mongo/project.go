@@ -60,6 +60,9 @@ func (c *MongoConnector) AddJob(job *lib.Job) error {
 }
 
 func (c *MongoConnector) AddVariant(variant *lib.Variant) error {
+	i := bson.NewObjectId()
+	variant.ID = i.Hex()
+
 	fmt.Printf("add variant: %#v", variant)
 	if variant.Status == 0 {
 		variant.Status = lib.JOB_RUNNING
