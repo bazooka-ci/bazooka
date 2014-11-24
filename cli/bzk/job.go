@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	lib "github.com/bazooka-ci/bazooka-lib"
+	lib "github.com/haklop/bazooka/commons"
 	"log"
 	"os"
 	"text/tabwriter"

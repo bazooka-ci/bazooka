@@ -11,8 +11,8 @@ import (
 	"strconv"
 	"time"
 
-	lib "github.com/bazooka-ci/bazooka-lib"
-	"github.com/bazooka-ci/bazooka-lib/mongo"
+	lib "github.com/haklop/bazooka/commons"
+	"github.com/haklop/bazooka/commons/mongo"
 	docker "github.com/bywan/go-dockercommand"
 	"github.com/gorilla/mux"
 	"github.com/haklop/bazooka/server/context"

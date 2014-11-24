@@ -1,7 +1,7 @@
 package main
 
 import (
-	lib "github.com/bazooka-ci/bazooka-lib"
+	lib "github.com/haklop/bazooka/commons"
 	"io/ioutil"
 	"testing"
 

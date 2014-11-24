@@ -6,8 +6,8 @@ import (
 	"os"
 	"time"
 
-	lib "github.com/bazooka-ci/bazooka-lib"
-	"github.com/bazooka-ci/bazooka-lib/mongo"
+	lib "github.com/haklop/bazooka/commons"
+	"github.com/haklop/bazooka/commons/mongo"
 )
 
 const (

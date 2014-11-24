@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"net/http"
 
-	lib "github.com/bazooka-ci/bazooka-lib"
-	"github.com/bazooka-ci/bazooka-lib/mongo"
+	lib "github.com/haklop/bazooka/commons"
+	"github.com/haklop/bazooka/commons/mongo"
 	"github.com/gorilla/mux"
 	"github.com/haklop/bazooka/server/context"
 )

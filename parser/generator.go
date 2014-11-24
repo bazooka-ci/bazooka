@@ -7,7 +7,7 @@ import (
 	"os"
 	"strings"
 
-	lib "github.com/bazooka-ci/bazooka-lib"
+	lib "github.com/haklop/bazooka/commons"
 )
 
 type Generator struct {

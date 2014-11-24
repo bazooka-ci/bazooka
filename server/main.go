@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/bazooka-ci/bazooka-lib/mongo"
+	"github.com/haklop/bazooka/commons/mongo"
 	"github.com/gorilla/mux"
 	"github.com/haklop/bazooka/server/context"
 	"github.com/haklop/bazooka/server/fetcher"

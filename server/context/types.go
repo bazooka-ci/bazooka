@@ -1,7 +1,7 @@
 package context
 
 import (
-	"github.com/bazooka-ci/bazooka-lib/mongo"
+	"github.com/haklop/bazooka/commons/mongo"
 )
 
 type ErrorResponse struct {

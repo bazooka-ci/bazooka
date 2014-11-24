@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 
-	lib "github.com/bazooka-ci/bazooka-lib"
+	lib "github.com/haklop/bazooka/commons"
 )
 
 const (

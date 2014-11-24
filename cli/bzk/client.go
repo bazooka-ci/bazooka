@@ -7,7 +7,7 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	lib "github.com/bazooka-ci/bazooka-lib"
+	lib "github.com/haklop/bazooka/commons"
 )
 
 type Client struct {
