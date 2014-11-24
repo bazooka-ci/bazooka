@@ -74,7 +74,7 @@ func setSetupScript(conf *ConfigGolang) {
 		"  GODIR=/go/src/app",
 		"fi",
 		"mkdir -p $GODIR",
-		"cp -r /bazooka $GODIR",
+		"cp -r /bazooka/* $GODIR",
 		"cd $GODIR",
 	}
 }
