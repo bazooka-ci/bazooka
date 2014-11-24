@@ -81,10 +81,7 @@ func setSetupScript(conf *ConfigGolang) {
 
 func setDefaultInstall(conf *ConfigGolang) {
 	if len(conf.Install) == 0 {
-		conf.Install = []string{
-			"go get -d -v ./... && go build -v ./...",
-			"pwd",
-		}
+		conf.Install = []string{"go get -d -v ./... && go build -v ./..."}
 	}
 }
 
