@@ -11,6 +11,16 @@ type Project struct {
 	ID      string `bson:"id" json:"id"`
 }
 
+type Variant struct {
+	Status     JobStatus `bson:"status" json:"status"`
+	Started    time.Time `bson:"started" json:"started"`
+	Completed  time.Time `bson:"completed" json:"completed"`
+	BuildImage string    `bson:"image" json:"image"`
+	JobID      string    `bson:"job_id" json:"job_id"`
+	Number     int       `bson:"number" json:"number"`
+	ID         string    `bson:"id" json:"id"`
+}
+
 type StartJob struct {
 	ScmReference string `json:"reference"`
 }
@@ -21,6 +31,7 @@ const (
 	JOB_SUCCESS JobStatus = iota + 1
 	JOB_FAILED
 	JOB_ERRORED
+	JOB_RUNNING
 )
 
 type Job struct {

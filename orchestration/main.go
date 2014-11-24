@@ -99,6 +99,7 @@ func main() {
 	r := &Runner{
 		BuildImages: buildImages,
 		Env:         env,
+		Mongo:       connector,
 	}
 	success, err := r.Run()
 	if err != nil {
