@@ -2,6 +2,7 @@ package main
 
 type ConfigGolang struct {
 	Language      string   "language"
+	Setup         []string "setup,omitempty"
 	BeforeInstall []string "before_install,omitempty"
 	Install       []string "install,omitempty"
 	BeforeScript  []string "before_script,omitempty"
