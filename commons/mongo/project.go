@@ -51,17 +51,20 @@ func (c *MongoConnector) AddProject(project *lib.Project) error {
 
 func (c *MongoConnector) AddJob(job *lib.Job) error {
 	fmt.Printf("add job: %#v", job)
+	if job.Status == 0 {
+		job.Status = lib.JOB_RUNNING
+	}
 	err := c.database.C("jobs").Insert(job)
 
 	return err
 }
 
-func (c *MongoConnector) UpdateJob(job *lib.Job) error {
-	fmt.Printf("update job: %#v", job)
-	request := bson.M{
-		"id": job.ID,
+func (c *MongoConnector) AddVariant(variant *lib.Variant) error {
+	fmt.Printf("add variant: %#v", variant)
+	if variant.Status == 0 {
+		variant.Status = lib.JOB_RUNNING
 	}
-	err := c.database.C("jobs").Update(request, job)
+	err := c.database.C("variants").Insert(variant)
 
 	return err
 }
@@ -95,6 +98,22 @@ func (c *MongoConnector) FinishJob(id string, status lib.JobStatus, completed ti
 	return err
 }
 
+func (c *MongoConnector) FinishVariant(id string, status lib.JobStatus, completed time.Time) error {
+	fmt.Printf("finish variant: %v with status %v", id, status)
+	selector := bson.M{
+		"id": id,
+	}
+	request := bson.M{
+		"$set": bson.M{
+			"status":    status,
+			"completed": completed,
+		},
+	}
+	err := c.database.C("variants").Update(selector, request)
+
+	return err
+}
+
 func (c *MongoConnector) GetJobByID(id string) (lib.Job, error) {
 	result := lib.Job{}
 
@@ -106,6 +125,17 @@ func (c *MongoConnector) GetJobByID(id string) (lib.Job, error) {
 	return result, err
 }
 
+func (c *MongoConnector) GetVariantByID(id string) (lib.Variant, error) {
+	result := lib.Variant{}
+
+	request := bson.M{
+		"id": id,
+	}
+	err := c.database.C("variants").Find(request).One(&result)
+	fmt.Printf("retrieve variant: %#v", result)
+	return result, err
+}
+
 func (c *MongoConnector) GetJobs(projectID string) ([]lib.Job, error) {
 	result := []lib.Job{}
 
@@ -113,5 +143,15 @@ func (c *MongoConnector) GetJobs(projectID string) ([]lib.Job, error) {
 		"project_id": projectID,
 	}).All(&result)
 	fmt.Printf("retrieve jobs: %#v", result)
+	return result, err
+}
+
+func (c *MongoConnector) GetVariants(jobID string) ([]lib.Variant, error) {
+	result := []lib.Variant{}
+
+	err := c.database.C("variants").Find(bson.M{
+		"job_id": jobID,
+	}).All(&result)
+	fmt.Printf("retrieve variants: %#v", result)
 	return result, err
 }
