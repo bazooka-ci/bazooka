@@ -20,34 +20,13 @@ func createProjectCommand() cli.Command {
 				Usage:  "URI for the bazooka server",
 				EnvVar: "BZK_URI",
 			},
-			cli.StringFlag{
-				Name:  "build",
-				Value: "scm",
-				Usage: "Type of build for Bazooka, eg. scm for `SCM based build`",
-			},
-			cli.StringFlag{
-				Name:   "name",
-				Usage:  "Name of the project",
-				EnvVar: "BZK_SCM_NAME",
-			},
-			cli.StringFlag{
-				Name:   "scm",
-				Value:  "git",
-				Usage:  "Type of SCM for the SCM based-build",
-				EnvVar: "BZK_SCM",
-			},
-			cli.StringFlag{
-				Name:   "scm-uri",
-				Usage:  "URI of your SCM Project",
-				EnvVar: "BZK_SCM_URI",
-			},
 		},
 		Action: func(c *cli.Context) {
 			client, err := NewClient(c.String("bazooka-uri"))
 			if err != nil {
 				log.Fatal(err)
 			}
-			res, err := client.CreateProject(c.String("name"), c.String("scm"), c.String("scm-uri"))
+			res, err := client.CreateProject(c.Args()[0], c.Args()[1], c.Args()[2])
 			if err != nil {
 				log.Fatal(err)
 			}
