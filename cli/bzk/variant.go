@@ -20,22 +20,13 @@ func listVariantsCommand() cli.Command {
 				Usage:  "URI for the bazooka server",
 				EnvVar: "BZK_URI",
 			},
-			cli.StringFlag{
-				Name:   "project-id",
-				Usage:  "ID of the project",
-				EnvVar: "BZK_PROJECT_ID",
-			},
-			cli.StringFlag{
-				Name:  "job-id",
-				Usage: "ID of the job",
-			},
 		},
 		Action: func(c *cli.Context) {
 			client, err := NewClient(c.String("bazooka-uri"))
 			if err != nil {
 				log.Fatal(err)
 			}
-			res, err := client.ListVariants(c.String("project-id"), c.String("job-id"))
+			res, err := client.ListVariants(c.Args()[0], c.Args()[1])
 			if err != nil {
 				log.Fatal(err)
 			}
