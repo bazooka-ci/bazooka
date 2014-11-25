@@ -79,7 +79,6 @@ func (c *MongoConnector) AddLog(log *lib.LogEntry) error {
 	i := bson.NewObjectId()
 	log.ID = i.Hex()
 
-	fmt.Printf("add log: %#v", log)
 	return c.database.C("logs").Insert(log)
 }
 

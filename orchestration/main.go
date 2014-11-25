@@ -55,9 +55,9 @@ func main() {
 		BazookaEnvDockerSock:   os.Getenv(BazookaEnvDockerSock),
 	}
 
-	var logContainer Logger = func(image string, variantID string, container *docker.Container) {
+	var containerLogger Logger = func(image string, variantID string, container *docker.Container) {
 		r, w := io.Pipe()
-		container.StreamLogs(w)
+		container.StreamLogs(io.MultiWriter(os.Stdout, w))
 		connector.FeedLog(r, lib.LogEntry{
 			ProjectID: env[BazookaEnvProjectID],
 			JobID:     env[BazookaEnvJobID],
@@ -65,6 +65,17 @@ func main() {
 			Image:     image,
 		})
 	}
+
+	//redirect the log to mongo
+	func() {
+		r, w := io.Pipe()
+		log.SetOutput(io.MultiWriter(os.Stdout, w))
+		connector.FeedLog(r, lib.LogEntry{
+			ProjectID: env[BazookaEnvProjectID],
+			JobID:     env[BazookaEnvJobID],
+			Image:     "bazooka/orchestration",
+		})
+	}()
 
 	checkoutFolder := fmt.Sprintf(CheckoutFolderPattern, env[BazookaEnvHome])
 	metaFolder := fmt.Sprintf(MetaFolderPattern, env[BazookaEnvHome])
@@ -79,7 +90,7 @@ func main() {
 			Env:         env,
 		},
 	}
-	if err := f.Fetch(logContainer); err != nil {
+	if err := f.Fetch(containerLogger); err != nil {
 		connector.FinishJob(env[BazookaEnvJobID], lib.JOB_ERRORED, time.Now())
 		log.Fatal(err)
 	}
@@ -93,7 +104,7 @@ func main() {
 			Env:            env,
 		},
 	}
-	if err := p.Parse(logContainer); err != nil {
+	if err := p.Parse(containerLogger); err != nil {
 		connector.FinishJob(env[BazookaEnvJobID], lib.JOB_ERRORED, time.Now())
 		log.Fatal(err)
 	}
@@ -116,7 +127,7 @@ func main() {
 		Env:         env,
 		Mongo:       connector,
 	}
-	success, err := r.Run(logContainer)
+	success, err := r.Run(containerLogger)
 	if err != nil {
 		connector.FinishJob(env[BazookaEnvJobID], lib.JOB_ERRORED, time.Now())
 		log.Fatal(err)
