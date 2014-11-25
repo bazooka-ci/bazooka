@@ -4,7 +4,7 @@ e.g. : BZK_URI=http://192.168.59.103:3000
 # Create a Project
 
 ```
-> bzk project create --name testBuild --scm-uri git@bitbucket.org:bywan/bazooka-lang-example.git
+> bzk project create <name> <scm> <scm_url>
 PROJECT ID                 NAME           SCM TYPE       SCM URI
 546b1f2be0973d0001000001   testBuild2     git            git@bitbucket.org:bywan/bazooka-lang-example.git
 ```
@@ -21,11 +21,11 @@ PROJECT ID                 NAME           SCM TYPE       SCM URI
 # Start a Job
 
 ```
-bzk job start --project-id 5463801acc60e30001000001 --scm-ref golang
+bzk job start <project_id> <scm_ref>
 ```
 
-or, set BZK_PROJECT_ID to the ID of the project and run
+# List variants for a job
 
 ```
-bzk job start --scm-ref golang
+bzk variant list <project_id> <job_id>
 ```

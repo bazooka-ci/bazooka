@@ -44,23 +44,13 @@ func startJobCommand() cli.Command {
 				Usage:  "URI for the bazooka server",
 				EnvVar: "BZK_URI",
 			},
-			cli.StringFlag{
-				Name:   "project-id",
-				Usage:  "ID of the project to build",
-				EnvVar: "BZK_PROJECT_ID",
-			},
-			cli.StringFlag{
-				Name:  "scm-ref",
-				Value: "master",
-				Usage: "SCM Reference to build",
-			},
 		},
 		Action: func(c *cli.Context) {
 			client, err := NewClient(c.String("bazooka-uri"))
 			if err != nil {
 				log.Fatal(err)
 			}
-			res, err := client.StartJob(c.String("project-id"), c.String("scm-ref"))
+			res, err := client.StartJob(c.Args()[0], c.Args()[1])
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -83,18 +73,13 @@ func listJobsCommand() cli.Command {
 				Usage:  "URI for the bazooka server",
 				EnvVar: "BZK_URI",
 			},
-			cli.StringFlag{
-				Name:   "project-id",
-				Usage:  "ID of the project to build",
-				EnvVar: "BZK_PROJECT_ID",
-			},
 		},
 		Action: func(c *cli.Context) {
 			client, err := NewClient(c.String("bazooka-uri"))
 			if err != nil {
 				log.Fatal(err)
 			}
-			res, err := client.ListJobs(c.String("project-id"))
+			res, err := client.ListJobs(c.Args()[0])
 			if err != nil {
 				log.Fatal(err)
 			}
