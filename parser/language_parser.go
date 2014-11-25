@@ -38,15 +38,13 @@ func (p *LanguageParser) Parse() error {
 		return err
 	}
 
-	container.Logs("AAA")
-	container.Wait()
+	container.Logs(p.Image)
 
-	details, err := container.Inspect()
-
+	exitCode, err := container.Wait()
 	if err != nil {
 		return err
 	}
-	if details.State.ExitCode != 0 {
+	if exitCode != 0 {
 		return fmt.Errorf("Error during execution of Language Parser container %s/parser\n Check Docker container logs, id is %s\n", p.Image, container.ID())
 	}
 
