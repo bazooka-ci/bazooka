@@ -21,7 +21,7 @@ type FetchOptions struct {
 	Env         map[string]string
 }
 
-func (f *SCMFetcher) Fetch() error {
+func (f *SCMFetcher) Fetch(logger Logger) error {
 
 	log.Printf("Fetching SCM From Source Repo %s\n", f.Options.URL)
 
@@ -49,6 +49,7 @@ func (f *SCMFetcher) Fetch() error {
 	}
 
 	container.Logs(image)
+	logger(image, "", container)
 
 	exitCode, err := container.Wait()
 	if err != nil {

@@ -40,3 +40,31 @@ func listVariantsCommand() cli.Command {
 		},
 	}
 }
+
+func variantLogCommand() cli.Command {
+	return cli.Command{
+		Name:  "log",
+		Usage: "print the variant's log",
+		Flags: []cli.Flag{
+			cli.StringFlag{
+				Name:   "bazooka-uri",
+				Value:  "http://localhost:3000",
+				Usage:  "URI for the bazooka server",
+				EnvVar: "BZK_URI",
+			},
+		},
+		Action: func(c *cli.Context) {
+			client, err := NewClient(c.String("bazooka-uri"))
+			if err != nil {
+				log.Fatal(err)
+			}
+			res, err := client.VariantLog(c.Args()[0], c.Args()[1], c.Args()[2])
+			if err != nil {
+				log.Fatal(err)
+			}
+			for _, l := range res {
+				fmt.Printf("%s [%s] %s\n", l.Time.Format("2006/01/02 15:04:05"), l.Image, l.Message)
+			}
+		},
+	}
+}

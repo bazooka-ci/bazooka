@@ -17,11 +17,11 @@ func main() {
 		}, {
 			Name:        "job",
 			Usage:       "Actions on projects",
-			Subcommands: []cli.Command{startJobCommand(), listJobsCommand()},
+			Subcommands: []cli.Command{startJobCommand(), listJobsCommand(), jobLogCommand()},
 		}, {
 			Name:        "variant",
 			Usage:       "Actions on variants",
-			Subcommands: []cli.Command{listVariantsCommand()},
+			Subcommands: []cli.Command{listVariantsCommand(), variantLogCommand()},
 		},
 	}
 	app.Run(os.Args)

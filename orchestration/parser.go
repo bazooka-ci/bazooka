@@ -23,7 +23,7 @@ type ParseOptions struct {
 	Env            map[string]string
 }
 
-func (p *Parser) Parse() error {
+func (p *Parser) Parse(logger Logger) error {
 
 	log.Printf("Parsing Configuration from checked-out source %s\n", p.Options.InputFolder)
 	client, err := docker.NewDocker(DockerEndpoint)
@@ -42,6 +42,7 @@ func (p *Parser) Parse() error {
 	}
 
 	container.Logs(BazookaParseImage)
+	logger(BazookaParseImage, "", container)
 
 	exitCode, err := container.Wait()
 	if err != nil {
