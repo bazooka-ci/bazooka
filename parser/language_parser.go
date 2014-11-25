@@ -32,12 +32,17 @@ func (p *LanguageParser) Parse() error {
 			fmt.Sprintf("%s/work/:/bazooka-output", bazookaHome),
 			fmt.Sprintf("%s/meta/:/meta", bazookaHome),
 		},
+		Detach: true,
 	})
 	if err != nil {
 		return err
 	}
 
+	container.Logs("AAA")
+	container.Wait()
+
 	details, err := container.Inspect()
+
 	if err != nil {
 		return err
 	}
