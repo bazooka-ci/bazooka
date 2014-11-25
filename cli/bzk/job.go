@@ -104,10 +104,6 @@ func jobLogCommand() cli.Command {
 				Usage:  "URI for the bazooka server",
 				EnvVar: "BZK_URI",
 			},
-			cli.StringFlag{
-				Name:  "job-id",
-				Usage: "ID of the job",
-			},
 		},
 		Action: func(c *cli.Context) {
 			client, err := NewClient(c.String("bazooka-uri"))
