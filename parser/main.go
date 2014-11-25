@@ -109,14 +109,14 @@ func iterPermutations(perms []*Permutation, envMap map[string]string, config *li
 	if len(perms) == 0 {
 		//Flush file
 		newConfig := *config
-		newConfig.Env = flattenMap(envMap)
+		newConfig.Env = lib.FlattenEnvMap(envMap)
 		err := lib.CopyFile(fmt.Sprintf("%s/%s", MetaFolder, rootIndex), fmt.Sprintf("%s/%s%d", MetaFolder, rootIndex, permutationIndex))
 		if err != nil {
 			return err
 		}
 		var buffer bytes.Buffer
 		buffer.WriteString("env:\n")
-		for _, env := range flattenMap(envMap) {
+		for _, env := range lib.FlattenEnvMap(envMap) {
 			buffer.WriteString(fmt.Sprintf(" - %s\n", env))
 			if err != nil {
 				return err
@@ -139,14 +139,6 @@ func iterPermutations(perms []*Permutation, envMap map[string]string, config *li
 	return nil
 }
 
-func flattenMap(mapp map[string]string) []string {
-	res := []string{}
-	for key, value := range mapp {
-		res = append(res, fmt.Sprintf("%s=%s", key, value))
-	}
-	return res
-}
-
 func permut(envKeyMap map[string][]string) []*Permutation {
 	if len(envKeyMap) == 0 {
 		return nil
@@ -157,7 +149,7 @@ func permut(envKeyMap map[string][]string) []*Permutation {
 		break
 	}
 
-	lowerMap := copyMap(envKeyMap)
+	lowerMap := lib.CopyMap(envKeyMap)
 	delete(lowerMap, anyKey)
 
 	perms := []*Permutation{}
@@ -175,14 +167,6 @@ type Permutation struct {
 	EnvKey       string
 	EnvValue     string
 	Permutations []*Permutation
-}
-
-func copyMap(source map[string][]string) map[string][]string {
-	dst := make(map[string][]string)
-	for k, v := range source {
-		dst[k] = v
-	}
-	return dst
 }
 
 func getEnvMap(config *lib.Config) map[string][]string {
