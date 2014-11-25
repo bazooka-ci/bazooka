@@ -105,11 +105,6 @@ func jobLogCommand() cli.Command {
 				EnvVar: "BZK_URI",
 			},
 			cli.StringFlag{
-				Name:   "project-id",
-				Usage:  "ID of the project to build",
-				EnvVar: "BZK_PROJECT_ID",
-			},
-			cli.StringFlag{
 				Name:  "job-id",
 				Usage: "ID of the job",
 			},
@@ -119,7 +114,7 @@ func jobLogCommand() cli.Command {
 			if err != nil {
 				log.Fatal(err)
 			}
-			res, err := client.JobLog(c.String("project-id"), c.String("job-id"))
+			res, err := client.JobLog(c.Args()[0], c.Args()[1])
 			if err != nil {
 				log.Fatal(err)
 			}

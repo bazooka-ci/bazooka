@@ -52,26 +52,13 @@ func variantLogCommand() cli.Command {
 				Usage:  "URI for the bazooka server",
 				EnvVar: "BZK_URI",
 			},
-			cli.StringFlag{
-				Name:   "project-id",
-				Usage:  "ID of the project",
-				EnvVar: "BZK_PROJECT_ID",
-			},
-			cli.StringFlag{
-				Name:  "job-id",
-				Usage: "ID of the job",
-			},
-			cli.StringFlag{
-				Name:  "variant-id",
-				Usage: "ID of the variant",
-			},
 		},
 		Action: func(c *cli.Context) {
 			client, err := NewClient(c.String("bazooka-uri"))
 			if err != nil {
 				log.Fatal(err)
 			}
-			res, err := client.VariantLog(c.String("project-id"), c.String("job-id"), c.String("variant-id"))
+			res, err := client.VariantLog(c.Args()[0], c.Args()[1], c.Args()[2])
 			if err != nil {
 				log.Fatal(err)
 			}
