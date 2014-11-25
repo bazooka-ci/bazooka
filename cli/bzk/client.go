@@ -141,6 +141,27 @@ func (c *Client) StartJob(projectID, scmReference string) (*lib.Job, error) {
 	return createJob, nil
 }
 
+func (c *Client) JobLog(projectID, jobID string) ([]lib.LogEntry, error) {
+	resp, err := http.Get(fmt.Sprintf("%s/project/%s/job/%s/log", c.URL, projectID, jobID))
+	if err != nil {
+		return nil, err
+	}
+	err = c.checkResponse(resp)
+	if err != nil {
+		return nil, err
+	}
+	body, err := body(resp)
+	if err != nil {
+		return nil, err
+	}
+	var log []lib.LogEntry
+	err = json.Unmarshal(body, &log)
+	if err != nil {
+		return nil, err
+	}
+	return log, nil
+}
+
 func (c *Client) checkResponse(s *http.Response) error {
 	switch {
 	case s.StatusCode == http.StatusNotFound:

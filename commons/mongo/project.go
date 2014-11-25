@@ -1,7 +1,10 @@
 package mongo
 
 import (
+	"bufio"
 	"fmt"
+	"io"
+	"log"
 	"time"
 
 	lib "github.com/haklop/bazooka/commons"
@@ -70,6 +73,45 @@ func (c *MongoConnector) AddVariant(variant *lib.Variant) error {
 	err := c.database.C("variants").Insert(variant)
 
 	return err
+}
+
+func (c *MongoConnector) AddLog(log *lib.LogEntry) error {
+	i := bson.NewObjectId()
+	log.ID = i.Hex()
+
+	fmt.Printf("add log: %#v", log)
+	return c.database.C("logs").Insert(log)
+}
+
+func (c *MongoConnector) GetLog(like *lib.LogEntry) ([]lib.LogEntry, error) {
+	result := []lib.LogEntry{}
+	request := bson.M{}
+	if len(like.ProjectID) > 0 {
+		request["project_id"] = like.ProjectID
+	}
+	if len(like.JobID) > 0 {
+		request["job_id"] = like.JobID
+	}
+	if len(like.VariantID) > 0 {
+		request["variant_id"] = like.VariantID
+	}
+	err := c.database.C("logs").Find(request).All(&result)
+	fmt.Printf("retrieve projects: %#v", result)
+	return result, err
+}
+
+func (c *MongoConnector) FeedLog(r io.Reader, template lib.LogEntry) {
+	go func(reader io.Reader) {
+		scanner := bufio.NewScanner(reader)
+		for scanner.Scan() {
+			template.Message = scanner.Text()
+			template.Time = time.Now()
+			c.AddLog(&template)
+		}
+		if err := scanner.Err(); err != nil {
+			log.Println("There was an error with the scanner in attached container", err)
+		}
+	}(r)
 }
 
 func (c *MongoConnector) SetJobOrchestrationId(id string, orchestrationId string) error {

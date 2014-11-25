@@ -2,10 +2,12 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"time"
 
+	docker "github.com/bywan/go-dockercommand"
 	lib "github.com/haklop/bazooka/commons"
 	"github.com/haklop/bazooka/commons/mongo"
 )
@@ -31,6 +33,8 @@ const (
 	BazookaEnvMongoPort    = "MONGO_PORT_27017_TCP_PORT"
 )
 
+type Logger func(image string, variant string, container *docker.Container)
+
 func main() {
 	// TODO add validation
 	start := time.Now()
@@ -51,6 +55,17 @@ func main() {
 		BazookaEnvDockerSock:   os.Getenv(BazookaEnvDockerSock),
 	}
 
+	var logContainer Logger = func(image string, variantID string, container *docker.Container) {
+		r, w := io.Pipe()
+		container.StreamLogs(w)
+		connector.FeedLog(r, lib.LogEntry{
+			ProjectID: env[BazookaEnvProjectID],
+			JobID:     env[BazookaEnvJobID],
+			VariantID: variantID,
+			Image:     image,
+		})
+	}
+
 	checkoutFolder := fmt.Sprintf(CheckoutFolderPattern, env[BazookaEnvHome])
 	metaFolder := fmt.Sprintf(MetaFolderPattern, env[BazookaEnvHome])
 	f := &SCMFetcher{
@@ -64,7 +79,7 @@ func main() {
 			Env:         env,
 		},
 	}
-	if err := f.Fetch(); err != nil {
+	if err := f.Fetch(logContainer); err != nil {
 		connector.FinishJob(env[BazookaEnvJobID], lib.JOB_ERRORED, time.Now())
 		log.Fatal(err)
 	}
@@ -78,7 +93,7 @@ func main() {
 			Env:            env,
 		},
 	}
-	if err := p.Parse(); err != nil {
+	if err := p.Parse(logContainer); err != nil {
 		connector.FinishJob(env[BazookaEnvJobID], lib.JOB_ERRORED, time.Now())
 		log.Fatal(err)
 	}
@@ -101,7 +116,7 @@ func main() {
 		Env:         env,
 		Mongo:       connector,
 	}
-	success, err := r.Run()
+	success, err := r.Run(logContainer)
 	if err != nil {
 		connector.FinishJob(env[BazookaEnvJobID], lib.JOB_ERRORED, time.Now())
 		log.Fatal(err)

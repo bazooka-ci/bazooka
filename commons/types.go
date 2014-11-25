@@ -43,6 +43,16 @@ type Job struct {
 	Status          JobStatus `bson:"status" json:"status"`
 }
 
+type LogEntry struct {
+	ID        string    `bson:"id" json:"id"`
+	Message   string    `bson:"msg" json:"msg"`
+	Time      time.Time `bson:"time" json:"time"`
+	ProjectID string    `bson:"project_id" json:"project_id"`
+	JobID     string    `bson:"job_id" json:"job_id"`
+	VariantID string    `bson:"variant_id" json:"variant_id"`
+	Image     string    `bson:"image" json:"image"`
+}
+
 type ScmFetcher struct {
 	Name        string `bson:"name" json:"name"`
 	Description string `bson:"description" json:"description"`

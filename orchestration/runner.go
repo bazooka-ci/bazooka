@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strconv"
 	"time"
 
 	docker "github.com/bywan/go-dockercommand"
@@ -16,19 +17,21 @@ type Runner struct {
 	BuildImages []BuiltImage
 	Env         map[string]string
 	Mongo       *mongo.MongoConnector
+	client      *docker.Docker
 }
 
-func (r *Runner) Run() (bool, error) {
+func (r *Runner) Run(logger Logger) (bool, error) {
 	client, err := docker.NewDocker(DockerEndpoint)
 	if err != nil {
 		return false, err
 	}
+	r.client = client
 
 	errChanRun := make(chan error)
 	successChanRun := make(chan bool)
 	remainingRuns := len(r.BuildImages)
 	for _, buildImage := range r.BuildImages {
-		go runContainer(client, buildImage, r.Env, r.Mongo, successChanRun, errChanRun)
+		go r.runContainer(logger, buildImage, r.Env, successChanRun, errChanRun)
 	}
 
 	success := false
@@ -50,7 +53,7 @@ func (r *Runner) Run() (bool, error) {
 	return success, nil
 }
 
-func runContainer(client *docker.Docker, buildImage BuiltImage, env map[string]string, mongo *mongo.MongoConnector, successChan chan bool, errChan chan error) {
+func (r *Runner) runContainer(logger Logger, buildImage BuiltImage, env map[string]string, successChan chan bool, errChan chan error) {
 	success := true
 	servicesFile := fmt.Sprintf("%s/work/%d/services", BazookaInput, buildImage.VariantID)
 
@@ -60,11 +63,11 @@ func runContainer(client *docker.Docker, buildImage BuiltImage, env map[string]s
 		Number:     buildImage.VariantID,
 		JobID:      env[BazookaEnvJobID],
 	}
-	mongo.AddVariant(variant)
+	r.Mongo.AddVariant(variant)
 
 	servicesList, err := listServices(servicesFile)
 	if err != nil {
-		err2 := mongo.FinishVariant(variant.ID, commons.JOB_ERRORED, time.Now())
+		err2 := r.Mongo.FinishVariant(variant.ID, commons.JOB_ERRORED, time.Now())
 		if err2 != nil {
 			errChan <- err2
 			return
@@ -78,13 +81,13 @@ func runContainer(client *docker.Docker, buildImage BuiltImage, env map[string]s
 	for _, service := range servicesList {
 		name := fmt.Sprintf("service-%s-%s-%d", env[BazookaEnvProjectID], env[BazookaEnvJobID], buildImage.VariantID)
 		containerLinks = append(containerLinks, fmt.Sprintf("%s:%s", name, service))
-		serviceContainer, err := client.Run(&docker.RunOptions{
+		serviceContainer, err := r.client.Run(&docker.RunOptions{
 			Name:   name,
 			Image:  service,
 			Detach: true,
 		})
 		if err != nil {
-			err2 := mongo.FinishVariant(variant.ID, commons.JOB_ERRORED, time.Now())
+			err2 := r.Mongo.FinishVariant(variant.ID, commons.JOB_ERRORED, time.Now())
 			if err2 != nil {
 				errChan <- err2
 				return
@@ -96,13 +99,13 @@ func runContainer(client *docker.Docker, buildImage BuiltImage, env map[string]s
 	}
 
 	// TODO link containers
-	container, err := client.Run(&docker.RunOptions{
+	container, err := r.client.Run(&docker.RunOptions{
 		Image:  buildImage.Image,
 		Links:  containerLinks,
 		Detach: true,
 	})
 	if err != nil {
-		err2 := mongo.FinishVariant(variant.ID, commons.JOB_ERRORED, time.Now())
+		err2 := r.Mongo.FinishVariant(variant.ID, commons.JOB_ERRORED, time.Now())
 		if err2 != nil {
 			errChan <- err2
 			return
@@ -112,10 +115,11 @@ func runContainer(client *docker.Docker, buildImage BuiltImage, env map[string]s
 	}
 
 	container.Logs(buildImage.Image)
+	logger(buildImage.Image, strconv.Itoa(buildImage.VariantID), container)
 
 	exitCode, err := container.Wait()
 	if err != nil {
-		err2 := mongo.FinishVariant(variant.ID, commons.JOB_ERRORED, time.Now())
+		err2 := r.Mongo.FinishVariant(variant.ID, commons.JOB_ERRORED, time.Now())
 		if err2 != nil {
 			errChan <- err2
 			return
@@ -125,7 +129,7 @@ func runContainer(client *docker.Docker, buildImage BuiltImage, env map[string]s
 	}
 	if exitCode != 0 {
 		if exitCode == 42 {
-			err2 := mongo.FinishVariant(variant.ID, commons.JOB_ERRORED, time.Now())
+			err2 := r.Mongo.FinishVariant(variant.ID, commons.JOB_ERRORED, time.Now())
 			if err2 != nil {
 				errChan <- err2
 				return
@@ -140,7 +144,7 @@ func runContainer(client *docker.Docker, buildImage BuiltImage, env map[string]s
 		RemoveVolumes: true,
 	})
 	if err != nil {
-		err2 := mongo.FinishVariant(variant.ID, commons.JOB_ERRORED, time.Now())
+		err2 := r.Mongo.FinishVariant(variant.ID, commons.JOB_ERRORED, time.Now())
 		if err2 != nil {
 			errChan <- err2
 			return
@@ -155,7 +159,7 @@ func runContainer(client *docker.Docker, buildImage BuiltImage, env map[string]s
 			RemoveVolumes: true,
 		})
 		if err != nil {
-			err2 := mongo.FinishVariant(variant.ID, commons.JOB_ERRORED, time.Now())
+			err2 := r.Mongo.FinishVariant(variant.ID, commons.JOB_ERRORED, time.Now())
 			if err2 != nil {
 				errChan <- err2
 				return
@@ -170,7 +174,7 @@ func runContainer(client *docker.Docker, buildImage BuiltImage, env map[string]s
 	} else {
 		status = commons.JOB_FAILED
 	}
-	err = mongo.FinishVariant(variant.ID, status, time.Now())
+	err = r.Mongo.FinishVariant(variant.ID, status, time.Now())
 	if err != nil {
 		errChan <- err
 		return

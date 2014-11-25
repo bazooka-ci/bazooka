@@ -107,3 +107,40 @@ func listJobsCommand() cli.Command {
 		},
 	}
 }
+
+func jobLogCommand() cli.Command {
+	return cli.Command{
+		Name:  "log",
+		Usage: "print the Job's log",
+		Flags: []cli.Flag{
+			cli.StringFlag{
+				Name:   "bazooka-uri",
+				Value:  "http://localhost:3000",
+				Usage:  "URI for the bazooka server",
+				EnvVar: "BZK_URI",
+			},
+			cli.StringFlag{
+				Name:   "project-id",
+				Usage:  "ID of the project to build",
+				EnvVar: "BZK_PROJECT_ID",
+			},
+			cli.StringFlag{
+				Name:  "job-id",
+				Usage: "ID of the job",
+			},
+		},
+		Action: func(c *cli.Context) {
+			client, err := NewClient(c.String("bazooka-uri"))
+			if err != nil {
+				log.Fatal(err)
+			}
+			res, err := client.JobLog(c.String("project-id"), c.String("job-id"))
+			if err != nil {
+				log.Fatal(err)
+			}
+			for _, l := range res {
+				fmt.Printf("%s [%s] %s\n", l.Time.Format("2006/01/02 15:04:05"), l.Image, l.Message)
+			}
+		},
+	}
+}
