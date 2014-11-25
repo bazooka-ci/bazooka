@@ -47,7 +47,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	for i, file := range files {
+	for _, file := range files {
 		config := &lib.Config{}
 		err = lib.Parse(file, config)
 		if err != nil {
@@ -55,7 +55,8 @@ func main() {
 		}
 
 		permutations := permut(getEnvMap(config))
-		err = iterPermutations(permutations, make(map[string]string), config, i)
+		permutationIndex = 0
+		err = iterPermutations(permutations, make(map[string]string), config, parseIndex(file))
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -71,7 +72,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	for i, file := range files {
+	for _, file := range files {
 		config := &lib.Config{}
 		err = lib.Parse(file, config)
 		if err != nil {
@@ -81,7 +82,7 @@ func main() {
 		g := &Generator{
 			Config:       config,
 			OutputFolder: OutputFolder,
-			Index:        i,
+			Index:        parseIndex(file),
 		}
 		err = g.GenerateDockerfile()
 		if err != nil {
@@ -91,13 +92,19 @@ func main() {
 
 }
 
-func iterPermutations(perms []*Permutation, envMap map[string]string, config *lib.Config, rootIndex int) error {
+func parseIndex(filePath string) string {
+	splits := strings.Split(filePath, "/")
+	file := splits[len(splits)-1]
+	return strings.Split(file, ".")[2]
+}
+
+func iterPermutations(perms []*Permutation, envMap map[string]string, config *lib.Config, rootIndex string) error {
 	if len(perms) == 0 {
 		//Flush file
 		permutationIndex++
 		newConfig := *config
 		newConfig.Env = flattenMap(envMap)
-		return lib.Flush(newConfig, fmt.Sprintf("%s/.bazooka.%d%d.yml", OutputFolder, rootIndex, permutationIndex))
+		return lib.Flush(newConfig, fmt.Sprintf("%s/.bazooka.%s%d.yml", OutputFolder, rootIndex, permutationIndex))
 	}
 	for _, perm := range perms {
 		envMap[perm.EnvKey] = perm.EnvValue
