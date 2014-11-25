@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"strconv"
 	"time"
 
 	docker "github.com/bywan/go-dockercommand"
@@ -115,7 +114,7 @@ func (r *Runner) runContainer(logger Logger, buildImage BuiltImage, env map[stri
 	}
 
 	container.Logs(buildImage.Image)
-	logger(buildImage.Image, strconv.Itoa(buildImage.VariantID), container)
+	logger(buildImage.Image, variant.ID, container)
 
 	exitCode, err := container.Wait()
 	if err != nil {
