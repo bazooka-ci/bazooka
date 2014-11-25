@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"log"
 	"os"
@@ -12,6 +13,7 @@ import (
 const (
 	SourceFolder      = "/bazooka"
 	OutputFolder      = "/bazooka-output"
+	MetaFolder        = "/meta"
 	BazookaConfigFile = ".bazooka.yml"
 	TravisConfigFile  = ".travis.yml"
 )
@@ -65,6 +67,11 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
+
+		err = os.RemoveAll(fmt.Sprintf("%s/%s", MetaFolder, permutationIndex))
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
 
 	files, err = lib.ListFilesWithPrefix(OutputFolder, ".bazooka")
@@ -101,10 +108,29 @@ func parseIndex(filePath string) string {
 func iterPermutations(perms []*Permutation, envMap map[string]string, config *lib.Config, rootIndex string) error {
 	if len(perms) == 0 {
 		//Flush file
-		permutationIndex++
 		newConfig := *config
 		newConfig.Env = flattenMap(envMap)
-		return lib.Flush(newConfig, fmt.Sprintf("%s/.bazooka.%s%d.yml", OutputFolder, rootIndex, permutationIndex))
+		err := lib.CopyFile(fmt.Sprintf("%s/%s", MetaFolder, rootIndex), fmt.Sprintf("%s/%s%d", MetaFolder, rootIndex, permutationIndex))
+		if err != nil {
+			return err
+		}
+		var buffer bytes.Buffer
+		buffer.WriteString("env:\n")
+		for _, env := range flattenMap(envMap) {
+			buffer.WriteString(fmt.Sprintf(" - %s\n", env))
+			if err != nil {
+				return err
+			}
+		}
+		err = lib.AppendToFile(fmt.Sprintf("%s/%s%d", MetaFolder, rootIndex, permutationIndex), buffer.String(), 0755)
+		if err != nil {
+			return err
+		}
+		err = lib.Flush(newConfig, fmt.Sprintf("%s/.bazooka.%s%d.yml", OutputFolder, rootIndex, permutationIndex))
+		if err != nil {
+			return err
+		}
+		permutationIndex++
 	}
 	for _, perm := range perms {
 		envMap[perm.EnvKey] = perm.EnvValue

@@ -20,6 +20,7 @@ type ParseOptions struct {
 	OutputFolder   string
 	DockerSock     string
 	HostBaseFolder string
+	MetaFolder     string
 	Env            map[string]string
 }
 
@@ -33,7 +34,10 @@ func (p *Parser) Parse(logger Logger) error {
 	container, err := client.Run(&docker.RunOptions{
 		Image: BazookaParseImage,
 		Env:   p.Options.Env,
-		VolumeBinds: []string{fmt.Sprintf("%s:/bazooka", p.Options.InputFolder), fmt.Sprintf("%s:/bazooka-output", p.Options.OutputFolder),
+		VolumeBinds: []string{
+			fmt.Sprintf("%s:/bazooka", p.Options.InputFolder),
+			fmt.Sprintf("%s:/meta", p.Options.MetaFolder),
+			fmt.Sprintf("%s:/bazooka-output", p.Options.OutputFolder),
 			fmt.Sprintf("%s:/docker.sock", p.Options.DockerSock)},
 		Detach: true,
 	})
