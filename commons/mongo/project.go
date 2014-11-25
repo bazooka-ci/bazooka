@@ -82,7 +82,14 @@ func (c *MongoConnector) AddLog(log *lib.LogEntry) error {
 	return c.database.C("logs").Insert(log)
 }
 
-func (c *MongoConnector) GetLog(like *lib.LogEntry) ([]lib.LogEntry, error) {
+type LogExample struct {
+	ProjectID string
+	JobID     string
+	VariantID string
+	Images    []string
+}
+
+func (c *MongoConnector) GetLog(like *LogExample) ([]lib.LogEntry, error) {
 	result := []lib.LogEntry{}
 	request := bson.M{}
 	if len(like.ProjectID) > 0 {
@@ -93,6 +100,12 @@ func (c *MongoConnector) GetLog(like *lib.LogEntry) ([]lib.LogEntry, error) {
 	}
 	if len(like.VariantID) > 0 {
 		request["variant_id"] = like.VariantID
+	}
+
+	if len(like.Images) > 0 {
+		request["image"] = bson.M{
+			"$in": like.Images,
+		}
 	}
 	err := c.database.C("logs").Find(request).All(&result)
 	fmt.Printf("retrieve projects: %#v", result)

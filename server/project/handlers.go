@@ -44,6 +44,7 @@ func (p *Handlers) SetHandlers(r *mux.Router, serverContext context.Context) {
 	r.HandleFunc("/{id}/job/{job_id}/log", p.getJobLog).Methods("GET")
 	r.HandleFunc("/{id}/job/{job_id}/variant", p.getVariants).Methods("GET")
 	r.HandleFunc("/{id}/job/{job_id}/variant/{variant_id}", p.getVariant).Methods("GET")
+	r.HandleFunc("/{id}/job/{job_id}/variant/{variant_id}/log", p.getVariantLog).Methods("GET")
 }
 
 func (p *Handlers) createProject(res http.ResponseWriter, req *http.Request) {

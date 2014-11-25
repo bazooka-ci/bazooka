@@ -21,7 +21,7 @@ func main() {
 		}, {
 			Name:        "variant",
 			Usage:       "Actions on variants",
-			Subcommands: []cli.Command{listVariantsCommand()},
+			Subcommands: []cli.Command{listVariantsCommand(), variantLogCommand()},
 		},
 	}
 	app.Run(os.Args)
