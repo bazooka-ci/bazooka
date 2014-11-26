@@ -135,6 +135,8 @@ func iterPermutations(perms []*Permutation, envMap map[string]string, config *li
 		if err != nil {
 			return err
 		}
+
+		permutationIndex++
 	}
 	for _, perm := range perms {
 		envMap[perm.EnvKey] = perm.EnvValue
