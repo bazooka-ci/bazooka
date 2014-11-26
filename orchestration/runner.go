@@ -33,23 +33,24 @@ func (r *Runner) Run(logger Logger) (bool, error) {
 		go r.runContainer(logger, buildImage, r.Env, successChanRun, errChanRun)
 	}
 
-	success := false
+	success := true
+	var lastError error
 	for {
 		select {
 		case result := <-successChanRun:
-			success = success || result
-			remainingRuns--
+			success = success && result
 		case err := <-errChanRun:
-			return false, err
+			lastError = err
 		}
 
+		remainingRuns--
 		if remainingRuns == 0 {
 			break
 		}
 	}
 
 	log.Printf("Dockerfiles builds finished\n")
-	return success, nil
+	return success, lastError
 }
 
 func (r *Runner) runContainer(logger Logger, buildImage BuiltImage, env map[string]string, successChan chan bool, errChan chan error) {
