@@ -26,13 +26,9 @@ func (g *Generator) GenerateDockerfile() error {
 
 	buffer.WriteString(fmt.Sprintf("FROM %s\n\n", g.Config.FromImage))
 
-	for _, env := range g.Config.Env {
-		envSplit := strings.Split(env, "=")
-		buffer.WriteString(fmt.Sprintf("ENV %s %s\n", envSplit[0], envSplit[1]))
-	}
-
-	buffer.WriteString("ADD . $BZK_BUILD_DIR\n\n")
-	buffer.WriteString("RUN chmod +x $BZK_BUILD_DIR/bazooka_run.sh\n\n")
+	envMap := getEnvMap(g.Config)
+	buffer.WriteString(fmt.Sprintf("ADD . %s\n\n", envMap["BZK_BUILD_DIR"][0]))
+	buffer.WriteString(fmt.Sprintf("RUN chmod +x %s/bazooka_run.sh\n\n", envMap["BZK_BUILD_DIR"][0]))
 
 	type buildPhase struct {
 		name      string
@@ -148,11 +144,16 @@ func (g *Generator) GenerateDockerfile() error {
 
 	for _, phase := range phases {
 		if len(phase.commands) != 0 {
-			buffer.WriteString(fmt.Sprintf("RUN chmod +x $BZK_BUILD_DIR/bazooka_%s.sh\n\n", phase.name))
+			buffer.WriteString(fmt.Sprintf("RUN chmod +x %s/bazooka_%s.sh\n\n", envMap["BZK_BUILD_DIR"][0], phase.name))
 		}
 	}
 
-	buffer.WriteString("WORKDIR $BZK_BUILD_DIR\n\n")
+	for _, env := range g.Config.Env {
+		envSplit := strings.Split(env, "=")
+		buffer.WriteString(fmt.Sprintf("ENV %s %s\n", envSplit[0], envSplit[1]))
+	}
+
+	buffer.WriteString(fmt.Sprintf("WORKDIR %s\n\n", envMap["BZK_BUILD_DIR"][0]))
 
 	buffer.WriteString("CMD ./bazooka_run.sh\n")
 
