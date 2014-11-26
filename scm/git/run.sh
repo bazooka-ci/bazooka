@@ -9,7 +9,7 @@ function extract_meta {
   message=$(git --no-pager log --format=%B -n 1 | head -n 1)
 
   echo "reference: $BZK_SCM_REFERENCE"  > /meta/scm
-  echo "sha1: $sha1     "          >> /meta/scm
+  echo "sha1: $sha1     "               >> /meta/scm
   echo "author:"                        >> /meta/scm
   echo "  name: $author_name"           >> /meta/scm
   echo "  email: $author_email"         >> /meta/scm
