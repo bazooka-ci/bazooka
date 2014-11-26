@@ -25,13 +25,13 @@ type StartJob struct {
 	ScmReference string `json:"reference"`
 }
 
-type JobStatus uint8
+type JobStatus string
 
 const (
-	JOB_SUCCESS JobStatus = iota + 1
-	JOB_FAILED
-	JOB_ERRORED
-	JOB_RUNNING
+	JOB_SUCCESS JobStatus = "SUCCESS"
+	JOB_FAILED            = "FAILED"
+	JOB_ERRORED           = "ERRORED"
+	JOB_RUNNING           = "RUNNING"
 )
 
 type Job struct {
