@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/haklop/bazooka/commons/matrix"
+
 	bazooka "github.com/haklop/bazooka/commons"
 )
 
@@ -13,6 +15,7 @@ const (
 	MetaFolder        = "/meta"
 	BazookaConfigFile = ".bazooka.yml"
 	TravisConfigFile  = ".travis.yml"
+	Jdk               = "jdk"
 )
 
 func main() {
@@ -31,20 +34,20 @@ func main() {
 		log.Fatal(err)
 	}
 
+	mx := matrix.Matrix{
+		Jdk: conf.JdkVersions,
+	}
+
 	if len(conf.JdkVersions) == 0 {
-		err = manageJdkVersion(0, conf, "oraclejdk8", buildTool)
-		if err != nil {
+		mx[Jdk] = []string{"oraclejdk8"}
+
+	}
+
+	matrix.IterAll(mx, func(permutation map[string]string, counter string) {
+		if err := manageJdkVersion(counter, conf, permutation[Jdk], buildTool); err != nil {
 			log.Fatal(err)
 		}
-	} else {
-		for i, version := range conf.JdkVersions {
-			vconf := *conf
-			err = manageJdkVersion(i, &vconf, version, buildTool)
-			if err != nil {
-				log.Fatal(err)
-			}
-		}
-	}
+	})
 }
 
 func detectBuildTool(source string) (string, error) {
@@ -73,7 +76,7 @@ func detectBuildTool(source string) (string, error) {
 	return "ant", nil
 }
 
-func manageJdkVersion(i int, conf *ConfigJava, version, buildTool string) error {
+func manageJdkVersion(counter string, conf *ConfigJava, version, buildTool string) error {
 	conf.JdkVersions = []string{}
 	setDefaultInstall(conf, buildTool)
 	setDefaultScript(conf, buildTool)
@@ -82,12 +85,12 @@ func manageJdkVersion(i int, conf *ConfigJava, version, buildTool string) error 
 	if err != nil {
 		return err
 	}
-	err = bazooka.AppendToFile(fmt.Sprintf("%s/%d", MetaFolder, i), fmt.Sprintf("jdk: %s\n", version), 0644)
+	err = bazooka.AppendToFile(fmt.Sprintf("%s/%s", MetaFolder, counter), fmt.Sprintf("%s: %s\n", Jdk, version), 0644)
 	if err != nil {
 		return err
 	}
 
-	return bazooka.Flush(conf, fmt.Sprintf("%s/.bazooka.%d.yml", OutputFolder, i))
+	return bazooka.Flush(conf, fmt.Sprintf("%s/.bazooka.%s.yml", OutputFolder, counter))
 }
 
 func setDefaultInstall(conf *ConfigJava, buildTool string) {

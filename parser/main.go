@@ -7,6 +7,8 @@ import (
 	"os"
 	"strings"
 
+	"github.com/haklop/bazooka/commons/matrix"
+
 	lib "github.com/haklop/bazooka/commons"
 )
 
@@ -50,123 +52,89 @@ func main() {
 	}
 
 	for _, file := range files {
+		rootCounter := parseCounter(file)
 		config := &lib.Config{}
 		err = lib.Parse(file, config)
 		if err != nil {
-			log.Fatal(err)
+			log.Fatal(fmt.Errorf("Error while parsing config file %s: %v", file, err))
 		}
+		mx := matrix.Matrix(getEnvMap(config))
 
-		permutations := permut(getEnvMap(config))
-		permutationIndex = 0
-		err = iterPermutations(permutations, make(map[string]string), config, parseIndex(file))
-		if err != nil {
-			log.Fatal(err)
-		}
+		matrix.IterAll(mx, func(permutation map[string]string, counter string) {
+			if err := handlePermutation(permutation, config, counter, rootCounter); err != nil {
+				log.Fatal(fmt.Errorf("Error while generating the permutations: %v", err))
+			}
+		})
 
 		err = os.Remove(file)
 		if err != nil {
-			log.Fatal(err)
+			log.Fatal(fmt.Errorf("Error while removing file %s: %v", file, err))
 		}
 
-		err = os.RemoveAll(fmt.Sprintf("%s/%s", MetaFolder, permutationIndex))
+		err = os.Remove(fmt.Sprintf("%s/%s", MetaFolder, rootCounter))
 		if err != nil {
-			log.Fatal(err)
+			log.Fatal(fmt.Errorf("Error while removing meta folders: %v", err))
 		}
 	}
 
 	files, err = lib.ListFilesWithPrefix(OutputFolder, ".bazooka")
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal(fmt.Errorf("Error while listing .bazooka* files: %v", err))
 	}
 
 	for _, file := range files {
 		config := &lib.Config{}
 		err = lib.Parse(file, config)
 		if err != nil {
-			log.Fatal(err)
+			log.Fatal(fmt.Errorf("Error while parsing config file %s: %v", file, err))
 		}
 
 		g := &Generator{
 			Config:       config,
 			OutputFolder: OutputFolder,
-			Index:        parseIndex(file),
+			Index:        parseCounter(file),
 		}
 		err = g.GenerateDockerfile()
 		if err != nil {
-			log.Fatal(err)
+			fmt.Errorf("Error while generating a dockerfile: %v", err)
 		}
 	}
 
 }
 
-func parseIndex(filePath string) string {
+func parseCounter(filePath string) string {
 	splits := strings.Split(filePath, "/")
 	file := splits[len(splits)-1]
 	return strings.Split(file, ".")[2]
 }
 
-func iterPermutations(perms []*Permutation, envMap map[string]string, config *lib.Config, rootIndex string) error {
-	if len(perms) == 0 {
-		//Flush file
-		newConfig := *config
-		newConfig.Env = lib.FlattenEnvMap(envMap)
-		err := lib.CopyFile(fmt.Sprintf("%s/%s", MetaFolder, rootIndex), fmt.Sprintf("%s/%s%d", MetaFolder, rootIndex, permutationIndex))
-		if err != nil {
-			return err
-		}
-		var buffer bytes.Buffer
-		buffer.WriteString("env:\n")
-		for _, env := range lib.FlattenEnvMap(envMap) {
-			buffer.WriteString(fmt.Sprintf(" - %s\n", env))
-			if err != nil {
-				return err
-			}
-		}
-		err = lib.AppendToFile(fmt.Sprintf("%s/%s%d", MetaFolder, rootIndex, permutationIndex), buffer.String(), 0755)
-		if err != nil {
-			return err
-		}
-		err = lib.Flush(newConfig, fmt.Sprintf("%s/.bazooka.%s%d.yml", OutputFolder, rootIndex, permutationIndex))
-		if err != nil {
-			return err
-		}
-		permutationIndex++
+func handlePermutation(envMap map[string]string, config *lib.Config, counter, rootCounter string) error {
+
+	//Flush file
+	newConfig := *config
+	newConfig.Env = lib.FlattenEnvMap(envMap)
+	err := lib.CopyFile(fmt.Sprintf("%s/%s", MetaFolder, rootCounter), fmt.Sprintf("%s/%s%s", MetaFolder, rootCounter, counter))
+	if err != nil {
+		return err
 	}
-	for _, perm := range perms {
-		envMap[perm.EnvKey] = perm.EnvValue
-		iterPermutations(perm.Permutations, envMap, config, rootIndex)
+	var buffer bytes.Buffer
+	buffer.WriteString("env:\n")
+	for _, env := range lib.FlattenEnvMap(envMap) {
+		buffer.WriteString(fmt.Sprintf(" - %s\n", env))
+		if err != nil {
+			return err
+		}
 	}
+	err = lib.AppendToFile(fmt.Sprintf("%s/%s%s", MetaFolder, rootCounter, counter), buffer.String(), 0755)
+	if err != nil {
+		return err
+	}
+	err = lib.Flush(newConfig, fmt.Sprintf("%s/.bazooka.%s%s.yml", OutputFolder, rootCounter, counter))
+	if err != nil {
+		return err
+	}
+
 	return nil
-}
-
-func permut(envKeyMap map[string][]string) []*Permutation {
-	if len(envKeyMap) == 0 {
-		return nil
-	}
-	var anyKey string
-	for key := range envKeyMap {
-		anyKey = key
-		break
-	}
-
-	lowerMap := lib.CopyMap(envKeyMap)
-	delete(lowerMap, anyKey)
-
-	perms := []*Permutation{}
-	for _, value := range envKeyMap[anyKey] {
-		perms = append(perms, &Permutation{
-			EnvKey:       anyKey,
-			EnvValue:     value,
-			Permutations: permut(lowerMap),
-		})
-	}
-	return perms
-}
-
-type Permutation struct {
-	EnvKey       string
-	EnvValue     string
-	Permutations []*Permutation
 }
 
 func getEnvMap(config *lib.Config) map[string][]string {
