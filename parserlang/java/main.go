@@ -10,6 +10,7 @@ import (
 const (
 	SourceFolder      = "/bazooka"
 	OutputFolder      = "/bazooka-output"
+	MetaFolder        = "/meta"
 	BazookaConfigFile = ".bazooka.yml"
 	TravisConfigFile  = ".travis.yml"
 )
@@ -81,6 +82,11 @@ func manageJdkVersion(i int, conf *ConfigJava, version, buildTool string) error 
 	if err != nil {
 		return err
 	}
+	err = bazooka.AppendToFile(fmt.Sprintf("%s/%d", MetaFolder, i), fmt.Sprintf("jdk: %s\n", version), 0644)
+	if err != nil {
+		return err
+	}
+
 	return bazooka.Flush(conf, fmt.Sprintf("%s/.bazooka.%d.yml", OutputFolder, i))
 }
 
