@@ -6,7 +6,6 @@ import (
 	"io"
 	"log"
 	"os"
-	"strings"
 
 	bazooka "github.com/haklop/bazooka/commons"
 )
@@ -70,7 +69,7 @@ func manageGoVersion(i int, conf *ConfigGolang, version string) error {
 }
 
 func setGodir(conf *ConfigGolang) {
-	env := getEnvMap(conf)
+	env := bazooka.GetEnvMap(conf.Env)
 
 	godirExist, err := bazooka.FileExists("/bazooka/.godir")
 	if err != nil {
@@ -103,7 +102,7 @@ func setGodir(conf *ConfigGolang) {
 		env["BZK_BUILD_DIR"] = "/go/src/app"
 	}
 
-	conf.Env = flattenMap(env)
+	conf.Env = bazooka.FlattenEnvMap(env)
 }
 
 func setDefaultInstall(conf *ConfigGolang) {
@@ -140,21 +139,4 @@ func resolveGoImage(version string) (string, error) {
 		return val, nil
 	}
 	return "", fmt.Errorf("Unable to find Bazooka Docker Image for Go Runnner %s\n", version)
-}
-
-func getEnvMap(config *ConfigGolang) map[string]string {
-	envKeyMap := make(map[string]string)
-	for _, env := range config.Env {
-		envSplit := strings.Split(env, "=")
-		envKeyMap[envSplit[0]] = envSplit[1]
-	}
-	return envKeyMap
-}
-
-func flattenMap(mapp map[string]string) []string {
-	res := []string{}
-	for key, value := range mapp {
-		res = append(res, fmt.Sprintf("%s=%s", key, value))
-	}
-	return res
 }
