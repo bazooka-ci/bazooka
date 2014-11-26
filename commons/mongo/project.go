@@ -54,7 +54,7 @@ func (c *MongoConnector) AddProject(project *lib.Project) error {
 
 func (c *MongoConnector) AddJob(job *lib.Job) error {
 	fmt.Printf("add job: %#v", job)
-	if job.Status == 0 {
+	if len(job.Status) == 0 {
 		job.Status = lib.JOB_RUNNING
 	}
 	err := c.database.C("jobs").Insert(job)
@@ -67,7 +67,7 @@ func (c *MongoConnector) AddVariant(variant *lib.Variant) error {
 	variant.ID = i.Hex()
 
 	fmt.Printf("add variant: %#v", variant)
-	if variant.Status == 0 {
+	if len(variant.Status) == 0 {
 		variant.Status = lib.JOB_RUNNING
 	}
 	err := c.database.C("variants").Insert(variant)
