@@ -13,6 +13,14 @@ const (
 	travisConfigFile  = ".travis.yml"
 )
 
+func FlattenEnvMap(mapp map[string]string) []string {
+	res := []string{}
+	for key, value := range mapp {
+		res = append(res, fmt.Sprintf("%s=%s", key, value))
+	}
+	return res
+}
+
 func ResolveConfigFile(source string) (string, error) {
 	bazookaPath := fmt.Sprintf("%s/%s", source, bazookaConfigFile)
 	exist, err := FileExists(bazookaPath)

@@ -101,6 +101,7 @@ func main() {
 			OutputFolder:   fmt.Sprintf(WorkdirFolderPattern, env[BazookaEnvHome]),
 			DockerSock:     env[BazookaEnvDockerSock],
 			HostBaseFolder: checkoutFolder,
+			MetaFolder:     metaFolder,
 			Env:            env,
 		},
 	}
