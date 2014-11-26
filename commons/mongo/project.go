@@ -140,7 +140,7 @@ func (c *MongoConnector) SetJobOrchestrationId(id string, orchestrationId string
 }
 
 func (c *MongoConnector) FinishJob(id string, status lib.JobStatus, completed time.Time) error {
-	fmt.Printf("finish job: %v with status %v", id, status)
+	fmt.Printf("finish job: %v with status %v\n", id, status)
 	selector := bson.M{
 		"id": id,
 	}
@@ -156,7 +156,7 @@ func (c *MongoConnector) FinishJob(id string, status lib.JobStatus, completed ti
 }
 
 func (c *MongoConnector) FinishVariant(id string, status lib.JobStatus, completed time.Time) error {
-	fmt.Printf("finish variant: %v with status %v", id, status)
+	fmt.Printf("finish variant: %v with status %v\n", id, status)
 	selector := bson.M{
 		"id": id,
 	}
