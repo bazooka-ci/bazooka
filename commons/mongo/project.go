@@ -53,7 +53,11 @@ func (c *MongoConnector) AddProject(project *lib.Project) error {
 }
 
 func (c *MongoConnector) AddJob(job *lib.Job) error {
+	i := bson.NewObjectId()
+	job.ID = i.Hex()
+
 	fmt.Printf("add job: %#v", job)
+
 	if len(job.Status) == 0 {
 		job.Status = lib.JOB_RUNNING
 	}

@@ -5,11 +5,10 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/haklop/bazooka/commons/mongo"
+	"bitbucket.org/bywan/bazooka-command/server/context"
+
 	"github.com/gorilla/mux"
-	"github.com/haklop/bazooka/server/context"
-	"github.com/haklop/bazooka/server/fetcher"
-	"github.com/haklop/bazooka/server/project"
+	"github.com/haklop/bazooka/commons/mongo"
 )
 
 func main() {
@@ -23,7 +22,7 @@ func main() {
 	}
 
 	if len(env[context.BazookaEnvHome]) == 0 {
-		env[context.BazookaEnvHome] = "/bazooka"
+		env[BazookaEnvHome] = "/bazooka"
 	}
 
 	// Enable bazooka-server to be execute without running its own container
@@ -31,14 +30,14 @@ func main() {
 	if len(os.Getenv("DOCKER_HOST")) != 0 {
 		serverEndpoint = os.Getenv("DOCKER_HOST")
 	} else {
-		serverEndpoint = context.DockerEndpoint
+		serverEndpoint = DockerEndpoint
 	}
 
 	// Configure Mongo
 	connector := mongo.NewConnector()
 	defer connector.Close()
 
-	serverContext := context.Context{
+	p := Context{
 		Connector:      connector,
 		DockerEndpoint: serverEndpoint,
 		Env:            env,
@@ -47,13 +46,22 @@ func main() {
 	// Configure web server
 	r := mux.NewRouter()
 
-	projectRouter := r.PathPrefix("/project").Subrouter()
-	projectHandler := project.Handlers{}
-	projectHandler.SetHandlers(projectRouter, serverContext)
+	r.HandleFunc("/project", p.createProject).Methods("POST")
+	r.HandleFunc("/project", p.getProjects).Methods("GET")
+	r.HandleFunc("/project/{id}", p.getProject).Methods("GET")
+	r.HandleFunc("/project/{id}/job", p.startBuild).Methods("POST")
+	r.HandleFunc("/project/{id}/job", p.getJobs).Methods("GET")
 
-	fetcherRouter := r.PathPrefix("/fetcher").Subrouter()
-	fetcherHandler := fetcher.Handlers{}
-	fetcherHandler.SetHandlers(fetcherRouter, serverContext)
+	r.HandleFunc("/job/{job_id}", p.getJob).Methods("GET")
+	r.HandleFunc("/job/{job_id}/log", p.getJobLog).Methods("GET")
+	r.HandleFunc("/job/{job_id}/variant", p.getVariants).Methods("GET")
+
+	r.HandleFunc("/variant/{variant_id}", p.getVariant).Methods("GET")
+	r.HandleFunc("/variant/{variant_id}/log", p.getVariantLog).Methods("GET")
+
+	r.HandleFunc("/fetcher", p.createFetcher).Methods("POST")
+	r.HandleFunc("/fetcher", p.getFetchers).Methods("GET")
+	r.HandleFunc("/fetcher/{id}", p.getFetcher).Methods("GET")
 
 	http.Handle("/", r)
 	log.Fatal(http.ListenAndServe(":3000", nil))

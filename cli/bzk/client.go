@@ -21,7 +21,7 @@ func NewClient(endpoint string) (*Client, error) {
 }
 
 func (c *Client) ListProjects() ([]lib.Project, error) {
-	resp, err := http.Get(fmt.Sprintf("%s/project/", c.URL))
+	resp, err := http.Get(fmt.Sprintf("%s/project", c.URL))
 	if err != nil {
 		return nil, err
 	}
@@ -42,7 +42,7 @@ func (c *Client) ListProjects() ([]lib.Project, error) {
 }
 
 func (c *Client) ListJobs(projectID string) ([]lib.Job, error) {
-	resp, err := http.Get(fmt.Sprintf("%s/project/%s/job/", c.URL, projectID))
+	resp, err := http.Get(fmt.Sprintf("%s/project/%s/job", c.URL, projectID))
 	if err != nil {
 		return nil, err
 	}
@@ -62,8 +62,8 @@ func (c *Client) ListJobs(projectID string) ([]lib.Job, error) {
 	return jobs, nil
 }
 
-func (c *Client) ListVariants(projectID, jobID string) ([]lib.Variant, error) {
-	resp, err := http.Get(fmt.Sprintf("%s/project/%s/job/%s/variant", c.URL, projectID, jobID))
+func (c *Client) ListVariants(jobID string) ([]lib.Variant, error) {
+	resp, err := http.Get(fmt.Sprintf("%s/job/%s/variant", c.URL, jobID))
 	if err != nil {
 		return nil, err
 	}
@@ -93,7 +93,7 @@ func (c *Client) CreateProject(name, scm, scmUri string) (*lib.Project, error) {
 	if err != nil {
 		return nil, err
 	}
-	resp, err := http.Post(fmt.Sprintf("%s/project/", c.URL), "application/json", bytes.NewBuffer(p))
+	resp, err := http.Post(fmt.Sprintf("%s/project", c.URL), "application/json", bytes.NewBuffer(p))
 	if err != nil {
 		return nil, err
 	}
@@ -141,8 +141,8 @@ func (c *Client) StartJob(projectID, scmReference string) (*lib.Job, error) {
 	return createJob, nil
 }
 
-func (c *Client) JobLog(projectID, jobID string) ([]lib.LogEntry, error) {
-	resp, err := http.Get(fmt.Sprintf("%s/project/%s/job/%s/log", c.URL, projectID, jobID))
+func (c *Client) JobLog(jobID string) ([]lib.LogEntry, error) {
+	resp, err := http.Get(fmt.Sprintf("%s/job/%s/log", c.URL, jobID))
 	if err != nil {
 		return nil, err
 	}
@@ -162,8 +162,8 @@ func (c *Client) JobLog(projectID, jobID string) ([]lib.LogEntry, error) {
 	return log, nil
 }
 
-func (c *Client) VariantLog(projectID, jobID, variantID string) ([]lib.LogEntry, error) {
-	resp, err := http.Get(fmt.Sprintf("%s/project/%s/job/%s/variant/%v/log", c.URL, projectID, jobID, variantID))
+func (c *Client) VariantLog(variantID string) ([]lib.LogEntry, error) {
+	resp, err := http.Get(fmt.Sprintf("%s/variant/%v/log", c.URL, variantID))
 	if err != nil {
 		return nil, err
 	}

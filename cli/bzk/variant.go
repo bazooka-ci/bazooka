@@ -26,7 +26,7 @@ func listVariantsCommand() cli.Command {
 			if err != nil {
 				log.Fatal(err)
 			}
-			res, err := client.ListVariants(c.Args()[0], c.Args()[1])
+			res, err := client.ListVariants(c.Args()[0])
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -58,7 +58,7 @@ func variantLogCommand() cli.Command {
 			if err != nil {
 				log.Fatal(err)
 			}
-			res, err := client.VariantLog(c.Args()[0], c.Args()[1], c.Args()[2])
+			res, err := client.VariantLog(c.Args()[0])
 			if err != nil {
 				log.Fatal(err)
 			}
