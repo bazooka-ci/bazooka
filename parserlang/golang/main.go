@@ -69,7 +69,6 @@ func manageGoVersion(counter string, conf *ConfigGolang, version string) error {
 }
 
 func setGodir(conf *ConfigGolang) {
-	fmt.Println("Conf: %#v", conf)
 	env := bazooka.GetEnvMap(conf.Env)
 
 	godirExist, err := bazooka.FileExists("/bazooka/.godir")
