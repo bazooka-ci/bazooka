@@ -110,7 +110,7 @@ func jobLogCommand() cli.Command {
 			if err != nil {
 				log.Fatal(err)
 			}
-			res, err := client.JobLog(c.Args()[0], c.Args()[1])
+			res, err := client.JobLog(c.Args()[0])
 			if err != nil {
 				log.Fatal(err)
 			}

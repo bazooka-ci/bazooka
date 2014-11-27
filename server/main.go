@@ -5,25 +5,22 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/haklop/bazooka/commons/mongo"
 	"github.com/gorilla/mux"
-	"github.com/haklop/bazooka/server/context"
-	"github.com/haklop/bazooka/server/fetcher"
-	"github.com/haklop/bazooka/server/project"
+	"github.com/haklop/bazooka/commons/mongo"
 )
 
 func main() {
 	// Configure Bazooka
 	env := map[string]string{
-		context.BazookaEnvSCMKeyfile: os.Getenv(context.BazookaEnvSCMKeyfile),
-		context.BazookaEnvHome:       os.Getenv(context.BazookaEnvHome),
-		context.BazookaEnvDockerSock: os.Getenv(context.BazookaEnvDockerSock),
-		context.BazookaEnvMongoAddr:  os.Getenv(context.BazookaEnvMongoAddr),
-		context.BazookaEnvMongoPort:  os.Getenv(context.BazookaEnvMongoPort),
+		BazookaEnvSCMKeyfile: os.Getenv(BazookaEnvSCMKeyfile),
+		BazookaEnvHome:       os.Getenv(BazookaEnvHome),
+		BazookaEnvDockerSock: os.Getenv(BazookaEnvDockerSock),
+		BazookaEnvMongoAddr:  os.Getenv(BazookaEnvMongoAddr),
+		BazookaEnvMongoPort:  os.Getenv(BazookaEnvMongoPort),
 	}
 
-	if len(env[context.BazookaEnvHome]) == 0 {
-		env[context.BazookaEnvHome] = "/bazooka"
+	if len(env[BazookaEnvHome]) == 0 {
+		env[BazookaEnvHome] = "/bazooka"
 	}
 
 	// Enable bazooka-server to be execute without running its own container
@@ -31,14 +28,14 @@ func main() {
 	if len(os.Getenv("DOCKER_HOST")) != 0 {
 		serverEndpoint = os.Getenv("DOCKER_HOST")
 	} else {
-		serverEndpoint = context.DockerEndpoint
+		serverEndpoint = DockerEndpoint
 	}
 
 	// Configure Mongo
 	connector := mongo.NewConnector()
 	defer connector.Close()
 
-	serverContext := context.Context{
+	ctx := Context{
 		Connector:      connector,
 		DockerEndpoint: serverEndpoint,
 		Env:            env,
@@ -47,13 +44,22 @@ func main() {
 	// Configure web server
 	r := mux.NewRouter()
 
-	projectRouter := r.PathPrefix("/project").Subrouter()
-	projectHandler := project.Handlers{}
-	projectHandler.SetHandlers(projectRouter, serverContext)
+	r.HandleFunc("/project", ctx.createProject).Methods("POST")
+	r.HandleFunc("/project", ctx.getProjects).Methods("GET")
+	r.HandleFunc("/project/{id}", ctx.getProject).Methods("GET")
+	r.HandleFunc("/project/{id}/job", ctx.startBuild).Methods("POST")
+	r.HandleFunc("/project/{id}/job", ctx.getJobs).Methods("GET")
 
-	fetcherRouter := r.PathPrefix("/fetcher").Subrouter()
-	fetcherHandler := fetcher.Handlers{}
-	fetcherHandler.SetHandlers(fetcherRouter, serverContext)
+	r.HandleFunc("/job/{id}", ctx.getJob).Methods("GET")
+	r.HandleFunc("/job/{id}/log", ctx.getJobLog).Methods("GET")
+	r.HandleFunc("/job/{id}/variant", ctx.getVariants).Methods("GET")
+
+	r.HandleFunc("/variant/{id}", ctx.getVariant).Methods("GET")
+	r.HandleFunc("/variant/{id}/log", ctx.getVariantLog).Methods("GET")
+
+	r.HandleFunc("/fetcher", ctx.createFetcher).Methods("POST")
+	r.HandleFunc("/fetcher", ctx.getFetchers).Methods("GET")
+	r.HandleFunc("/fetcher/{id}", ctx.getFetcher).Methods("GET")
 
 	http.Handle("/", r)
 	log.Fatal(http.ListenAndServe(":3000", nil))
