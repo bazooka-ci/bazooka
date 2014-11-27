@@ -9,74 +9,69 @@ type Matrix map[string][]string
 
 type Iterator func(permutation map[string]string, counter string)
 
-func Iter(mx Matrix, it Iterator, vars ...string) {
-	iter(mx, it, map[string]string{}, []string{}, vars...)
+func (mx *Matrix) AddVar(name, value string) {
+	if vs, ok := (*mx)[name]; ok {
+		(*mx)[name] = append(vs, value)
+		return
+	}
+	(*mx)[name] = []string{value}
 }
 
-func IterAll(mx Matrix, it Iterator) {
-	keys := make([]string, 0, len(mx))
-	for key := range mx {
+func (mx *Matrix) Merge(with map[string][]string) {
+	for k, vs := range with {
+		for _, v := range vs {
+			mx.AddVar(k, v)
+		}
+	}
+}
+func (mx *Matrix) Iter(it Iterator, exclusions []*Matrix, vars ...string) {
+	mx.iter(it, map[string]string{}, exclusions, []string{}, vars...)
+}
+
+func (mx *Matrix) IterAll(it Iterator, exclusions []*Matrix) {
+	keys := make([]string, 0, len(*mx))
+	for key := range *mx {
 		keys = append(keys, key)
 	}
-	iter(mx, it, map[string]string{}, []string{}, keys...)
+	mx.iter(it, map[string]string{}, exclusions, []string{}, keys...)
 }
 
-func IsExcluded(item map[string]interface{}, exclusions []map[string]interface{}) bool {
-	for _, ex := range exclusions {
-		fmt.Printf("item: \n%+v\n exclusion:\n%+v\nResult: %t", item, ex, matches(item, ex))
-		if matches(item, ex) {
-			return true
-		}
-	}
-	return false
-}
+func isIn(needle *Matrix, haystack map[string]string) bool {
+	ammo := len(*needle)
+	for k, vs := range *needle {
+		if w, ok := haystack[k]; ok {
+			// the key also exists in the haystack
+			found := false
+			for _, v := range vs {
+				if v == w {
+					found = true
+					ammo--
+					break
+				}
+			}
 
-func matches(item, exclusion map[string]interface{}) bool {
-	for key, valueExcluded := range exclusion {
-		switch valueExcluded.(type) {
-		case []string:
-		case []interface{}:
-			fmt.Printf("[]string\n")
-			if !isIn(valueExcluded.([]string), item[key].([]string)) {
+			if !found {
 				return false
 			}
-		case string:
-			fmt.Printf("string\n")
-			if item[key] != valueExcluded {
-				return false
-			}
-		default:
-			fmt.Printf("value: %s\n", valueExcluded)
-			fmt.Printf("type: %T\n", valueExcluded)
+		} else {
 			return false
 		}
 	}
-	return true
+
+	return ammo == 0
 }
 
-// slice1 is included in slice2
-func isIn(slice1 []string, slice2 []string) bool {
-	for _, a := range slice1 {
-		if !contains(slice2, a) {
-			return false
-		}
-	}
-	return true
-}
-
-// item is in slice
-func contains(slice []string, item string) bool {
-	for _, a := range slice {
-		if a == item {
-			return true
-		}
-	}
-	return false
-}
-
-func iter(mx Matrix, it Iterator, permutation map[string]string, counter []string, vars ...string) {
+func (mx Matrix) iter(it Iterator, permutation map[string]string, exclusions []*Matrix, counter []string, vars ...string) {
 	if len(vars) == 0 {
-		//if no more variables, we reached a fixed permutation, call the iterator and return
+		// if no more variables, we reached a fixed permutation
+		//check if this permutation is in the exclusions list
+		for _, ex := range exclusions {
+			if isIn(ex, permutation) {
+				return
+			}
+		}
+
+		// call the iterator and return
 		it(permutation, strings.Join(counter, ""))
 		return
 	}
@@ -100,6 +95,6 @@ func iter(mx Matrix, it Iterator, permutation map[string]string, counter []strin
 		// set this variable counter by formatting the iteration index using the format computed above
 		counter[ci] = fmt.Sprintf(cf, i)
 		// recursively call _iter with a n-1 vars array (after removing self)
-		iter(mx, it, permutation, counter, vars[1:]...)
+		mx.iter(it, permutation, exclusions, counter, vars[1:]...)
 	}
 }
