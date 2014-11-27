@@ -33,6 +33,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	fmt.Printf("Parsed configuration: %+v\n", config)
 	image, err := resolveLanguageParser(config.Language)
 	if err != nil {
 		log.Fatal(err)

@@ -61,16 +61,21 @@ type ScmFetcher struct {
 }
 
 type Config struct {
-	Language      string   `yaml:"language"`
-	Setup         []string `yaml:"setup,omitempty"`
-	BeforeInstall []string `yaml:"before_install,omitempty"`
-	Install       []string `yaml:"install,omitempty"`
-	BeforeScript  []string `yaml:"before_script,omitempty"`
-	Script        []string `yaml:"script,omitempty"`
-	AfterScript   []string `yaml:"after_script,omitempty"`
-	AfterSuccess  []string `yaml:"after_success,omitempty"`
-	AfterFailure  []string `yaml:"after_failure,omitempty"`
-	Services      []string `yaml:"services,omitempty"`
-	Env           []string `yaml:"env,omitempty"`
-	FromImage     string   `yaml:"from"`
+	Language      string       `yaml:"language"`
+	Setup         []string     `yaml:"setup,omitempty"`
+	BeforeInstall []string     `yaml:"before_install,omitempty"`
+	Install       []string     `yaml:"install,omitempty"`
+	BeforeScript  []string     `yaml:"before_script,omitempty"`
+	Script        []string     `yaml:"script,omitempty"`
+	AfterScript   []string     `yaml:"after_script,omitempty"`
+	AfterSuccess  []string     `yaml:"after_success,omitempty"`
+	AfterFailure  []string     `yaml:"after_failure,omitempty"`
+	Services      []string     `yaml:"services,omitempty"`
+	Env           []string     `yaml:"env,omitempty"`
+	FromImage     string       `yaml:"from"`
+	Matrix        ConfigMatrix `yaml:"matrix,omitempty"`
+}
+
+type ConfigMatrix struct {
+	Exclude []interface{} `yaml:"exclude,omitempty"`
 }
