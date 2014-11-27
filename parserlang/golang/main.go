@@ -5,6 +5,8 @@ import (
 	"log"
 	"os"
 
+	"github.com/haklop/bazooka/commons/matrix"
+
 	bazooka "github.com/haklop/bazooka/commons"
 )
 
@@ -14,6 +16,7 @@ const (
 	MetaFolder        = "/meta"
 	BazookaConfigFile = ".bazooka.yml"
 	TravisConfigFile  = ".travis.yml"
+	Golang            = "golang"
 )
 
 func main() {
@@ -27,24 +30,22 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	mx := matrix.Matrix{
+		Golang: conf.GoVersions,
+	}
+
 	if len(conf.GoVersions) == 0 {
-		err = manageGoVersion(0, conf, "tip")
-		if err != nil {
+		mx[Golang] = []string{"tip"}
+	}
+	matrix.IterAll(mx, func(permutation map[string]string, counter string) {
+		if err := manageGoVersion(counter, conf, permutation[Golang]); err != nil {
 			log.Fatal(err)
 		}
-
-	} else {
-		for i, version := range conf.GoVersions {
-			vconf := *conf
-			err = manageGoVersion(i, &vconf, version)
-			if err != nil {
-				log.Fatal(err)
-			}
-		}
-	}
+	})
 }
 
-func manageGoVersion(i int, conf *ConfigGolang, version string) error {
+func manageGoVersion(counter string, conf *ConfigGolang, version string) error {
 	conf.GoVersions = []string{}
 	setSetupScript(conf)
 	setDefaultInstall(conf)
@@ -58,11 +59,11 @@ func manageGoVersion(i int, conf *ConfigGolang, version string) error {
 		return err
 	}
 
-	err = bazooka.AppendToFile(fmt.Sprintf("%s/%d", MetaFolder, i), fmt.Sprintf("golang: %s\n", version), 0644)
+	err = bazooka.AppendToFile(fmt.Sprintf("%s/%s", MetaFolder, counter), fmt.Sprintf("%s: %s\n", Golang, version), 0644)
 	if err != nil {
 		return err
 	}
-	return bazooka.Flush(conf, fmt.Sprintf("%s/.bazooka.%d.yml", OutputFolder, i))
+	return bazooka.Flush(conf, fmt.Sprintf("%s/.bazooka.%s.yml", OutputFolder, counter))
 }
 
 func setSetupScript(conf *ConfigGolang) {
