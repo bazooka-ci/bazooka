@@ -21,6 +21,54 @@ func IterAll(mx Matrix, it Iterator) {
 	iter(mx, it, map[string]string{}, []string{}, keys...)
 }
 
+func IsExcluded(item map[string]interface{}, exclusions []map[string]interface{}) bool {
+	for _, ex := range exclusions {
+		if matches(item, ex) {
+			return true
+		}
+	}
+	return false
+}
+
+func matches(item, exclusion map[string]interface{}) bool {
+	for key, valueExcluded := range exclusion {
+		switch valueExcluded.(type) {
+		case []string:
+			_, typeOK := item[key].([]string)
+			if !typeOK || !isIn(valueExcluded.([]string), item[key].([]string)) {
+				return false
+			}
+		case string:
+			if item[key] != valueExcluded {
+				return false
+			}
+		default:
+			return false
+		}
+	}
+	return true
+}
+
+// slice1 is included in slice2
+func isIn(slice1 []string, slice2 []string) bool {
+	for _, a := range slice1 {
+		if !contains(slice2, a) {
+			return false
+		}
+	}
+	return true
+}
+
+// item is in slice
+func contains(slice []string, item string) bool {
+	for _, a := range slice {
+		if a == item {
+			return true
+		}
+	}
+	return false
+}
+
 func iter(mx Matrix, it Iterator, permutation map[string]string, counter []string, vars ...string) {
 	if len(vars) == 0 {
 		//if no more variables, we reached a fixed permutation, call the iterator and return
