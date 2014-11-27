@@ -1,7 +1,9 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
+	"io"
 	"log"
 	"os"
 
@@ -27,6 +29,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	if len(conf.GoVersions) == 0 {
 		err = manageGoVersion(0, conf, "tip")
 		if err != nil {
@@ -46,7 +49,7 @@ func main() {
 
 func manageGoVersion(i int, conf *ConfigGolang, version string) error {
 	conf.GoVersions = []string{}
-	setSetupScript(conf)
+	setGodir(conf)
 	setDefaultInstall(conf)
 	err := setDefaultScript(conf)
 	if err != nil {
@@ -65,18 +68,41 @@ func manageGoVersion(i int, conf *ConfigGolang, version string) error {
 	return bazooka.Flush(conf, fmt.Sprintf("%s/.bazooka.%d.yml", OutputFolder, i))
 }
 
-func setSetupScript(conf *ConfigGolang) {
-	conf.Setup = []string{
-		"if [ -f /bazooka/.godir ]; then",
-		"  d=$(cat /bazooka/.godir)",
-		"  GODIR=/go/src/${d}",
-		"else",
-		"  GODIR=/go/src/app",
-		"fi",
-		"mkdir -p $GODIR",
-		"cp -r /bazooka/* $GODIR",
-		"cd $GODIR",
+func setGodir(conf *ConfigGolang) {
+	env := bazooka.GetEnvMap(conf.Env)
+
+	godirExist, err := bazooka.FileExists("/bazooka/.godir")
+	if err != nil {
+		log.Fatal(err)
 	}
+
+	if godirExist {
+		f, err := os.Open("/bazooka/.godir")
+		defer f.Close()
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		bf := bufio.NewReader(f)
+
+		// only read first line
+		content, isPrefix, err := bf.ReadLine()
+
+		if err == io.EOF {
+			env["BZK_BUILD_DIR"] = "/go/src/app"
+		} else if err != nil {
+			log.Fatal(err)
+		} else if isPrefix {
+			log.Fatal("Unexpected long line reading", f.Name())
+		} else {
+			env["BZK_BUILD_DIR"] = fmt.Sprintf("/go/src/%s", content)
+		}
+
+	} else {
+		env["BZK_BUILD_DIR"] = "/go/src/app"
+	}
+
+	conf.Env = bazooka.FlattenEnvMap(env)
 }
 
 func setDefaultInstall(conf *ConfigGolang) {

@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"strings"
 
 	yaml "gopkg.in/yaml.v2"
 )
@@ -19,6 +20,15 @@ func FlattenEnvMap(mapp map[string]string) []string {
 		res = append(res, fmt.Sprintf("%s=%s", key, value))
 	}
 	return res
+}
+
+func GetEnvMap(envArray []string) map[string]string {
+	envKeyMap := make(map[string]string)
+	for _, env := range envArray {
+		envSplit := strings.Split(env, "=")
+		envKeyMap[envSplit[0]] = envSplit[1]
+	}
+	return envKeyMap
 }
 
 func ResolveConfigFile(source string) (string, error) {

@@ -109,6 +109,11 @@ func iterPermutations(perms []*Permutation, envMap map[string]string, config *li
 	if len(perms) == 0 {
 		//Flush file
 		newConfig := *config
+
+		if _, ok := envMap["BZK_BUILD_DIR"]; !ok {
+			envMap["BZK_BUILD_DIR"] = "/bazooka"
+		}
+
 		newConfig.Env = lib.FlattenEnvMap(envMap)
 		err := lib.CopyFile(fmt.Sprintf("%s/%s", MetaFolder, rootIndex), fmt.Sprintf("%s/%s%d", MetaFolder, rootIndex, permutationIndex))
 		if err != nil {
@@ -130,6 +135,7 @@ func iterPermutations(perms []*Permutation, envMap map[string]string, config *li
 		if err != nil {
 			return err
 		}
+
 		permutationIndex++
 	}
 	for _, perm := range perms {
