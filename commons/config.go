@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"strings"
 
 	yaml "gopkg.in/yaml.v2"
 )
@@ -58,4 +59,13 @@ func Flush(object interface{}, outputFile string) error {
 		return err
 	}
 	return ioutil.WriteFile(outputFile, d, 0644)
+}
+
+func GetEnvMap(envArray []string) map[string]string {
+	envKeyMap := make(map[string]string)
+	for _, env := range envArray {
+		envSplit := strings.Split(env, "=")
+		envKeyMap[envSplit[0]] = envSplit[1]
+	}
+	return envKeyMap
 }
