@@ -10,8 +10,6 @@ import (
 	"os"
 	"time"
 
-	"bitbucket.org/bywan/bazooka-command/server/context"
-
 	docker "github.com/bywan/go-dockercommand"
 	"github.com/gorilla/mux"
 	lib "github.com/haklop/bazooka/commons"
@@ -55,7 +53,7 @@ func (p *Context) startBuild(res http.ResponseWriter, req *http.Request) {
 	project, err := p.Connector.GetProjectById(params["id"])
 	if err != nil {
 		if err.Error() != "not found" {
-			context.WriteError(err, res, encoder)
+			WriteError(err, res, encoder)
 			return
 		}
 		res.WriteHeader(404)
@@ -68,7 +66,7 @@ func (p *Context) startBuild(res http.ResponseWriter, req *http.Request) {
 
 	client, err := docker.NewDocker(p.DockerEndpoint)
 	if err != nil {
-		context.WriteError(err, res, encoder)
+		WriteError(err, res, encoder)
 		return
 	}
 
@@ -78,32 +76,32 @@ func (p *Context) startBuild(res http.ResponseWriter, req *http.Request) {
 	}
 
 	if err := p.Connector.AddJob(runningJob); err != nil {
-		context.WriteError(err, res, encoder)
+		WriteError(err, res, encoder)
 		return
 	}
 
-	buildFolder := fmt.Sprintf(buildFolderPattern, p.Env[context.BazookaEnvHome], runningJob.ProjectID, runningJob.ID)
+	buildFolder := fmt.Sprintf(buildFolderPattern, p.Env[BazookaEnvHome], runningJob.ProjectID, runningJob.ID)
 	orchestrationEnv := map[string]string{
-		"BZK_SCM":                   "git",
-		"BZK_SCM_URL":               project.ScmURI,
-		"BZK_SCM_REFERENCE":         startJob.ScmReference,
-		"BZK_SCM_KEYFILE":           p.Env[context.BazookaEnvSCMKeyfile], //TODO use keyfile per project
-		"BZK_HOME":                  buildFolder,
-		"BZK_PROJECT_ID":            project.ID,
-		"BZK_JOB_ID":                runningJob.ID, // TODO handle job number and tasks and save it
-		"BZK_DOCKERSOCK":            p.Env[context.BazookaEnvDockerSock],
-		context.BazookaEnvMongoAddr: p.Env[context.BazookaEnvMongoAddr],
-		context.BazookaEnvMongoPort: p.Env[context.BazookaEnvMongoPort],
+		"BZK_SCM":           "git",
+		"BZK_SCM_URL":       project.ScmURI,
+		"BZK_SCM_REFERENCE": startJob.ScmReference,
+		"BZK_SCM_KEYFILE":   p.Env[BazookaEnvSCMKeyfile], //TODO use keyfile per project
+		"BZK_HOME":          buildFolder,
+		"BZK_PROJECT_ID":    project.ID,
+		"BZK_JOB_ID":        runningJob.ID, // TODO handle job number and tasks and save it
+		"BZK_DOCKERSOCK":    p.Env[BazookaEnvDockerSock],
+		BazookaEnvMongoAddr: p.Env[BazookaEnvMongoAddr],
+		BazookaEnvMongoPort: p.Env[BazookaEnvMongoPort],
 	}
 
 	container, err := client.Run(&docker.RunOptions{
 		Image:       "bazooka/orchestration",
-		VolumeBinds: []string{fmt.Sprintf("%s:/bazooka", buildFolder), fmt.Sprintf("%s:/var/run/docker.sock", p.Env[context.BazookaEnvDockerSock])},
+		VolumeBinds: []string{fmt.Sprintf("%s:/bazooka", buildFolder), fmt.Sprintf("%s:/var/run/docker.sock", p.Env[BazookaEnvDockerSock])},
 		Env:         orchestrationEnv,
 		Detach:      true,
 	})
 
-	logFolder := fmt.Sprintf(logFolderPattern, context.BazookaHome, runningJob.ProjectID, runningJob.ID)
+	logFolder := fmt.Sprintf(logFolderPattern, BazookaHome, runningJob.ProjectID, runningJob.ID)
 	os.MkdirAll(logFolder, 0755)
 
 	// Ensure directory exists
@@ -122,7 +120,7 @@ func (p *Context) startBuild(res http.ResponseWriter, req *http.Request) {
 	p.Connector.SetJobOrchestrationId(runningJob.ID, container.ID())
 	if err != nil {
 		orchestrationLog.Println(err.Error())
-		context.WriteError(err, res, encoder)
+		WriteError(err, res, encoder)
 		return
 	}
 
@@ -154,7 +152,7 @@ func (p *Context) getJob(res http.ResponseWriter, req *http.Request) {
 	job, err := p.Connector.GetJobByID(params["job_id"])
 	if err != nil {
 		if err.Error() != "not found" {
-			context.WriteError(err, res, encoder)
+			WriteError(err, res, encoder)
 			return
 		}
 		res.WriteHeader(404)
@@ -186,7 +184,7 @@ func (p *Context) getJobs(res http.ResponseWriter, req *http.Request) {
 
 	jobs, err := p.Connector.GetJobs(params["id"])
 	if err != nil {
-		context.WriteError(err, res, encoder)
+		WriteError(err, res, encoder)
 		return
 	}
 
@@ -205,7 +203,7 @@ func (p *Context) getJobLog(res http.ResponseWriter, req *http.Request) {
 	})
 	if err != nil {
 		if err.Error() != "not found" {
-			context.WriteError(err, res, encoder)
+			WriteError(err, res, encoder)
 			return
 		}
 		res.WriteHeader(404)

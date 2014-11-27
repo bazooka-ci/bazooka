@@ -5,8 +5,6 @@ import (
 	"net/http"
 	"os"
 
-	"bitbucket.org/bywan/bazooka-command/server/context"
-
 	"github.com/gorilla/mux"
 	"github.com/haklop/bazooka/commons/mongo"
 )
@@ -14,14 +12,14 @@ import (
 func main() {
 	// Configure Bazooka
 	env := map[string]string{
-		context.BazookaEnvSCMKeyfile: os.Getenv(context.BazookaEnvSCMKeyfile),
-		context.BazookaEnvHome:       os.Getenv(context.BazookaEnvHome),
-		context.BazookaEnvDockerSock: os.Getenv(context.BazookaEnvDockerSock),
-		context.BazookaEnvMongoAddr:  os.Getenv(context.BazookaEnvMongoAddr),
-		context.BazookaEnvMongoPort:  os.Getenv(context.BazookaEnvMongoPort),
+		BazookaEnvSCMKeyfile: os.Getenv(BazookaEnvSCMKeyfile),
+		BazookaEnvHome:       os.Getenv(BazookaEnvHome),
+		BazookaEnvDockerSock: os.Getenv(BazookaEnvDockerSock),
+		BazookaEnvMongoAddr:  os.Getenv(BazookaEnvMongoAddr),
+		BazookaEnvMongoPort:  os.Getenv(BazookaEnvMongoPort),
 	}
 
-	if len(env[context.BazookaEnvHome]) == 0 {
+	if len(env[BazookaEnvHome]) == 0 {
 		env[BazookaEnvHome] = "/bazooka"
 	}
 

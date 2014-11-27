@@ -4,8 +4,6 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"bitbucket.org/bywan/bazooka-command/server/context"
-
 	"github.com/gorilla/mux"
 	lib "github.com/haklop/bazooka/commons"
 )
@@ -51,7 +49,7 @@ func (p *Context) createFetcher(res http.ResponseWriter, req *http.Request) {
 	existantFetcher, err := p.Connector.GetFetcherByName(fetcher.Name)
 	if err != nil {
 		if err.Error() != "not found" {
-			context.WriteError(err, res, encoder)
+			WriteError(err, res, encoder)
 			return
 		}
 	}
@@ -106,7 +104,7 @@ func (p *Context) getFetchers(res http.ResponseWriter, req *http.Request) {
 
 	fetchers, err := p.Connector.GetFetchers()
 	if err != nil {
-		context.WriteError(err, res, encoder)
+		WriteError(err, res, encoder)
 		return
 	}
 

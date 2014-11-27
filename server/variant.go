@@ -4,8 +4,6 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"bitbucket.org/bywan/bazooka-command/server/context"
-
 	"github.com/gorilla/mux"
 	"github.com/haklop/bazooka/commons/mongo"
 )
@@ -19,7 +17,7 @@ func (p *Context) getVariant(res http.ResponseWriter, req *http.Request) {
 	variant, err := p.Connector.GetVariantByID(params["variant_id"])
 	if err != nil {
 		if err.Error() != "not found" {
-			context.WriteError(err, res, encoder)
+			WriteError(err, res, encoder)
 			return
 		}
 		res.WriteHeader(404)
@@ -53,7 +51,7 @@ func (p *Context) getVariants(res http.ResponseWriter, req *http.Request) {
 
 	variants, err := p.Connector.GetVariants(params["job_id"])
 	if err != nil {
-		context.WriteError(err, res, encoder)
+		WriteError(err, res, encoder)
 		return
 	}
 
@@ -74,7 +72,7 @@ func (p *Context) getVariantLog(res http.ResponseWriter, req *http.Request) {
 	})
 	if err != nil {
 		if err.Error() != "not found" {
-			context.WriteError(err, res, encoder)
+			WriteError(err, res, encoder)
 			return
 		}
 		res.WriteHeader(404)

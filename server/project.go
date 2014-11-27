@@ -4,8 +4,6 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"bitbucket.org/bywan/bazooka-command/server/context"
-
 	"github.com/gorilla/mux"
 	lib "github.com/haklop/bazooka/commons"
 )
@@ -51,7 +49,7 @@ func (p *Context) createProject(res http.ResponseWriter, req *http.Request) {
 	existantProject, err := p.Connector.GetProject(project.ScmType, project.ScmURI)
 	if err != nil {
 		if err.Error() != "not found" {
-			context.WriteError(err, res, encoder)
+			WriteError(err, res, encoder)
 			return
 		}
 	}
@@ -86,7 +84,7 @@ func (p *Context) getProject(res http.ResponseWriter, req *http.Request) {
 	project, err := p.Connector.GetProjectById(params["id"])
 	if err != nil {
 		if err.Error() != "not found" {
-			context.WriteError(err, res, encoder)
+			WriteError(err, res, encoder)
 			return
 		}
 		res.WriteHeader(404)
@@ -108,7 +106,7 @@ func (p *Context) getProjects(res http.ResponseWriter, req *http.Request) {
 
 	projects, err := p.Connector.GetProjects()
 	if err != nil {
-		context.WriteError(err, res, encoder)
+		WriteError(err, res, encoder)
 		return
 	}
 
