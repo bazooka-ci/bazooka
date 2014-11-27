@@ -16,7 +16,7 @@ const (
 	MetaFolder        = "/meta"
 	BazookaConfigFile = ".bazooka.yml"
 	TravisConfigFile  = ".travis.yml"
-	Golang            = "golang"
+	Golang            = "go"
 )
 
 func main() {

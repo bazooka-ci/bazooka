@@ -77,5 +77,5 @@ type Config struct {
 }
 
 type ConfigMatrix struct {
-	Exclude []interface{} `yaml:"exclude,omitempty"`
+	Exclude []map[string]interface{} `yaml:"exclude,omitempty"`
 }

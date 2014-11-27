@@ -114,7 +114,21 @@ func handlePermutation(envMap map[string]string, config *lib.Config, counter, ro
 	//Flush file
 	newConfig := *config
 	newConfig.Env = lib.FlattenEnvMap(envMap)
-	err := lib.CopyFile(fmt.Sprintf("%s/%s", MetaFolder, rootCounter), fmt.Sprintf("%s/%s%s", MetaFolder, rootCounter, counter))
+	rootMetaFile := fmt.Sprintf("%s/%s", MetaFolder, rootCounter)
+	var permutationExclude map[string]interface{}
+	err := lib.Parse(rootMetaFile, &permutationExclude)
+	if err != nil {
+		return err
+	}
+	permutationExclude["env"] = lib.FlattenEnvMap(envMap)
+
+	fmt.Printf("Permutation is \n%v\n", permutationExclude)
+	fmt.Printf("Exclusion matrix is \n%v\n", config.Matrix.Exclude)
+	fmt.Printf("Is excluded: %t\n", matrix.IsExcluded(permutationExclude, config.Matrix.Exclude))
+	if matrix.IsExcluded(permutationExclude, config.Matrix.Exclude) {
+		return nil
+	}
+	err = lib.CopyFile(rootMetaFile, fmt.Sprintf("%s/%s%s", MetaFolder, rootCounter, counter))
 	if err != nil {
 		return err
 	}

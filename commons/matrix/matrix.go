@@ -23,6 +23,7 @@ func IterAll(mx Matrix, it Iterator) {
 
 func IsExcluded(item map[string]interface{}, exclusions []map[string]interface{}) bool {
 	for _, ex := range exclusions {
+		fmt.Printf("item: \n%+v\n exclusion:\n%+v\nResult: %t", item, ex, matches(item, ex))
 		if matches(item, ex) {
 			return true
 		}
@@ -34,15 +35,19 @@ func matches(item, exclusion map[string]interface{}) bool {
 	for key, valueExcluded := range exclusion {
 		switch valueExcluded.(type) {
 		case []string:
-			_, typeOK := item[key].([]string)
-			if !typeOK || !isIn(valueExcluded.([]string), item[key].([]string)) {
+		case []interface{}:
+			fmt.Printf("[]string\n")
+			if !isIn(valueExcluded.([]string), item[key].([]string)) {
 				return false
 			}
 		case string:
+			fmt.Printf("string\n")
 			if item[key] != valueExcluded {
 				return false
 			}
 		default:
+			fmt.Printf("value: %s\n", valueExcluded)
+			fmt.Printf("type: %T\n", valueExcluded)
 			return false
 		}
 	}
