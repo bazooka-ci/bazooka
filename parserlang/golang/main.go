@@ -106,7 +106,6 @@ func setGodir(conf *ConfigGolang) {
 
 	env["BZK_BUILD_DIR"] = []string{buildDir}
 
-
 	conf.Env = flattenEnvMap(env)
 }
 
@@ -148,10 +147,10 @@ func resolveGoImage(version string) (string, error) {
 
 func flattenEnvMap(mapp map[string][]string) []string {
 	res := []string{}
-		for key, values := range mapp {
-			for _, value := range values {
-				res = append(res, fmt.Sprintf("%s=%s", key, value))
-			}
+	for key, values := range mapp {
+		for _, value := range values {
+			res = append(res, fmt.Sprintf("%s=%s", key, value))
 		}
+	}
 	return res
 }
