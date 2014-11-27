@@ -8,7 +8,7 @@ import (
 	lib "github.com/haklop/bazooka/commons"
 )
 
-func (p *Context) createFetcher(res http.ResponseWriter, req *http.Request) {
+func (c *Context) createFetcher(res http.ResponseWriter, req *http.Request) {
 	var fetcher lib.ScmFetcher
 
 	decoder := json.NewDecoder(req.Body)
@@ -46,7 +46,7 @@ func (p *Context) createFetcher(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	existantFetcher, err := p.Connector.GetFetcherByName(fetcher.Name)
+	existantFetcher, err := c.Connector.GetFetcherByName(fetcher.Name)
 	if err != nil {
 		if err.Error() != "not found" {
 			WriteError(err, res, encoder)
@@ -64,7 +64,7 @@ func (p *Context) createFetcher(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	err = p.Connector.AddFetcher(&fetcher)
+	err = c.Connector.AddFetcher(&fetcher)
 	res.Header().Set("Location", "/fetcher/"+fetcher.ID)
 
 	res.WriteHeader(201)
@@ -72,13 +72,13 @@ func (p *Context) createFetcher(res http.ResponseWriter, req *http.Request) {
 
 }
 
-func (p *Context) getFetcher(res http.ResponseWriter, req *http.Request) {
+func (c *Context) getFetcher(res http.ResponseWriter, req *http.Request) {
 	params := mux.Vars(req)
 
 	encoder := json.NewEncoder(res)
 	res.Header().Set("Content-Type", "application/json; charset=utf-8")
 
-	fetcher, err := p.Connector.GetFetcherById(params["id"])
+	fetcher, err := c.Connector.GetFetcherById(params["id"])
 	if err != nil {
 		if err.Error() != "not found" {
 			WriteError(err, res, encoder)
@@ -98,11 +98,11 @@ func (p *Context) getFetcher(res http.ResponseWriter, req *http.Request) {
 	encoder.Encode(&fetcher)
 }
 
-func (p *Context) getFetchers(res http.ResponseWriter, req *http.Request) {
+func (c *Context) getFetchers(res http.ResponseWriter, req *http.Request) {
 	encoder := json.NewEncoder(res)
 	res.Header().Set("Content-Type", "application/json; charset=utf-8")
 
-	fetchers, err := p.Connector.GetFetchers()
+	fetchers, err := c.Connector.GetFetchers()
 	if err != nil {
 		WriteError(err, res, encoder)
 		return

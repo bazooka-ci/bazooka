@@ -8,13 +8,13 @@ import (
 	"github.com/haklop/bazooka/commons/mongo"
 )
 
-func (p *Context) getVariant(res http.ResponseWriter, req *http.Request) {
+func (c *Context) getVariant(res http.ResponseWriter, req *http.Request) {
 	params := mux.Vars(req)
 
 	encoder := json.NewEncoder(res)
 	res.Header().Set("Content-Type", "application/json; charset=utf-8")
 
-	variant, err := p.Connector.GetVariantByID(params["variant_id"])
+	variant, err := c.Connector.GetVariantByID(params["id"])
 	if err != nil {
 		if err.Error() != "not found" {
 			WriteError(err, res, encoder)
@@ -28,28 +28,17 @@ func (p *Context) getVariant(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	if params["job_id"] != variant.JobID {
-		res.WriteHeader(404)
-		encoder.Encode(&ErrorResponse{
-			Code:    404,
-			Message: "project not found",
-		})
-		return
-	}
-
-	// TODO Validate project_id is correct
-
 	res.WriteHeader(200)
 	encoder.Encode(&variant)
 }
 
-func (p *Context) getVariants(res http.ResponseWriter, req *http.Request) {
+func (c *Context) getVariants(res http.ResponseWriter, req *http.Request) {
 	params := mux.Vars(req)
 
 	encoder := json.NewEncoder(res)
 	res.Header().Set("Content-Type", "application/json; charset=utf-8")
 
-	variants, err := p.Connector.GetVariants(params["job_id"])
+	variants, err := c.Connector.GetVariants(params["id"])
 	if err != nil {
 		WriteError(err, res, encoder)
 		return
@@ -59,16 +48,14 @@ func (p *Context) getVariants(res http.ResponseWriter, req *http.Request) {
 	encoder.Encode(&variants)
 }
 
-func (p *Context) getVariantLog(res http.ResponseWriter, req *http.Request) {
+func (c *Context) getVariantLog(res http.ResponseWriter, req *http.Request) {
 	params := mux.Vars(req)
 
 	encoder := json.NewEncoder(res)
 	res.Header().Set("Content-Type", "application/json; charset=utf-8")
 
-	log, err := p.Connector.GetLog(&mongo.LogExample{
-		ProjectID: params["id"],
-		JobID:     params["job_id"],
-		VariantID: params["variant_id"],
+	log, err := c.Connector.GetLog(&mongo.LogExample{
+		VariantID: params["id"],
 	})
 	if err != nil {
 		if err.Error() != "not found" {

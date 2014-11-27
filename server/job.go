@@ -22,7 +22,7 @@ const (
 	// keyFolderPattern   = "%s/key/%s"         // $bzk_home/key/$keyName
 )
 
-func (p *Context) startBuild(res http.ResponseWriter, req *http.Request) {
+func (c *Context) startBuild(res http.ResponseWriter, req *http.Request) {
 	params := mux.Vars(req)
 	var startJob lib.StartJob
 
@@ -50,7 +50,7 @@ func (p *Context) startBuild(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	project, err := p.Connector.GetProjectById(params["id"])
+	project, err := c.Connector.GetProjectById(params["id"])
 	if err != nil {
 		if err.Error() != "not found" {
 			WriteError(err, res, encoder)
@@ -64,7 +64,7 @@ func (p *Context) startBuild(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	client, err := docker.NewDocker(p.DockerEndpoint)
+	client, err := docker.NewDocker(c.DockerEndpoint)
 	if err != nil {
 		WriteError(err, res, encoder)
 		return
@@ -75,28 +75,28 @@ func (p *Context) startBuild(res http.ResponseWriter, req *http.Request) {
 		Started:   time.Now(),
 	}
 
-	if err := p.Connector.AddJob(runningJob); err != nil {
+	if err := c.Connector.AddJob(runningJob); err != nil {
 		WriteError(err, res, encoder)
 		return
 	}
 
-	buildFolder := fmt.Sprintf(buildFolderPattern, p.Env[BazookaEnvHome], runningJob.ProjectID, runningJob.ID)
+	buildFolder := fmt.Sprintf(buildFolderPattern, c.Env[BazookaEnvHome], runningJob.ProjectID, runningJob.ID)
 	orchestrationEnv := map[string]string{
-		"BZK_SCM":           "git",
+		"BZK_SCM":           project.ScmType,
 		"BZK_SCM_URL":       project.ScmURI,
 		"BZK_SCM_REFERENCE": startJob.ScmReference,
-		"BZK_SCM_KEYFILE":   p.Env[BazookaEnvSCMKeyfile], //TODO use keyfile per project
+		"BZK_SCM_KEYFILE":   c.Env[BazookaEnvSCMKeyfile], //TODO use keyfile per project
 		"BZK_HOME":          buildFolder,
 		"BZK_PROJECT_ID":    project.ID,
 		"BZK_JOB_ID":        runningJob.ID, // TODO handle job number and tasks and save it
-		"BZK_DOCKERSOCK":    p.Env[BazookaEnvDockerSock],
-		BazookaEnvMongoAddr: p.Env[BazookaEnvMongoAddr],
-		BazookaEnvMongoPort: p.Env[BazookaEnvMongoPort],
+		"BZK_DOCKERSOCK":    c.Env[BazookaEnvDockerSock],
+		BazookaEnvMongoAddr: c.Env[BazookaEnvMongoAddr],
+		BazookaEnvMongoPort: c.Env[BazookaEnvMongoPort],
 	}
 
 	container, err := client.Run(&docker.RunOptions{
 		Image:       "bazooka/orchestration",
-		VolumeBinds: []string{fmt.Sprintf("%s:/bazooka", buildFolder), fmt.Sprintf("%s:/var/run/docker.sock", p.Env[BazookaEnvDockerSock])},
+		VolumeBinds: []string{fmt.Sprintf("%s:/bazooka", buildFolder), fmt.Sprintf("%s:/var/run/docker.sock", c.Env[BazookaEnvDockerSock])},
 		Env:         orchestrationEnv,
 		Detach:      true,
 	})
@@ -117,7 +117,7 @@ func (p *Context) startBuild(res http.ResponseWriter, req *http.Request) {
 	runningJob.OrchestrationID = container.ID()
 	orchestrationLog := log.New(logFileWriter, "", log.LstdFlags)
 	orchestrationLog.Printf("Start job %s on project %s with container %s\n", runningJob.ID, runningJob.ProjectID, runningJob.OrchestrationID)
-	p.Connector.SetJobOrchestrationId(runningJob.ID, container.ID())
+	c.Connector.SetJobOrchestrationId(runningJob.ID, container.ID())
 	if err != nil {
 		orchestrationLog.Println(err.Error())
 		WriteError(err, res, encoder)
@@ -143,13 +143,13 @@ func (p *Context) startBuild(res http.ResponseWriter, req *http.Request) {
 	encoder.Encode(runningJob)
 }
 
-func (p *Context) getJob(res http.ResponseWriter, req *http.Request) {
+func (c *Context) getJob(res http.ResponseWriter, req *http.Request) {
 	params := mux.Vars(req)
 
 	encoder := json.NewEncoder(res)
 	res.Header().Set("Content-Type", "application/json; charset=utf-8")
 
-	job, err := p.Connector.GetJobByID(params["job_id"])
+	job, err := c.Connector.GetJobByID(params["id"])
 	if err != nil {
 		if err.Error() != "not found" {
 			WriteError(err, res, encoder)
@@ -163,26 +163,17 @@ func (p *Context) getJob(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	if params["id"] != job.ProjectID {
-		res.WriteHeader(404)
-		encoder.Encode(&ErrorResponse{
-			Code:    404,
-			Message: "project not found",
-		})
-		return
-	}
-
 	res.WriteHeader(200)
 	encoder.Encode(&job)
 }
 
-func (p *Context) getJobs(res http.ResponseWriter, req *http.Request) {
+func (c *Context) getJobs(res http.ResponseWriter, req *http.Request) {
 	params := mux.Vars(req)
 
 	encoder := json.NewEncoder(res)
 	res.Header().Set("Content-Type", "application/json; charset=utf-8")
 
-	jobs, err := p.Connector.GetJobs(params["id"])
+	jobs, err := c.Connector.GetJobs(params["id"])
 	if err != nil {
 		WriteError(err, res, encoder)
 		return
@@ -192,14 +183,14 @@ func (p *Context) getJobs(res http.ResponseWriter, req *http.Request) {
 	encoder.Encode(&jobs)
 }
 
-func (p *Context) getJobLog(res http.ResponseWriter, req *http.Request) {
+func (c *Context) getJobLog(res http.ResponseWriter, req *http.Request) {
 	params := mux.Vars(req)
 
 	encoder := json.NewEncoder(res)
 	res.Header().Set("Content-Type", "application/json; charset=utf-8")
 
-	log, err := p.Connector.GetLog(&mongo.LogExample{
-		JobID: params["job_id"],
+	log, err := c.Connector.GetLog(&mongo.LogExample{
+		JobID: params["id"],
 	})
 	if err != nil {
 		if err.Error() != "not found" {

@@ -35,7 +35,7 @@ func main() {
 	connector := mongo.NewConnector()
 	defer connector.Close()
 
-	p := Context{
+	ctx := Context{
 		Connector:      connector,
 		DockerEndpoint: serverEndpoint,
 		Env:            env,
@@ -44,22 +44,22 @@ func main() {
 	// Configure web server
 	r := mux.NewRouter()
 
-	r.HandleFunc("/project", p.createProject).Methods("POST")
-	r.HandleFunc("/project", p.getProjects).Methods("GET")
-	r.HandleFunc("/project/{id}", p.getProject).Methods("GET")
-	r.HandleFunc("/project/{id}/job", p.startBuild).Methods("POST")
-	r.HandleFunc("/project/{id}/job", p.getJobs).Methods("GET")
+	r.HandleFunc("/project", ctx.createProject).Methods("POST")
+	r.HandleFunc("/project", ctx.getProjects).Methods("GET")
+	r.HandleFunc("/project/{id}", ctx.getProject).Methods("GET")
+	r.HandleFunc("/project/{id}/job", ctx.startBuild).Methods("POST")
+	r.HandleFunc("/project/{id}/job", ctx.getJobs).Methods("GET")
 
-	r.HandleFunc("/job/{job_id}", p.getJob).Methods("GET")
-	r.HandleFunc("/job/{job_id}/log", p.getJobLog).Methods("GET")
-	r.HandleFunc("/job/{job_id}/variant", p.getVariants).Methods("GET")
+	r.HandleFunc("/job/{id}", ctx.getJob).Methods("GET")
+	r.HandleFunc("/job/{id}/log", ctx.getJobLog).Methods("GET")
+	r.HandleFunc("/job/{id}/variant", ctx.getVariants).Methods("GET")
 
-	r.HandleFunc("/variant/{variant_id}", p.getVariant).Methods("GET")
-	r.HandleFunc("/variant/{variant_id}/log", p.getVariantLog).Methods("GET")
+	r.HandleFunc("/variant/{id}", ctx.getVariant).Methods("GET")
+	r.HandleFunc("/variant/{id}/log", ctx.getVariantLog).Methods("GET")
 
-	r.HandleFunc("/fetcher", p.createFetcher).Methods("POST")
-	r.HandleFunc("/fetcher", p.getFetchers).Methods("GET")
-	r.HandleFunc("/fetcher/{id}", p.getFetcher).Methods("GET")
+	r.HandleFunc("/fetcher", ctx.createFetcher).Methods("POST")
+	r.HandleFunc("/fetcher", ctx.getFetchers).Methods("GET")
+	r.HandleFunc("/fetcher/{id}", ctx.getFetcher).Methods("GET")
 
 	http.Handle("/", r)
 	log.Fatal(http.ListenAndServe(":3000", nil))
