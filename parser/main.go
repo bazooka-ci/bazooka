@@ -181,7 +181,7 @@ func handlePermutation(permutation map[string]string, config *lib.Config, counte
 	// and replace its env variables with this unique permutation
 	envMap := extractPrefixedKeysMap(permutation, MX_ENV_PREFIX)
 	newConfig.Env = lib.FlattenEnvMap(envMap)
-	if err := lib.Flush(newConfig, fmt.Sprintf("%s/.bazooka.%s.yml", OutputFolder, counter)); err != nil {
+	if err := lib.Flush(newConfig, fmt.Sprintf("%s/.bazooka.%s%s.yml", OutputFolder, rootCounter, counter)); err != nil {
 		return err
 	}
 
@@ -189,7 +189,7 @@ func handlePermutation(permutation map[string]string, config *lib.Config, counte
 	// start from the language specific permutation meta file
 	rootMetaFile := fmt.Sprintf("%s/%s", MetaFolder, rootCounter)
 	// copy it to a global (lang specific+env vars) permutation meta file
-	if err := lib.CopyFile(rootMetaFile, fmt.Sprintf("%s/%s", MetaFolder, counter)); err != nil {
+	if err := lib.CopyFile(rootMetaFile, fmt.Sprintf("%s/%s%s", MetaFolder, rootCounter, counter)); err != nil {
 		return err
 	}
 	// and add to it this unique permutation of env variables
