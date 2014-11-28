@@ -226,11 +226,7 @@ func feedMatrix(extra map[string]interface{}, mx *matrix.Matrix) error {
 			}
 
 		default:
-			if s, ok := v.(string); ok {
-				mx.AddVar(k, s)
-			} else {
-				return fmt.Errorf("Invalid config: Unsupported variable type (%v) for the key %v", k, v)
-			}
+			mx.AddVar(k, fmt.Sprintf("%v", v))
 		}
 	}
 	return nil
