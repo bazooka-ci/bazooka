@@ -108,7 +108,10 @@ func main() {
 			log.Fatal(err)
 		}
 		// and then add the new language specific variables parsed from the meta file to the build matrix (which already contains the env variables)
-		feedMatrix(langExtraVars, &mx)
+		err = feedMatrix(langExtraVars, &mx)
+		if err != nil {
+			log.Fatal(err)
+		}
 
 		// we're not done yet: we need to also handle the matrix exclusions
 		// we parse them into a list of matrices
