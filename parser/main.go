@@ -180,6 +180,12 @@ func handlePermutation(permutation map[string]string, config *lib.Config, counte
 
 	// and replace its env variables with this unique permutation
 	envMap := extractPrefixedKeysMap(permutation, MX_ENV_PREFIX)
+
+	// Insert BZK_BUILD_DIR if not present
+	if _, ok := envMap["BZK_BUILD_DIR"]; !ok {
+		envMap["BZK_BUILD_DIR"] = "/bazooka"
+	}
+
 	newConfig.Env = lib.FlattenEnvMap(envMap)
 	if err := lib.Flush(newConfig, fmt.Sprintf("%s/.bazooka.%s%s.yml", OutputFolder, rootCounter, counter)); err != nil {
 		return err

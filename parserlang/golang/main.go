@@ -1,7 +1,9 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
+	"io"
 	"log"
 	"os"
 
@@ -47,7 +49,7 @@ func main() {
 
 func manageGoVersion(counter string, conf *ConfigGolang, version string) error {
 	conf.GoVersions = []string{}
-	setSetupScript(conf)
+	setGodir(conf)
 	setDefaultInstall(conf)
 	err := setDefaultScript(conf)
 	if err != nil {
@@ -66,18 +68,44 @@ func manageGoVersion(counter string, conf *ConfigGolang, version string) error {
 	return bazooka.Flush(conf, fmt.Sprintf("%s/.bazooka.%s.yml", OutputFolder, counter))
 }
 
-func setSetupScript(conf *ConfigGolang) {
-	conf.Setup = []string{
-		"if [ -f /bazooka/.godir ]; then",
-		"  d=$(cat /bazooka/.godir)",
-		"  GODIR=/go/src/${d}",
-		"else",
-		"  GODIR=/go/src/app",
-		"fi",
-		"mkdir -p $GODIR",
-		"cp -r /bazooka/* $GODIR",
-		"cd $GODIR",
+func setGodir(conf *ConfigGolang) {
+	env := bazooka.GetEnvMap(conf.Env)
+
+	godirExist, err := bazooka.FileExists("/bazooka/.godir")
+	if err != nil {
+		log.Fatal(err)
 	}
+
+	var buildDir string
+	if godirExist {
+		f, err := os.Open("/bazooka/.godir")
+		defer f.Close()
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		bf := bufio.NewReader(f)
+
+		// only read first line
+		content, isPrefix, err := bf.ReadLine()
+
+		if err == io.EOF {
+			buildDir = "/go/src/app"
+		} else if err != nil {
+			log.Fatal(err)
+		} else if isPrefix {
+			log.Fatal("Unexpected long line reading", f.Name())
+		} else {
+			buildDir = fmt.Sprintf("/go/src/%s", content)
+		}
+
+	} else {
+		buildDir = "/go/src/app"
+	}
+
+	env["BZK_BUILD_DIR"] = []string{buildDir}
+
+	conf.Env = flattenEnvMap(env)
 }
 
 func setDefaultInstall(conf *ConfigGolang) {
@@ -114,4 +142,14 @@ func resolveGoImage(version string) (string, error) {
 		return val, nil
 	}
 	return "", fmt.Errorf("Unable to find Bazooka Docker Image for Go Runnner %s\n", version)
+}
+
+func flattenEnvMap(mapp map[string][]string) []string {
+	res := []string{}
+	for key, values := range mapp {
+		for _, value := range values {
+			res = append(res, fmt.Sprintf("%s=%s", key, value))
+		}
+	}
+	return res
 }
