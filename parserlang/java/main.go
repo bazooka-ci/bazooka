@@ -43,11 +43,11 @@ func main() {
 
 	}
 
-	matrix.IterAll(mx, func(permutation map[string]string, counter string) {
+	mx.IterAll(func(permutation map[string]string, counter string) {
 		if err := manageJdkVersion(counter, conf, permutation[Jdk], buildTool); err != nil {
 			log.Fatal(err)
 		}
-	})
+	}, nil)
 }
 
 func detectBuildTool(source string) (string, error) {

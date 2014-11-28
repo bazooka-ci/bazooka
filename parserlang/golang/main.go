@@ -16,7 +16,7 @@ const (
 	MetaFolder        = "/meta"
 	BazookaConfigFile = ".bazooka.yml"
 	TravisConfigFile  = ".travis.yml"
-	Golang            = "golang"
+	Golang            = "go"
 )
 
 func main() {
@@ -38,11 +38,11 @@ func main() {
 	if len(conf.GoVersions) == 0 {
 		mx[Golang] = []string{"tip"}
 	}
-	matrix.IterAll(mx, func(permutation map[string]string, counter string) {
+	mx.IterAll(func(permutation map[string]string, counter string) {
 		if err := manageGoVersion(counter, conf, permutation[Golang]); err != nil {
 			log.Fatal(err)
 		}
-	})
+	}, nil)
 }
 
 func manageGoVersion(counter string, conf *ConfigGolang, version string) error {
