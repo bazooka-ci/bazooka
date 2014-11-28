@@ -26,7 +26,7 @@ func (g *Generator) GenerateDockerfile() error {
 
 	buffer.WriteString(fmt.Sprintf("FROM %s\n\n", g.Config.FromImage))
 
-	envMap := getEnvMap(g.Config)
+	envMap := lib.GetEnvMap(g.Config.Env)
 	buffer.WriteString(fmt.Sprintf("ADD . %s\n\n", envMap["BZK_BUILD_DIR"][0]))
 	buffer.WriteString(fmt.Sprintf("RUN chmod +x %s/bazooka_run.sh\n\n", envMap["BZK_BUILD_DIR"][0]))
 
