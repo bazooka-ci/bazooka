@@ -1,6 +1,5 @@
 language: golang
 install:
   - go get github.com/mitchellh/gox
-  - gox -build-toolchain
 script:
   - make devimages
