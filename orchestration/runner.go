@@ -86,8 +86,11 @@ func (r *Runner) runContainer(logger Logger, buildImage BuiltImage, env map[stri
 		name := fmt.Sprintf("service-%s-%s-%d", env[BazookaEnvProjectID], env[BazookaEnvJobID], buildImage.VariantID)
 		containerLinks = append(containerLinks, fmt.Sprintf("%s:%s", name, service))
 		serviceContainer, err := r.client.Run(&docker.RunOptions{
-			Name:   name,
-			Image:  service,
+			Name:  name,
+			Image: service,
+			VolumeBinds: []string{
+				fmt.Sprintf("%s:/var/run/docker.sock", DockerSock),
+			},
 			Detach: true,
 		})
 		if err != nil {
