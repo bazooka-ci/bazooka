@@ -1,6 +1,6 @@
 default: docker
 
 docker:
-	docker build -t bazooka/scm-git .
+	$(PREFIX) docker build -t bazooka/scm-git .
 
 devimage: docker
