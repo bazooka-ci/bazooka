@@ -58,7 +58,7 @@ func Flush(object interface{}, outputFile string) error {
 	if err != nil {
 		return err
 	}
-	return ioutil.WriteFile(outputFile, d, 0755)
+	return ioutil.WriteFile(outputFile, d, 0644)
 }
 
 func GetEnvMap(envArray []string) map[string][]string {

@@ -61,7 +61,7 @@ func manageGoVersion(counter string, conf *ConfigGolang, version string) error {
 		return err
 	}
 
-	err = bazooka.AppendToFile(fmt.Sprintf("%s/%s", MetaFolder, counter), fmt.Sprintf("%s: %s\n", Golang, version), 0755)
+	err = bazooka.AppendToFile(fmt.Sprintf("%s/%s", MetaFolder, counter), fmt.Sprintf("%s: %s\n", Golang, version), 0644)
 	if err != nil {
 		return err
 	}
