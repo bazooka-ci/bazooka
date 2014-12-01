@@ -123,7 +123,7 @@ func (g *Generator) GenerateDockerfile() error {
 			for _, action := range phase.commands {
 				buffer.WriteString(fmt.Sprintf("%s\n", action))
 			}
-			err = ioutil.WriteFile(fmt.Sprintf("%s/%s/bazooka_%s.sh", g.OutputFolder, g.Index, phase.name), buffer.Bytes(), 0644)
+			err = ioutil.WriteFile(fmt.Sprintf("%s/%s/bazooka_%s.sh", g.OutputFolder, g.Index, phase.name), buffer.Bytes(), 0755)
 			if err != nil {
 				return fmt.Errorf("Phase [%d/%s]: writing file failed: %v", g.Index, phase.name, err)
 			}
@@ -137,7 +137,7 @@ func (g *Generator) GenerateDockerfile() error {
 		}
 	}
 
-	err = ioutil.WriteFile(fmt.Sprintf("%s/%s/bazooka_run.sh", g.OutputFolder, g.Index), bufferRun.Bytes(), 0644)
+	err = ioutil.WriteFile(fmt.Sprintf("%s/%s/bazooka_run.sh", g.OutputFolder, g.Index), bufferRun.Bytes(), 0755)
 	if err != nil {
 		return fmt.Errorf("Phase [%d/run]: writing file failed: %v", g.Index, err)
 	}
@@ -157,7 +157,7 @@ func (g *Generator) GenerateDockerfile() error {
 
 	buffer.WriteString("CMD ./bazooka_run.sh\n")
 
-	err = ioutil.WriteFile(fmt.Sprintf("%s/%s/Dockerfile", g.OutputFolder, g.Index), buffer.Bytes(), 0644)
+	err = ioutil.WriteFile(fmt.Sprintf("%s/%s/Dockerfile", g.OutputFolder, g.Index), buffer.Bytes(), 0755)
 	if err != nil {
 		return fmt.Errorf("Phase [%d/docker]: writing file failed: %v", g.Index, err)
 	}
@@ -167,7 +167,7 @@ func (g *Generator) GenerateDockerfile() error {
 		for _, service := range g.Config.Services {
 			servicesBuffer.WriteString(fmt.Sprintf("%s\n", service))
 		}
-		err = ioutil.WriteFile(fmt.Sprintf("%s/%s/services", g.OutputFolder, g.Index), servicesBuffer.Bytes(), 0644)
+		err = ioutil.WriteFile(fmt.Sprintf("%s/%s/services", g.OutputFolder, g.Index), servicesBuffer.Bytes(), 0755)
 		if err != nil {
 			return fmt.Errorf("Phase [%d/services]: writing file failed: %v", g.Index, err)
 		}

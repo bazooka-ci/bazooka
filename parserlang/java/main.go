@@ -85,7 +85,7 @@ func manageJdkVersion(counter string, conf *ConfigJava, version, buildTool strin
 	if err != nil {
 		return err
 	}
-	err = bazooka.AppendToFile(fmt.Sprintf("%s/%s", MetaFolder, counter), fmt.Sprintf("%s: %s\n", Jdk, version), 0644)
+	err = bazooka.AppendToFile(fmt.Sprintf("%s/%s", MetaFolder, counter), fmt.Sprintf("%s: %s\n", Jdk, version), 0755)
 	if err != nil {
 		return err
 	}
