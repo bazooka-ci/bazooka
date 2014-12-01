@@ -35,12 +35,13 @@ const (
 )
 
 type Job struct {
-	ID              string    `bson:"id" json:"id"`
-	ProjectID       string    `bson:"project_id" json:"project_id"`
-	OrchestrationID string    `bson:"orchestration_id" json:"orchestration_id"`
-	Started         time.Time `bson:"started" json:"started"`
-	Completed       time.Time `bson:"completed" json:"completed"`
-	Status          JobStatus `bson:"status" json:"status"`
+	ID              string      `bson:"id" json:"id"`
+	ProjectID       string      `bson:"project_id" json:"project_id"`
+	OrchestrationID string      `bson:"orchestration_id" json:"orchestration_id"`
+	Started         time.Time   `bson:"started" json:"started"`
+	Completed       time.Time   `bson:"completed" json:"completed"`
+	Status          JobStatus   `bson:"status" json:"status"`
+	SCMMetadata     SCMMetadata `bson:"scm_metadata" json:"scm_metadata"`
 }
 
 type LogEntry struct {
@@ -51,6 +52,19 @@ type LogEntry struct {
 	JobID     string    `bson:"job_id" json:"job_id"`
 	VariantID string    `bson:"variant_id" json:"variant_id"`
 	Image     string    `bson:"image" json:"image"`
+}
+
+type SCMMetadata struct {
+	Reference string    `bson:"reference" json:"reference" yaml:"reference"`
+	CommitID  string    `bson:"commit_id" json:"commit_id" yaml:"commit_id"`
+	Author    Person    `bson:"author" json:"author" yaml:"author"`
+	Date      time.Time `bson:"time" json:"date" yaml:"date"`
+	Message   string    `bson:"message" json:"message" yaml:"message"`
+}
+
+type Person struct {
+	Name  string `bson:"name" json:"name" yaml:"name"`
+	Email string `bson:"email" json:"email" yaml:"email"`
 }
 
 type ScmFetcher struct {
