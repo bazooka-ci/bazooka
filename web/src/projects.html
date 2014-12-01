@@ -1,0 +1,32 @@
+<div class="col projects" ng-class="{wide: showNewProject}" ng-controller="ProjectsController">
+	<h1>
+		projects
+		<a href="" ng-click="newProjectVisible(true)" ng-if="!showNewProject">
+			<i class="fa fa-plus"></i>
+		</a>
+		<a href="" ng-click="newProjectVisible(false)" ng-if="showNewProject">
+			<i class="fa fa-times"></i>
+		</a>
+	</h1>
+
+	<form class="new" ng-if="showNewProject">
+		<label for="project-name">Project name</label>
+		<input type="text" name="name" id="project-name" ng-model="newProj.name"/>
+
+		<label for="project-uri">SCM uri</label>
+		<input type="text" name="uri" id="project-uri"  ng-model="newProj.scm_uri"/>
+
+		<button ng-click="createProject()">Create project</button>
+	</form>
+	<!-- <div class="search">
+		<input type="text" ng-model="filter"/>
+	</div> -->
+	<div class="scroll">
+		<ul>
+		    <li ng-repeat="project in projects | filter:filter"  ng-class="{selected: isSelected(project)}">
+		    	<a ng-href="#/{{project.id}}">{{project.name}}</a>
+		    </li>
+		    
+		</ul>
+	</div>
+</div>

@@ -1,0 +1,304 @@
+.project.ng-enter {
+	left: 0;
+	right: $projects-width;
+}
+
+.project.ng-enter-active {
+	left: $projects-width;
+	right: 0;
+}
+.project {
+	left: $projects-width;
+	right: 0;
+	transition: all 0.5s;
+
+	a.build {
+		position: absolute;
+		z-index: 5;
+		right: 10px;
+		top: 10px;
+		display: block;
+		width: 50px;
+		height: 50px;
+		font-size: 50px;
+		line-height: 50px;
+
+		background: #27ae60;
+		box-shadow: #333 4px 4px 4px;
+		border-radius: 50%;
+		text-align: center;
+		color: #fff;
+
+		span {
+			padding-left: 7px;
+		}
+	}
+
+	.jobs {
+		left: 0;
+		// right: 0;
+		width: $jobs-width;
+		background: $jobs-bg;
+		color: $jobs-fg;
+		z-index: 2;
+		overflow: auto;
+
+		h1 {
+			background: darken($jobs-bg, 4%);
+			border-bottom: 1px solid darken($jobs-bg, 8%);
+			
+			a {
+				color: $jobs-start-fg;
+				background: $jobs-start-bg;
+			}
+		}
+
+		ul {
+			list-style-type: none;
+			margin: 0;
+			padding: 0;
+
+			li.selected a {
+				background: darken($jobs-bg, 10%);
+			}
+			li {
+				padding: 0;
+				border-bottom: 1px solid #7f8c8d;
+				
+
+				a {
+					display: block;
+					height: $jobs-item-height;
+					// line-height: 30px;
+					padding: 0 10px 0 ($build-state-size * 2);
+					
+					text-decoration: none;
+					position: relative;
+
+					color: $jobs-fg;
+
+
+
+					span {
+						display: block;
+						line-height: ($jobs-item-height - 20px)/2;
+						padding: 5px 10px;
+						// color: #fff;
+						font-weight: bold;
+						font-size: 12px;
+					}
+
+					span:before {
+						color: lighten($jobs-fg, 40%);
+						display: inline-block;
+						width: 70px;
+						font-weight: bold;
+					}
+
+					.finished {	
+						
+					}
+
+					.finished:before {
+						content: "Finished: ";
+						
+					}
+
+					.duration {
+					}
+
+					.duration:before {
+						content: "Duration: ";
+					}
+				}
+
+				a:hover {
+					background: darken($jobs-bg, 4%);
+				}
+
+				a:before {
+					content: "";
+					position: absolute;
+					left: $build-state-size;
+					top: 50%;
+					width: $build-state-size;
+					height: $build-state-size;
+					border-radius: 50%;
+					margin: -$build-state-size/2 0 0 -$build-state-size/2;
+					background: red;
+				}
+
+				a.success:before {
+					background: $success-color;
+				}
+
+				a.partial:before {
+					background: $partial-color;
+				}
+
+				a.failed:before {
+					background: $failure-color;
+				}
+
+				a.running:before {
+					background: $running-color;
+				}
+			}
+		}	
+	}
+
+	.job.wide {
+		width: $job-width + $job-log-width;
+	}
+	.job {
+		left: $jobs-width;
+		// right: 0;
+		width: $job-width;
+		background: $job-bg;
+		color: $job-fg;
+		z-index: 1;
+		overflow: auto;
+		
+		h1 {
+			background: darken($job-bg, 4%);
+			border-bottom: 1px solid darken($job-bg, 8%);
+		}
+
+		.info {
+			padding: 10px;
+			color: #999;
+		}
+
+		.logs {
+			background: $logs-bg;
+			color: $logs-fg;
+
+			pre {
+				font-family: monospace;
+				padding: 0;
+				font-size: 12px;
+				line-height: 19px;
+				word-wrap: break-word;
+				white-space: pre-wrap;
+				margin: 0;
+
+				p {
+					margin: 0;
+					padding: 0 10px 0 55px;
+					position: relative;
+
+					span {
+						position: absolute;
+						left: 0;
+						width: 35px;
+						font-weight: bold;
+						padding-right: 10px;
+						text-align: right;
+						background: lighten($logs-bg, 8%);
+					}
+				}
+
+				p:hover {
+					background: lighten($logs-bg, 8%);
+				}
+			}
+		}
+
+		.list {
+			right: none;
+			width: $job-width;
+		}
+
+		.logs {
+			left: $job-width;
+			width: $job-log-width;
+		}
+
+		table.variants {
+			width: 100%;
+			font-size: 12px;
+
+			th {
+				text-align: left;
+				padding: 8px 4px;
+				background: darken($job-bg, 16%);
+				// border-bottom: 1px solid darken($job-bg, 8%);
+			}
+
+			th:nth-of-type(1) {
+				text-align: center;
+			}
+
+			tr {
+
+				td {
+					// text-align: center;
+					padding: 4px;
+					border-bottom: 1px solid darken($job-bg, 8%);
+				}
+
+
+				td:nth-of-type(1) a {
+					display: block;
+					position: relative;
+					padding-left: $build-state-size*2 + 10px;
+					text-decoration: none;
+					color: #999;
+					font-weight: bold;
+				}
+				td:nth-of-type(1) a:before {
+					content: "";
+					position: absolute;
+					left: $build-state-size +10px;
+					top: 50%;
+					width: $build-state-size;
+					height: $build-state-size;
+					border-radius: 50%;
+					margin: (-$build-state-size/2) 0 0 (-$build-state-size/2);
+					background: red;
+				}
+
+				
+			}
+
+			tr:hover {
+				td {
+					background: darken($job-bg, 4%);
+				}
+			}
+
+			tr.selected {
+				td {
+					background: darken($job-bg, 8%);
+				}
+			}
+
+			tr.success {
+				td:nth-of-type(1) a:before {
+					background: $success-color;
+				}
+			}
+
+			tr.partial {
+				td:nth-of-type(1) a:before {
+					background: $partial-color;
+				}
+			}
+
+			tr.failed {
+				td:nth-of-type(1) a:before {
+					background: $failure-color;
+				}
+			}
+
+			tr.running {
+				td:nth-of-type(1) a:before {
+					background: $running-color;
+				}
+			}
+		}
+
+
+	}
+}
+

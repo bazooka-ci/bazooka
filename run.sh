@@ -35,3 +35,17 @@ $d docker run -d \
   -p 3000:3000 \
   --name="bzk_server" \
   bazooka/server
+
+$d docker inspect bzk_web &> /dev/null
+
+rc=$?
+if [[ $rc == 0 ]] ; then
+    $d docker stop bzk_web &> /dev/null
+    $d docker rm bzk_web &> /dev/null
+fi
+
+$d docker run -d \
+  -p 8000:80 \
+  --name="bzk_web" \
+  --link bzk_server:server \
+  bazooka/web

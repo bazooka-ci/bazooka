@@ -1,0 +1,65 @@
+<div class="col project" ng-if="project">
+	<div class="col jobs" ng-controller="JobsController" >
+		<h1>
+			builds
+			<a href="" ng-click="buildProject()">
+				<span class="fa fa-play"></span>
+			</a>
+		</h1>
+		<div class="scroll">
+			<ul>
+			    <li ng-repeat="job in jobs | orderBy:'started':true" ng-class="{selected: isSelected(job)}">
+			    	<a ng-href="#/{{project.id}}?j={{job.id}}" ng-class="job | bzkStatus">
+			    		<span class="duration">
+			    			{{job | bzkDuration}}
+			    		</span>
+			    		<span class="finished">
+			    			{{job | bzkFinished}}
+			    		</span>
+			    		
+			    	</a>
+			    </li>
+			</ul>
+		</div>
+	</div>
+	<div class="col job" ng-controller="JobController" ng-class="{wide: variantSelected()}">
+		<h1>
+		{{project.name}}
+		<span class="meta">{{project.scm_uri}}</span>
+		<a href="">
+			<i class="fa fa-pencil"></i>
+		</a>
+		</h1>
+		<div  ng-controller="VariantsController">
+			
+			<div class="scroll list">
+				<div class="info">
+					<p>job information: commit message and author, etc.</p>
+				</div>
+				<table  class="variants">
+					<thead>
+						<tr>
+							<th>#</th>
+							<th>Duration</th>
+							<th>Finished</th>
+							<th>os</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr ng-repeat="variant in variants | orderBy:'number'"  ng-class="variant | bzkStatus" class="{{isSelected(variant)?'selected':''}}">
+							<td>
+								<a href="#/{{project.id}}?j={{job.id}}&v={{variant.id}}">{{variant.number}}</a>
+							</td>
+							<td>{{variant | bzkDuration}}</td>
+							<td>{{variant | bzkFinished}}</td>
+							<td>linux</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+
+			<div class="scroll logs" bzk-log="logger">
+			</div>
+		</div
+	</div>
+</div>

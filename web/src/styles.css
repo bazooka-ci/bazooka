@@ -1,0 +1,154 @@
+#header {
+	position: absolute;
+	left: 0;
+	right: 0;
+	top: 0;
+	height: 40px;
+	background: #f1c40f;
+	padding: 0 10px;
+	z-index: 4;
+}
+
+#header h1 {
+	color: #fff;
+	font-size: 24px;
+	line-height: 40px;
+	margin: 0;
+	text-transform: uppercase;
+	font-weight: normal;
+	letter-spacing: 4px;
+}
+
+.col {
+	position: absolute;
+	top: 40px;
+	bottom: 0;
+}
+
+#projects {
+	left: 0;
+	width: 200px;
+	background: #2c3e50;
+	color: #fff;
+	box-shadow: 2px 0 4px 0 #111;
+	z-index: 3;
+}
+
+#builds {
+	/*left: 200px;*/
+	right: 0;
+	width: 100px;
+	background: #34495e;
+	color: #fff;
+	box-shadow: -2px 0 4px 0 #111;
+	z-index: 2;
+}
+
+#build {
+	left: 200px;
+	right: 0;
+	background: #95a5a6;
+	z-index: 1;
+}
+
+#projects .search {
+	padding: 10px;
+}
+
+#projects input {
+	background: #95a5a6;
+	border: 1px solid #7f8c8d;
+	color: #fff;
+	padding: 5px;
+	text-transform: uppercase;
+	display: block;
+}
+
+#projects ul {
+	list-style-type: none;
+	margin: 0;
+	padding: 0;
+}
+
+#projects li {
+	padding: 0;
+	margin: 0;
+	border-top: 1px solid #34495e;
+}
+
+#projects a {
+	display: block;
+	padding: 20px 5px;
+	color: #ecf0f1;
+	font-weight: bold;
+	text-transform: uppercase;
+	text-decoration: none;
+
+	border-right: 4px solid #c0392b;
+}
+
+#projects a:hover {
+	color: #fff;
+	background: #34495e;
+}
+
+#builds ul {
+	list-style-type: none;
+	margin: 0;
+	padding: 0;
+}
+
+#builds li {
+	padding: 0;
+	border-bottom: 1px solid #7f8c8d;
+	/*margin: 10px 0;*/
+}
+
+#builds a {
+	display: block;
+	/*width: 30px;*/
+	height: 30px;
+	line-height: 30px;
+	/*text-align: center;*/
+	/*border-radius: 50%;*/
+	/*box-shadow: 1px 1px 2px 0 #111;*/
+	
+	color: #ecf0f1;
+	font-weight: bold;
+	text-transform: uppercase;
+	text-decoration: none;
+	/*border-left: 6px solid transparent;*/
+	padding-left: 16px;
+	position: relative;
+}
+
+#builds a:before {
+	content: "";
+	position: absolute;
+	left: 4px;
+	top: 50%;
+	width: 6px;
+	height: 6px;
+	border-radius: 50%;
+	margin-top: -3px;
+	background: red;
+}
+#builds a.success:before {
+	background: #1abc9c;
+}
+
+#builds a.partial:before {
+	background: #e67e22;
+}
+
+#builds a.failed:before {
+	background: #c0392b;
+}
+
+#builds .time {
+	font-size: 12px;
+	color: #999;
+	text-transform: lowercase;
+	font-weight: normal;
+	text-align: right;
+}
