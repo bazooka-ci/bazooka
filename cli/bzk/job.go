@@ -98,11 +98,11 @@ func listJobsCommand() cli.Command {
 			fmt.Fprint(w, "JOB ID\tSTARTED\tCOMPLETED\tSTATUS\tPROJECT ID\tORCHESTRATION ID\tREFERENCE\tCOMMIT ID\tAUTHOR\tDATE\tMESSAGE\n")
 			for _, item := range res {
 				fmt.Fprintf(w, "%s\t%s\t%v\t%v\t%v\t%s\t%s\t%s\t%s\t%s\t%s\t\n",
-					item.ID,
+					idExcerpt(item.ID),
 					fmtTime(item.Started),
 					fmtTime(item.Completed),
 					jobStatus(item.Status),
-					item.ProjectID,
+					idExcerpt(item.ProjectID),
 					lib.ShortSHA1(item.OrchestrationID),
 					item.SCMMetadata.Reference,
 					lib.ShortSHA1(item.SCMMetadata.CommitID),

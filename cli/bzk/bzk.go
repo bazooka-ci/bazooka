@@ -26,3 +26,14 @@ func main() {
 	}
 	app.Run(os.Args)
 }
+
+const (
+	idExcerptLen = 8
+)
+
+func idExcerpt(id string) string {
+	if len(id) > idExcerptLen {
+		return id[:idExcerptLen]
+	}
+	return id
+}
