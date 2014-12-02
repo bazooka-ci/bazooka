@@ -114,6 +114,8 @@ func setGodir(conf *ConfigGolang) {
 			res := r.FindStringSubmatch(scmMetadata.Origin)
 			if res != nil {
 				buildDir = fmt.Sprintf("/go/src/%s/%s", res[1], res[2])
+			} else {
+				buildDir = "/go/src/app"
 			}
 		} else {
 			buildDir = "/go/src/app"
