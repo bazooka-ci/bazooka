@@ -6,6 +6,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"regexp"
 
 	"github.com/haklop/bazooka/commons/matrix"
 
@@ -100,8 +101,26 @@ func setGodir(conf *ConfigGolang) {
 		}
 
 	} else {
-		buildDir = "/go/src/app"
+		scmMetadata := &bazooka.SCMMetadata{}
+		scmMetadataFile := fmt.Sprintf("%s/scm", MetaFolder)
+		bazooka.Parse(scmMetadataFile, scmMetadata)
+
+		if len(scmMetadata.Origin) > 0 {
+			r, err := regexp.Compile("^(?:https://(?:\\w+@){0,1}|git@)(github.com|bitbucket.org)[:/]{0,1}([\\w-_]+/[\\w-_]+).git$")
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			res := r.FindStringSubmatch(scmMetadata.Origin)
+			if res != nil {
+				buildDir = fmt.Sprintf("/go/src/%s/%s", res[1], res[2])
+			}
+		} else {
+			buildDir = "/go/src/app"
+		}
 	}
+
+	log.Printf("Buildir set to %s\n", buildDir)
 
 	env["BZK_BUILD_DIR"] = []string{buildDir}
 
