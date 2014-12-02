@@ -67,7 +67,7 @@ func startJobCommand() cli.Command {
 			}
 			w := tabwriter.NewWriter(os.Stdout, 15, 1, 3, ' ', 0)
 			fmt.Fprint(w, "JOB ID\tPROJECT ID\tORCHESTRATION ID\n")
-			fmt.Fprintf(w, "%s\t%s\t%s\t\n", res.ID, res.ProjectID, lib.ShortSHA1(res.OrchestrationID))
+			fmt.Fprintf(w, "%s\t%s\t%s\t\n", idExcerpt(res.ID), idExcerpt(res.ProjectID), idExcerpt(res.OrchestrationID))
 			w.Flush()
 		},
 	}
@@ -103,9 +103,9 @@ func listJobsCommand() cli.Command {
 					fmtTime(item.Completed),
 					jobStatus(item.Status),
 					idExcerpt(item.ProjectID),
-					lib.ShortSHA1(item.OrchestrationID),
+					idExcerpt(item.OrchestrationID),
 					item.SCMMetadata.Reference,
-					lib.ShortSHA1(item.SCMMetadata.CommitID),
+					idExcerpt(item.SCMMetadata.CommitID),
 					fmtAuthor(item.SCMMetadata.Author),
 					fmtTime(item.SCMMetadata.Date.Time),
 					item.SCMMetadata.Message)
