@@ -107,7 +107,7 @@ func listJobsCommand() cli.Command {
 					item.SCMMetadata.Reference,
 					lib.ShortSHA1(item.SCMMetadata.CommitID),
 					fmtAuthor(item.SCMMetadata.Author),
-					fmtTime(item.SCMMetadata.Date),
+					fmtTime(item.SCMMetadata.Date.Time),
 					item.SCMMetadata.Message)
 			}
 			w.Flush()
