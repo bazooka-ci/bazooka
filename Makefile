@@ -1,13 +1,18 @@
 default: images
 
 devimages:
-	./build-devimages.sh
+	./scripts/build-devimages.sh
 
 images:
-	./build-images.sh
+	./scripts/build-images.sh
 
 setup:
-	./dev-setup.sh
+	./scripts/dev-setup.sh
 
 run:
-	./run.sh
+	./scripts/run.sh
+
+errcheck:
+	./scripts/errcheck.sh
+
+test: errcheck devimages # Include errcheck in build phase

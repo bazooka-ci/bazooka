@@ -63,7 +63,11 @@ func (r *Runner) runContainer(logger Logger, buildImage BuiltImage, env map[stri
 		Number:     buildImage.VariantID,
 		JobID:      env[BazookaEnvJobID],
 	}
-	r.Mongo.AddVariant(variant)
+	err := r.Mongo.AddVariant(variant)
+	if err != nil {
+		errChan <- err
+		return
+	}
 
 	servicesList, err := listServices(servicesFile)
 	if err != nil {

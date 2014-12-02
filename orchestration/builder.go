@@ -68,7 +68,11 @@ func (b *Builder) Build() ([]BuiltImage, error) {
 func buildContainer(client *docker.Docker, variantID int, b *Builder, file *buildFiles, successChan chan BuiltImage, errChan chan error) {
 	for _, buildFile := range file.BuildFiles {
 		splitString := strings.Split(buildFile, "/")
-		lib.CopyFile(buildFile, fmt.Sprintf("%s/%s", b.Options.SourceFolder, splitString[len(splitString)-1]))
+		err := lib.CopyFile(buildFile, fmt.Sprintf("%s/%s", b.Options.SourceFolder, splitString[len(splitString)-1]))
+		if err != nil {
+			errChan <- err
+			return
+		}
 	}
 
 	tag := fmt.Sprintf("bazooka/build-%s-%s-%d", b.Options.ProjectID, b.Options.JobID, variantID)

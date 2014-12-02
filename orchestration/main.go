@@ -93,7 +93,10 @@ func main() {
 		},
 	}
 	if err := f.Fetch(containerLogger); err != nil {
-		connector.FinishJob(env[BazookaEnvJobID], lib.JOB_ERRORED, time.Now())
+		err2 := connector.FinishJob(env[BazookaEnvJobID], lib.JOB_ERRORED, time.Now())
+		if err2 != nil {
+			log.Fatal(err2)
+		}
 		log.Fatal(err)
 	}
 
@@ -108,7 +111,10 @@ func main() {
 		},
 	}
 	if err := p.Parse(containerLogger); err != nil {
-		connector.FinishJob(env[BazookaEnvJobID], lib.JOB_ERRORED, time.Now())
+		err2 := connector.FinishJob(env[BazookaEnvJobID], lib.JOB_ERRORED, time.Now())
+		if err2 != nil {
+			log.Fatal(err2)
+		}
 		log.Fatal(err)
 	}
 	b := &Builder{
@@ -121,7 +127,10 @@ func main() {
 	}
 	buildImages, err := b.Build()
 	if err != nil {
-		connector.FinishJob(env[BazookaEnvJobID], lib.JOB_ERRORED, time.Now())
+		err2 := connector.FinishJob(env[BazookaEnvJobID], lib.JOB_ERRORED, time.Now())
+		if err2 != nil {
+			log.Fatal(err2)
+		}
 		log.Fatal(err)
 	}
 
@@ -132,13 +141,19 @@ func main() {
 	}
 	success, err := r.Run(containerLogger)
 	if err != nil {
-		connector.FinishJob(env[BazookaEnvJobID], lib.JOB_ERRORED, time.Now())
+		err2 := connector.FinishJob(env[BazookaEnvJobID], lib.JOB_ERRORED, time.Now())
+		if err2 != nil {
+			log.Fatal(err2)
+		}
 		log.Fatal(err)
 	}
 	if success {
-		connector.FinishJob(env[BazookaEnvJobID], lib.JOB_SUCCESS, time.Now())
+		err = connector.FinishJob(env[BazookaEnvJobID], lib.JOB_SUCCESS, time.Now())
 	} else {
-		connector.FinishJob(env[BazookaEnvJobID], lib.JOB_FAILED, time.Now())
+		err = connector.FinishJob(env[BazookaEnvJobID], lib.JOB_FAILED, time.Now())
+	}
+	if err != nil {
+		log.Fatal(err)
 	}
 
 	elapsed := time.Since(start)
