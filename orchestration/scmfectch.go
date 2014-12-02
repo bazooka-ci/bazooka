@@ -73,7 +73,10 @@ func (f *SCMFetcher) Fetch(logger Logger) error {
 	localMetaFolder := fmt.Sprintf(MetaFolderPattern, BazookaInput)
 	scmMetadataFile := fmt.Sprintf("%s/scm", localMetaFolder)
 	log.Printf("Parsing SCM Metadata in %s\n", scmMetadataFile)
-	lib.Parse(scmMetadataFile, scmMetadata)
+	err = lib.Parse(scmMetadataFile, scmMetadata)
+	if err != nil {
+		return err
+	}
 	log.Printf("Metadata Parsed is %+v\n", scmMetadata)
 
 	f.MongoConnector.AddJobSCMMetadata(f.Options.JobID, scmMetadata)

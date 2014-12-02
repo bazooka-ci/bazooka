@@ -1,6 +1,7 @@
 package bazooka
 
 import (
+	"fmt"
 	"time"
 )
 
@@ -55,11 +56,11 @@ type LogEntry struct {
 }
 
 type SCMMetadata struct {
-	Reference string    `bson:"reference" json:"reference" yaml:"reference"`
-	CommitID  string    `bson:"commit_id" json:"commit_id" yaml:"commit_id"`
-	Author    Person    `bson:"author" json:"author" yaml:"author"`
-	Date      time.Time `bson:"time" json:"date" yaml:"date"`
-	Message   string    `bson:"message" json:"message" yaml:"message"`
+	Reference string   `bson:"reference" json:"reference" yaml:"reference"`
+	CommitID  string   `bson:"commit_id" json:"commit_id" yaml:"commit_id"`
+	Author    Person   `bson:"author" json:"author" yaml:"author"`
+	Date      YamlTime `bson:"time" json:"date" yaml:"date"`
+	Message   string   `bson:"message" json:"message" yaml:"message"`
 }
 
 type Person struct {
@@ -92,4 +93,47 @@ type Config struct {
 
 type ConfigMatrix struct {
 	Exclude []map[string]interface{} `yaml:"exclude,omitempty"`
+}
+
+type YamlTime struct {
+	time.Time
+	f string
+}
+
+func (t YamlTime) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	timeAsString := ""
+	if err := unmarshal(&timeAsString); err != nil {
+		return err
+	}
+
+	test, err := time.Parse("Mon Jan 02 15:04:05 2006 -0700", timeAsString)
+	if err == nil {
+		t = YamlTime{
+			test,
+			timeAsString,
+		}
+		fmt.Printf("Parsed time is %v\n", t)
+		return nil
+	}
+	return err
+}
+
+func (j YamlTime) format() string {
+	fmt.Printf("###########FORMAT\n")
+	return j.Time.Format(j.f)
+}
+
+func (j YamlTime) MarshalText() ([]byte, error) {
+	fmt.Printf("###########MT\n")
+	return []byte(j.format()), nil
+}
+
+func (j YamlTime) MarshalJSON() ([]byte, error) {
+	fmt.Printf("###########MJ\n")
+	return []byte(`"` + j.format() + `"`), nil
+}
+
+func (j YamlTime) MarshalYaml() ([]byte, error) {
+	fmt.Printf("###########MY\n")
+	return []byte(j.format()), nil
 }
