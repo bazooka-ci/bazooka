@@ -97,43 +97,47 @@ type ConfigMatrix struct {
 
 type YamlTime struct {
 	time.Time
-	f string
 }
 
-func (t YamlTime) UnmarshalYAML(unmarshal func(interface{}) error) error {
+func (t *YamlTime) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	timeAsString := ""
 	if err := unmarshal(&timeAsString); err != nil {
 		return err
 	}
-
-	test, err := time.Parse("Mon Jan 02 15:04:05 2006 -0700", timeAsString)
-	if err == nil {
-		t = YamlTime{
-			test,
-			timeAsString,
-		}
-		fmt.Printf("Parsed time is %v\n", t)
+	if len(timeAsString) == 0 {
 		return nil
 	}
-	return err
-}
 
-func (j YamlTime) format() string {
-	fmt.Printf("###########FORMAT\n")
-	return j.Time.Format(j.f)
-}
+	timeFormats := []string{
+		time.ANSIC,
+		time.ANSIC,
+		time.UnixDate,
+		time.RubyDate,
+		time.RFC822,
+		time.RFC822Z,
+		time.RFC850,
+		time.RFC1123,
+		time.RFC1123Z,
+		time.RFC3339,
+		time.RFC3339Nano,
+		time.Kitchen,
+		time.Stamp,
+		time.StampMilli,
+		time.StampMicro,
+		time.StampNano,
+		"Mon Jan 02 15:04:05 2006 -0700",
+	}
 
-func (j YamlTime) MarshalText() ([]byte, error) {
-	fmt.Printf("###########MT\n")
-	return []byte(j.format()), nil
-}
+	for _, timeFormat := range timeFormats {
+		test, err := time.Parse(timeFormat, timeAsString)
+		if err == nil {
+			*t = YamlTime{
+				test,
+			}
+			fmt.Printf("Parsed time is %v\n", t)
+			return nil
+		}
+	}
 
-func (j YamlTime) MarshalJSON() ([]byte, error) {
-	fmt.Printf("###########MJ\n")
-	return []byte(`"` + j.format() + `"`), nil
-}
-
-func (j YamlTime) MarshalYaml() ([]byte, error) {
-	fmt.Printf("###########MY\n")
-	return []byte(j.format()), nil
+	return fmt.Errorf("Unable to parse time %v", timeAsString)
 }
