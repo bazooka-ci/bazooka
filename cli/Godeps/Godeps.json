@@ -1,0 +1,18 @@
+{
+	"ImportPath": "github.com/haklop/bazooka/cli",
+	"GoVersion": "go1.3.3",
+	"Packages": [
+		"./..."
+	],
+	"Deps": [
+		{
+			"ImportPath": "github.com/codegangsta/cli",
+			"Comment": "1.2.0-38-g9908e96",
+			"Rev": "9908e96513e5a94de37004098a3974a567f18111"
+		},
+		{
+			"ImportPath": "gopkg.in/yaml.v2",
+			"Rev": "eca94c41d994ae2215d455ce578ae6e2dc6ee516"
+		}
+	]
+}
