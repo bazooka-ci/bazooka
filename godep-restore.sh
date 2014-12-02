@@ -8,6 +8,6 @@ go_projects=( "parser" "parserlang/golang" "parserlang/java" "orchestration" "se
 for project in "${go_projects[@]}"
 do
   pushd "$project"
-    godep restore ./...
+    make godep-restore
   popd
 done
