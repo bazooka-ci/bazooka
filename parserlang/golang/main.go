@@ -13,12 +13,10 @@ import (
 )
 
 const (
-	SourceFolder      = "/bazooka"
-	OutputFolder      = "/bazooka-output"
-	MetaFolder        = "/meta"
-	BazookaConfigFile = ".bazooka.yml"
-	TravisConfigFile  = ".travis.yml"
-	Golang            = "go"
+	SourceFolder = "/bazooka"
+	OutputFolder = "/bazooka-output"
+	MetaFolder   = "/meta"
+	Golang       = "go"
 )
 
 func main() {

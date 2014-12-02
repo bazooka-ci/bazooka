@@ -10,12 +10,10 @@ import (
 )
 
 const (
-	SourceFolder      = "/bazooka"
-	OutputFolder      = "/bazooka-output"
-	MetaFolder        = "/meta"
-	BazookaConfigFile = ".bazooka.yml"
-	TravisConfigFile  = ".travis.yml"
-	Jdk               = "jdk"
+	SourceFolder = "/bazooka"
+	OutputFolder = "/bazooka-output"
+	MetaFolder   = "/meta"
+	Jdk          = "jdk"
 )
 
 func main() {
