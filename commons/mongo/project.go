@@ -23,19 +23,16 @@ func (c *MongoConnector) GetProject(scmType string, scmURI string) (lib.Project,
 	return result, err
 }
 
-func (c *MongoConnector) GetProjectById(id string) (lib.Project, error) {
-	result := lib.Project{}
-
-	request := bson.M{
-		"id": id,
+func (c *MongoConnector) GetProjectById(id string) (*lib.Project, error) {
+	result := &lib.Project{}
+	if err := c.ById("projects", id, result); err != nil {
+		return nil, err
 	}
-	err := c.database.C("projects").Find(request).One(&result)
-	fmt.Printf("retrieve project: %#v\n", result)
-	return result, err
+	return result, nil
 }
 
-func (c *MongoConnector) GetProjects() ([]lib.Project, error) {
-	result := []lib.Project{}
+func (c *MongoConnector) GetProjects() ([]*lib.Project, error) {
+	result := []*lib.Project{}
 
 	err := c.database.C("projects").Find(bson.M{}).All(&result)
 	fmt.Printf("retrieve projects: %#v\n", result)
@@ -43,46 +40,43 @@ func (c *MongoConnector) GetProjects() ([]lib.Project, error) {
 }
 
 func (c *MongoConnector) AddProject(project *lib.Project) error {
-	i := bson.NewObjectId()
-	project.ID = i.Hex()
+	var err error
+	if project.ID, err = c.randomId(); err != nil {
+		return err
+	}
 
 	fmt.Printf("add project: %#v\n", project)
-	err := c.database.C("projects").Insert(project)
-
-	return err
+	return c.database.C("projects").Insert(project)
 }
 
 func (c *MongoConnector) AddJob(job *lib.Job) error {
-	i := bson.NewObjectId()
-	job.ID = i.Hex()
-
-	fmt.Printf("add job: %#v\n", job)
+	var err error
+	if job.ID, err = c.randomId(); err != nil {
+		return err
+	}
 
 	if len(job.Status) == 0 {
 		job.Status = lib.JOB_RUNNING
 	}
-	err := c.database.C("jobs").Insert(job)
-
-	return err
+	return c.database.C("jobs").Insert(job)
 }
 
 func (c *MongoConnector) AddVariant(variant *lib.Variant) error {
-	i := bson.NewObjectId()
-	variant.ID = i.Hex()
-
-	fmt.Printf("add variant: %#v\n", variant)
+	var err error
+	if variant.ID, err = c.randomId(); err != nil {
+		return err
+	}
 	if len(variant.Status) == 0 {
 		variant.Status = lib.JOB_RUNNING
 	}
-	err := c.database.C("variants").Insert(variant)
-
-	return err
+	return c.database.C("variants").Insert(variant)
 }
 
 func (c *MongoConnector) AddLog(log *lib.LogEntry) error {
-	i := bson.NewObjectId()
-	log.ID = i.Hex()
-
+	var err error
+	if log.ID, err = c.randomId(); err != nil {
+		return err
+	}
 	return c.database.C("logs").Insert(log)
 }
 
@@ -97,13 +91,26 @@ func (c *MongoConnector) GetLog(like *LogExample) ([]lib.LogEntry, error) {
 	result := []lib.LogEntry{}
 	request := bson.M{}
 	if len(like.ProjectID) > 0 {
-		request["project_id"] = like.ProjectID
+		proj, err := c.GetProjectById(like.ProjectID)
+		if err != nil {
+			return nil, err
+		}
+
+		request["project_id"] = proj.ID
 	}
 	if len(like.JobID) > 0 {
-		request["job_id"] = like.JobID
+		job, err := c.GetJobByID(like.JobID)
+		if err != nil {
+			return nil, err
+		}
+		request["job_id"] = job.ID
 	}
 	if len(like.VariantID) > 0 {
-		request["variant_id"] = like.VariantID
+		v, err := c.GetVariantByID(like.VariantID)
+		if err != nil {
+			return nil, err
+		}
+		request["variant_id"] = v.ID
 	}
 
 	if len(like.Images) > 0 {
@@ -112,7 +119,6 @@ func (c *MongoConnector) GetLog(like *LogExample) ([]lib.LogEntry, error) {
 		}
 	}
 	err := c.database.C("logs").Find(request).All(&result)
-	fmt.Printf("retrieve projects: %#v\n", result)
 	return result, err
 }
 
@@ -145,16 +151,13 @@ func (c *MongoConnector) SetJobOrchestrationId(id string, orchestrationId string
 
 func (c *MongoConnector) FinishJob(id string, status lib.JobStatus, completed time.Time) error {
 	fmt.Printf("finish job: %v with status %v\n", id, status)
-	selector := bson.M{
-		"id": id,
-	}
 	request := bson.M{
 		"$set": bson.M{
 			"status":    status,
 			"completed": completed,
 		},
 	}
-	err := c.database.C("jobs").Update(selector, request)
+	err := c.database.C("jobs").Update(c.idLike(id), request)
 
 	return err
 }
@@ -176,57 +179,57 @@ func (c *MongoConnector) AddJobSCMMetadata(id string, metadata *lib.SCMMetadata)
 
 func (c *MongoConnector) FinishVariant(id string, status lib.JobStatus, completed time.Time) error {
 	fmt.Printf("finish variant: %v with status %v\n", id, status)
-	selector := bson.M{
-		"id": id,
-	}
 	request := bson.M{
 		"$set": bson.M{
 			"status":    status,
 			"completed": completed,
 		},
 	}
-	err := c.database.C("variants").Update(selector, request)
+	err := c.database.C("variants").Update(c.idLike(id), request)
 
 	return err
 }
 
-func (c *MongoConnector) GetJobByID(id string) (lib.Job, error) {
-	result := lib.Job{}
-
-	request := bson.M{
-		"id": id,
+func (c *MongoConnector) GetJobByID(id string) (*lib.Job, error) {
+	result := &lib.Job{}
+	if err := c.ById("jobs", id, result); err != nil {
+		return nil, err
 	}
-	err := c.database.C("jobs").Find(request).One(&result)
-	fmt.Printf("retrieve job: %#v\n", result)
-	return result, err
+	return result, nil
 }
 
-func (c *MongoConnector) GetVariantByID(id string) (lib.Variant, error) {
-	result := lib.Variant{}
-
-	request := bson.M{
-		"id": id,
+func (c *MongoConnector) GetVariantByID(id string) (*lib.Variant, error) {
+	result := &lib.Variant{}
+	if err := c.ById("variants", id, result); err != nil {
+		return nil, err
 	}
-	err := c.database.C("variants").Find(request).One(&result)
-	fmt.Printf("retrieve variant: %#v\n", result)
-	return result, err
+	return result, nil
 }
 
-func (c *MongoConnector) GetJobs(projectID string) ([]lib.Job, error) {
-	result := []lib.Job{}
+func (c *MongoConnector) GetJobs(projectID string) ([]*lib.Job, error) {
+	proj, err := c.GetProjectById(projectID)
+	if err != nil {
+		return nil, err
+	}
 
-	err := c.database.C("jobs").Find(bson.M{
-		"project_id": projectID,
+	result := []*lib.Job{}
+	err = c.database.C("jobs").Find(bson.M{
+		"project_id": proj.ID,
 	}).All(&result)
 	fmt.Printf("retrieve jobs: %#v\n", result)
 	return result, err
 }
 
-func (c *MongoConnector) GetVariants(jobID string) ([]lib.Variant, error) {
-	result := []lib.Variant{}
+func (c *MongoConnector) GetVariants(jobID string) ([]*lib.Variant, error) {
+	job, err := c.GetJobByID(jobID)
+	if err != nil {
+		return nil, err
+	}
 
-	err := c.database.C("variants").Find(bson.M{
-		"job_id": jobID,
+	result := []*lib.Variant{}
+
+	err = c.database.C("variants").Find(bson.M{
+		"job_id": job.ID,
 	}).All(&result)
 	fmt.Printf("retrieve variants: %#v\n", result)
 	return result, err

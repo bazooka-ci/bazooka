@@ -34,7 +34,7 @@ func listVariantsCommand() cli.Command {
 
 			fmt.Fprint(w, "NUMBER\tVARIANT ID\tIMAGE\tSTARTED\tCOMPLETED\tSTATUS\tJOB ID\n")
 			for _, item := range res {
-				fmt.Fprintf(w, "%d\t%s\t%s\t%s\t%v\t%v\t%s\n", item.Number, item.ID, item.BuildImage, fmtTime(item.Started), fmtTime(item.Completed), jobStatus(item.Status), item.JobID)
+				fmt.Fprintf(w, "%d\t%s\t%s\t%s\t%v\t%v\t%s\n", item.Number, idExcerpt(item.ID), item.BuildImage, fmtTime(item.Started), fmtTime(item.Completed), jobStatus(item.Status), idExcerpt(item.JobID))
 			}
 			w.Flush()
 		},
