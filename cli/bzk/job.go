@@ -33,6 +33,17 @@ func fmtTime(t time.Time) string {
 	}
 	return t.Local().Format("15:04:05 02/01/2006")
 }
+
+func fmtAuthor(author lib.Person) string {
+	if len(author.Email) > 0 {
+		if len(author.Name) > 0 {
+			return fmt.Sprintf("%s <%s>", author.Name, author.Email)
+		}
+		return author.Email
+	}
+	return author.Name
+}
+
 func startJobCommand() cli.Command {
 	return cli.Command{
 		Name:  "start",
@@ -56,7 +67,7 @@ func startJobCommand() cli.Command {
 			}
 			w := tabwriter.NewWriter(os.Stdout, 15, 1, 3, ' ', 0)
 			fmt.Fprint(w, "JOB ID\tPROJECT ID\tORCHESTRATION ID\n")
-			fmt.Fprintf(w, "%s\t%s\t%s\t\n", res.ID, res.ProjectID, res.OrchestrationID)
+			fmt.Fprintf(w, "%s\t%s\t%s\t\n", res.ID, res.ProjectID, lib.ShortSHA1(res.OrchestrationID))
 			w.Flush()
 		},
 	}
@@ -84,9 +95,20 @@ func listJobsCommand() cli.Command {
 				log.Fatal(err)
 			}
 			w := tabwriter.NewWriter(os.Stdout, 15, 1, 3, ' ', 0)
-			fmt.Fprint(w, "JOB ID\tSTARTED\tCOMPLETED\tSTATUS\tPROJECT ID\tORCHESTRATION ID\n")
+			fmt.Fprint(w, "JOB ID\tSTARTED\tCOMPLETED\tSTATUS\tPROJECT ID\tORCHESTRATION ID\tREFERENCE\tCOMMIT ID\tAUTHOR\tDATE\tMESSAGE\n")
 			for _, item := range res {
-				fmt.Fprintf(w, "%s\t%s\t%v\t%v\t%v\t%s\t\n", item.ID, fmtTime(item.Started), fmtTime(item.Completed), jobStatus(item.Status), item.ProjectID, item.OrchestrationID)
+				fmt.Fprintf(w, "%s\t%s\t%v\t%v\t%v\t%s\t%s\t%s\t%s\t%s\t%s\t\n",
+					item.ID,
+					fmtTime(item.Started),
+					fmtTime(item.Completed),
+					jobStatus(item.Status),
+					item.ProjectID,
+					lib.ShortSHA1(item.OrchestrationID),
+					item.SCMMetadata.Reference,
+					lib.ShortSHA1(item.SCMMetadata.CommitID),
+					fmtAuthor(item.SCMMetadata.Author),
+					fmtTime(item.SCMMetadata.Date.Time),
+					item.SCMMetadata.Message)
 			}
 			w.Flush()
 		},

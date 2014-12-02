@@ -80,10 +80,12 @@ func main() {
 	checkoutFolder := fmt.Sprintf(CheckoutFolderPattern, env[BazookaEnvHome])
 	metaFolder := fmt.Sprintf(MetaFolderPattern, env[BazookaEnvHome])
 	f := &SCMFetcher{
+		MongoConnector: connector,
 		Options: &FetchOptions{
 			Scm:         env[BazookaEnvSCM],
 			URL:         env[BazookaEnvSCMUrl],
 			Reference:   env[BazookaEnvSCMReference],
+			JobID:       env[BazookaEnvJobID],
 			LocalFolder: checkoutFolder,
 			MetaFolder:  metaFolder,
 			KeyFile:     env[BazookaEnvSCMKeyfile],

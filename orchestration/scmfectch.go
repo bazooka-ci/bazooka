@@ -5,10 +5,13 @@ import (
 	"log"
 
 	docker "github.com/bywan/go-dockercommand"
+	lib "github.com/haklop/bazooka/commons"
+	"github.com/haklop/bazooka/commons/mongo"
 )
 
 type SCMFetcher struct {
-	Options *FetchOptions
+	Options        *FetchOptions
+	MongoConnector *mongo.MongoConnector
 }
 
 type FetchOptions struct {
@@ -18,6 +21,7 @@ type FetchOptions struct {
 	LocalFolder string
 	KeyFile     string
 	MetaFolder  string
+	JobID       string
 	Env         map[string]string
 }
 
@@ -60,10 +64,23 @@ func (f *SCMFetcher) Fetch(logger Logger) error {
 	}
 
 	log.Printf("SCM Source Repo Fetched in %s\n", f.Options.LocalFolder)
-	return container.Remove(&docker.RemoveOptions{
+	err = container.Remove(&docker.RemoveOptions{
 		Force:         true,
 		RemoveVolumes: true,
 	})
+
+	scmMetadata := &lib.SCMMetadata{}
+	localMetaFolder := fmt.Sprintf(MetaFolderPattern, BazookaInput)
+	scmMetadataFile := fmt.Sprintf("%s/scm", localMetaFolder)
+	log.Printf("Parsing SCM Metadata in %s\n", scmMetadataFile)
+	err = lib.Parse(scmMetadataFile, scmMetadata)
+	if err != nil {
+		return err
+	}
+	log.Printf("Metadata Parsed is %+v\n", scmMetadata)
+
+	f.MongoConnector.AddJobSCMMetadata(f.Options.JobID, scmMetadata)
+	return err
 }
 
 func resolveSCMImage(scm string) (string, error) {

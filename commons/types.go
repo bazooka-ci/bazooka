@@ -1,6 +1,7 @@
 package bazooka
 
 import (
+	"fmt"
 	"time"
 )
 
@@ -35,12 +36,13 @@ const (
 )
 
 type Job struct {
-	ID              string    `bson:"id" json:"id"`
-	ProjectID       string    `bson:"project_id" json:"project_id"`
-	OrchestrationID string    `bson:"orchestration_id" json:"orchestration_id"`
-	Started         time.Time `bson:"started" json:"started"`
-	Completed       time.Time `bson:"completed" json:"completed"`
-	Status          JobStatus `bson:"status" json:"status"`
+	ID              string      `bson:"id" json:"id"`
+	ProjectID       string      `bson:"project_id" json:"project_id"`
+	OrchestrationID string      `bson:"orchestration_id" json:"orchestration_id"`
+	Started         time.Time   `bson:"started" json:"started"`
+	Completed       time.Time   `bson:"completed" json:"completed"`
+	Status          JobStatus   `bson:"status" json:"status"`
+	SCMMetadata     SCMMetadata `bson:"scm_metadata" json:"scm_metadata"`
 }
 
 type LogEntry struct {
@@ -51,6 +53,19 @@ type LogEntry struct {
 	JobID     string    `bson:"job_id" json:"job_id"`
 	VariantID string    `bson:"variant_id" json:"variant_id"`
 	Image     string    `bson:"image" json:"image"`
+}
+
+type SCMMetadata struct {
+	Reference string   `bson:"reference" json:"reference" yaml:"reference"`
+	CommitID  string   `bson:"commit_id" json:"commit_id" yaml:"commit_id"`
+	Author    Person   `bson:"author" json:"author" yaml:"author"`
+	Date      YamlTime `bson:"time" json:"date" yaml:"date"`
+	Message   string   `bson:"message" json:"message" yaml:"message"`
+}
+
+type Person struct {
+	Name  string `bson:"name" json:"name" yaml:"name"`
+	Email string `bson:"email" json:"email" yaml:"email"`
 }
 
 type ScmFetcher struct {
@@ -78,4 +93,51 @@ type Config struct {
 
 type ConfigMatrix struct {
 	Exclude []map[string]interface{} `yaml:"exclude,omitempty"`
+}
+
+type YamlTime struct {
+	time.Time
+}
+
+func (t *YamlTime) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	timeAsString := ""
+	if err := unmarshal(&timeAsString); err != nil {
+		return err
+	}
+	if len(timeAsString) == 0 {
+		return nil
+	}
+
+	timeFormats := []string{
+		time.ANSIC,
+		time.ANSIC,
+		time.UnixDate,
+		time.RubyDate,
+		time.RFC822,
+		time.RFC822Z,
+		time.RFC850,
+		time.RFC1123,
+		time.RFC1123Z,
+		time.RFC3339,
+		time.RFC3339Nano,
+		time.Kitchen,
+		time.Stamp,
+		time.StampMilli,
+		time.StampMicro,
+		time.StampNano,
+		"Mon Jan 02 15:04:05 2006 -0700",
+	}
+
+	for _, timeFormat := range timeFormats {
+		test, err := time.Parse(timeFormat, timeAsString)
+		if err == nil {
+			*t = YamlTime{
+				test,
+			}
+			fmt.Printf("Parsed time is %v\n", t)
+			return nil
+		}
+	}
+
+	return fmt.Errorf("Unable to parse time %v", timeAsString)
 }
