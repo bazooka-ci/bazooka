@@ -16,7 +16,7 @@
 			    		<span class="finished">
 			    			{{job | bzkFinished}}
 			    		</span>
-			    		
+
 			    	</a>
 			    </li>
 			</ul>
@@ -31,10 +31,12 @@
 		</a>
 		</h1>
 		<div  ng-controller="VariantsController">
-			
+
 			<div class="scroll list">
 				<div class="info">
-					<p>job information: commit message and author, etc.</p>
+					<p><b>{{job.scm_metadata.reference}}</b> - {{job.scm_metadata.message}}</p>
+					<p>{{job.scm_metadata.author.name}} authored {{job.scm_metadata.date | bzkDate}}</p>
+					<p>Commit {{job.scm_metadata.commit_id}}</p>
 				</div>
 				<table  class="variants">
 					<thead>

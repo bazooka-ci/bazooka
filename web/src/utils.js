@@ -23,6 +23,14 @@ angular.module('bzk.utils').filter('bzkFinished', function(){
 	};
 });
 
+angular.module('bzk.utils').filter('bzkDate', function(){
+	return function(d) {
+		var m = moment(d);
+		return m.year()==1? '-':m.format('HH:mm:ss - DD MMM YYYY');
+	};
+});
+
+
 angular.module('bzk.utils').filter('bzkDuration', function(){
 	return function(job) {
 		var m = moment(job.completed);
