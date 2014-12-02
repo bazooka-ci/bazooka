@@ -93,9 +93,9 @@ func main() {
 		},
 	}
 	if err := f.Fetch(containerLogger); err != nil {
-		err2 := connector.FinishJob(env[BazookaEnvJobID], lib.JOB_ERRORED, time.Now())
-		if err2 != nil {
-			log.Fatal(err2)
+		mongoErr := connector.FinishJob(env[BazookaEnvJobID], lib.JOB_ERRORED, time.Now())
+		if mongoErr != nil {
+			log.Fatal(mongoErr)
 		}
 		log.Fatal(err)
 	}
@@ -111,9 +111,9 @@ func main() {
 		},
 	}
 	if err := p.Parse(containerLogger); err != nil {
-		err2 := connector.FinishJob(env[BazookaEnvJobID], lib.JOB_ERRORED, time.Now())
-		if err2 != nil {
-			log.Fatal(err2)
+		mongoErr := connector.FinishJob(env[BazookaEnvJobID], lib.JOB_ERRORED, time.Now())
+		if mongoErr != nil {
+			log.Fatal(mongoErr)
 		}
 		log.Fatal(err)
 	}
@@ -127,9 +127,9 @@ func main() {
 	}
 	buildImages, err := b.Build()
 	if err != nil {
-		err2 := connector.FinishJob(env[BazookaEnvJobID], lib.JOB_ERRORED, time.Now())
-		if err2 != nil {
-			log.Fatal(err2)
+		mongoErr := connector.FinishJob(env[BazookaEnvJobID], lib.JOB_ERRORED, time.Now())
+		if mongoErr != nil {
+			log.Fatal(mongoErr)
 		}
 		log.Fatal(err)
 	}
@@ -141,9 +141,9 @@ func main() {
 	}
 	success, err := r.Run(containerLogger)
 	if err != nil {
-		err2 := connector.FinishJob(env[BazookaEnvJobID], lib.JOB_ERRORED, time.Now())
-		if err2 != nil {
-			log.Fatal(err2)
+		mongoErr := connector.FinishJob(env[BazookaEnvJobID], lib.JOB_ERRORED, time.Now())
+		if mongoErr != nil {
+			log.Fatal(mongoErr)
 		}
 		log.Fatal(err)
 	}
