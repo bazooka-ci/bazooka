@@ -126,7 +126,7 @@ func (t *YamlTime) UnmarshalYAML(unmarshal func(interface{}) error) error {
 		time.StampMilli,
 		time.StampMicro,
 		time.StampNano,
-		"Mon Jan 02 15:04:05 2006 -0700",
+		"Mon Jan 2 15:04:05 2006 -0700",
 	}
 
 	for _, timeFormat := range timeFormats {
