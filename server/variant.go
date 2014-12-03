@@ -1,75 +1,38 @@
 package main
 
-import (
-	"encoding/json"
-	"net/http"
+import "github.com/haklop/bazooka/commons/mongo"
 
-	"github.com/gorilla/mux"
-	"github.com/haklop/bazooka/commons/mongo"
-)
-
-func (c *Context) getVariant(res http.ResponseWriter, req *http.Request) {
-	params := mux.Vars(req)
-
-	encoder := json.NewEncoder(res)
-	res.Header().Set("Content-Type", "application/json; charset=utf-8")
-
+func (c *context) getVariant(params map[string]string, body bodyFunc) (*response, error) {
 	variant, err := c.Connector.GetVariantByID(params["id"])
 	if err != nil {
 		if err.Error() != "not found" {
-			WriteError(err, res, encoder)
-			return
+			return nil, err
 		}
-		res.WriteHeader(404)
-		encoder.Encode(&ErrorResponse{
-			Code:    404,
-			Message: "variant not found",
-		})
-		return
+		return notFound("variant not found")
 	}
 
-	res.WriteHeader(200)
-	encoder.Encode(&variant)
+	return ok(&variant)
 }
 
-func (c *Context) getVariants(res http.ResponseWriter, req *http.Request) {
-	params := mux.Vars(req)
-
-	encoder := json.NewEncoder(res)
-	res.Header().Set("Content-Type", "application/json; charset=utf-8")
-
+func (c *context) getVariants(params map[string]string, body bodyFunc) (*response, error) {
 	variants, err := c.Connector.GetVariants(params["id"])
 	if err != nil {
-		WriteError(err, res, encoder)
-		return
+		return nil, err
 	}
 
-	res.WriteHeader(200)
-	encoder.Encode(&variants)
+	return ok(&variants)
 }
 
-func (c *Context) getVariantLog(res http.ResponseWriter, req *http.Request) {
-	params := mux.Vars(req)
-
-	encoder := json.NewEncoder(res)
-	res.Header().Set("Content-Type", "application/json; charset=utf-8")
-
+func (c *context) getVariantLog(params map[string]string, body bodyFunc) (*response, error) {
 	log, err := c.Connector.GetLog(&mongo.LogExample{
 		VariantID: params["id"],
 	})
 	if err != nil {
 		if err.Error() != "not found" {
-			WriteError(err, res, encoder)
-			return
+			return nil, err
 		}
-		res.WriteHeader(404)
-		encoder.Encode(&ErrorResponse{
-			Code:    404,
-			Message: "log not found",
-		})
-		return
+		return notFound("log not found")
 	}
 
-	res.WriteHeader(200)
-	encoder.Encode(&log)
+	return ok(&log)
 }
