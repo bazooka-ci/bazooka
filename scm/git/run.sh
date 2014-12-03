@@ -2,13 +2,15 @@
 set -e
 
 function extract_meta {
+  origin=$(git config --get remote.origin.url)
   sha1=$(git rev-parse HEAD)
   author_name=$(git --no-pager log --format='%an' -n 1 HEAD)
   author_email=$(git --no-pager log --format='%ae' -n 1 HEAD)
   date=$(git --no-pager log --format='%cd' -n 1 HEAD)
   message=$(git --no-pager log --format=%B -n 1 | head -n 1)
 
-  echo "reference: $BZK_SCM_REFERENCE"  > /meta/scm
+  echo "origin: $origin"                > /meta/scm
+  echo "reference: $BZK_SCM_REFERENCE"  >> /meta/scm
   echo "commit_id: $sha1"               >> /meta/scm
   echo "author:"                        >> /meta/scm
   echo "  name: $author_name"           >> /meta/scm

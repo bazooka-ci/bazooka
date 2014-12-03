@@ -56,6 +56,7 @@ type LogEntry struct {
 }
 
 type SCMMetadata struct {
+	Origin    string   `bson:"origin" json:"origin" yaml:"origin"`
 	Reference string   `bson:"reference" json:"reference" yaml:"reference"`
 	CommitID  string   `bson:"commit_id" json:"commit_id" yaml:"commit_id"`
 	Author    Person   `bson:"author" json:"author" yaml:"author"`
