@@ -79,7 +79,10 @@ func (f *SCMFetcher) Fetch(logger Logger) error {
 	}
 	log.Printf("Metadata Parsed is %+v\n", scmMetadata)
 
-	f.MongoConnector.AddJobSCMMetadata(f.Options.JobID, scmMetadata)
+	err = f.MongoConnector.AddJobSCMMetadata(f.Options.JobID, scmMetadata)
+	if err != nil {
+		return err
+	}
 	return err
 }
 

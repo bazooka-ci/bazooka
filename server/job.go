@@ -72,7 +72,6 @@ func (c *context) startBuild(params map[string]string, body bodyFunc) (*response
 	})
 
 	logFolder := fmt.Sprintf(logFolderPattern, BazookaHome, runningJob.ProjectID, runningJob.ID)
-	os.MkdirAll(logFolder, 0755)
 
 	// Ensure directory exists
 	err = os.MkdirAll(logFolder, 0755)
@@ -87,7 +86,8 @@ func (c *context) startBuild(params map[string]string, body bodyFunc) (*response
 	runningJob.OrchestrationID = container.ID()
 	orchestrationLog := log.New(logFileWriter, "", log.LstdFlags)
 	orchestrationLog.Printf("Start job %s on project %s with container %s\n", runningJob.ID, runningJob.ProjectID, runningJob.OrchestrationID)
-	c.Connector.SetJobOrchestrationId(runningJob.ID, container.ID())
+
+	err = c.Connector.SetJobOrchestrationId(runningJob.ID, container.ID())
 	if err != nil {
 		orchestrationLog.Println(err.Error())
 		return nil, err
