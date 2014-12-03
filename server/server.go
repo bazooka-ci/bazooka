@@ -86,8 +86,13 @@ func conflict(msg string) (*response, error) {
 	return nil, &errorResponse{409, msg}
 }
 
+func unauthorized() (*response, error) {
+	return nil, &errorResponse{401, "Unauthorized"}
+}
+
 func mkHandler(f func(map[string]string, bodyFunc) (*response, error)) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
+
 		bf := func(b interface{}) {
 			defer r.Body.Close()
 			decoder := json.NewDecoder(r.Body)
