@@ -3,12 +3,12 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
-	"log"
 	"strconv"
 	"strings"
 
 	docker "github.com/bywan/go-dockercommand"
 	lib "github.com/haklop/bazooka/commons"
+	l "github.com/haklop/bazooka/commons/logger"
 )
 
 type Builder struct {
@@ -29,7 +29,7 @@ type BuiltImage struct {
 
 func (b *Builder) Build() ([]BuiltImage, error) {
 
-	log.Printf("Starting building Dockerfiles\n")
+	l.Info.Printf("Starting building Dockerfiles\n")
 	files, err := listBuildfiles(b.Options.DockerfileFolder)
 	if err != nil {
 		return nil, err

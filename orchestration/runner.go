@@ -3,12 +3,12 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"log"
 	"os"
 	"time"
 
 	docker "github.com/bywan/go-dockercommand"
 	commons "github.com/haklop/bazooka/commons"
+	l "github.com/haklop/bazooka/commons/logger"
 	"github.com/haklop/bazooka/commons/mongo"
 )
 
@@ -49,7 +49,7 @@ func (r *Runner) Run(logger Logger) (bool, error) {
 		}
 	}
 
-	log.Printf("Dockerfiles builds finished\n")
+	l.Info.Printf("Dockerfiles builds finished\n")
 	return success, lastError
 }
 

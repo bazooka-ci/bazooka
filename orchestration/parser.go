@@ -5,6 +5,7 @@ import (
 	"log"
 
 	docker "github.com/bywan/go-dockercommand"
+	l "github.com/haklop/bazooka/commons/logger"
 	"github.com/haklop/bazooka/commons/mongo"
 )
 
@@ -28,7 +29,7 @@ type ParseOptions struct {
 
 func (p *Parser) Parse(logger Logger) error {
 
-	log.Printf("Parsing Configuration from checked-out source %s\n", p.Options.InputFolder)
+	l.Info.Printf("Parsing Configuration from checked-out source %s\n", p.Options.InputFolder)
 	client, err := docker.NewDocker(DockerEndpoint)
 	if err != nil {
 		return err
@@ -73,7 +74,7 @@ func (p *Parser) Parse(logger Logger) error {
 	if err != nil {
 		return err
 	}
-	log.Printf("Configuration parsed and Dockerfiles generated in %s\n", p.Options.OutputFolder)
+	l.Info.Printf("Configuration parsed and Dockerfiles generated in %s\n", p.Options.OutputFolder)
 	return nil
 }
 

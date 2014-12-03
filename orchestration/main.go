@@ -3,12 +3,13 @@ package main
 import (
 	"fmt"
 	"io"
-	"log"
+	"io/ioutil"
 	"os"
 	"time"
 
 	docker "github.com/bywan/go-dockercommand"
 	lib "github.com/haklop/bazooka/commons"
+	l "github.com/haklop/bazooka/commons/logger"
 	"github.com/haklop/bazooka/commons/mongo"
 )
 
@@ -38,7 +39,6 @@ type Logger func(image string, variant string, container *docker.Container)
 func main() {
 	// TODO add validation
 	start := time.Now()
-	log.SetFlags(0)
 
 	// Configure Mongo
 	connector := mongo.NewConnector()
@@ -69,7 +69,7 @@ func main() {
 	//redirect the log to mongo
 	func() {
 		r, w := io.Pipe()
-		log.SetOutput(io.MultiWriter(os.Stdout, w))
+		l.Init(ioutil.Discard, io.MultiWriter(os.Stdout, w), io.MultiWriter(os.Stdout, w), io.MultiWriter(os.Stdout, w))
 		connector.FeedLog(r, lib.LogEntry{
 			ProjectID: env[BazookaEnvProjectID],
 			JobID:     env[BazookaEnvJobID],
@@ -95,9 +95,9 @@ func main() {
 	if err := f.Fetch(containerLogger); err != nil {
 		mongoErr := connector.FinishJob(env[BazookaEnvJobID], lib.JOB_ERRORED, time.Now())
 		if mongoErr != nil {
-			log.Fatal(mongoErr)
+			l.Error.Fatal(mongoErr)
 		}
-		log.Fatal(err)
+		l.Error.Fatal(err)
 	}
 
 	p := &Parser{
@@ -114,9 +114,9 @@ func main() {
 	if err := p.Parse(containerLogger); err != nil {
 		mongoErr := connector.FinishJob(env[BazookaEnvJobID], lib.JOB_ERRORED, time.Now())
 		if mongoErr != nil {
-			log.Fatal(mongoErr)
+			l.Error.Fatal(mongoErr)
 		}
-		log.Fatal(err)
+		l.Error.Fatal(err)
 	}
 	b := &Builder{
 		Options: &BuildOptions{
@@ -130,9 +130,9 @@ func main() {
 	if err != nil {
 		mongoErr := connector.FinishJob(env[BazookaEnvJobID], lib.JOB_ERRORED, time.Now())
 		if mongoErr != nil {
-			log.Fatal(mongoErr)
+			l.Error.Fatal(mongoErr)
 		}
-		log.Fatal(err)
+		l.Error.Fatal(err)
 	}
 
 	r := &Runner{
@@ -144,9 +144,9 @@ func main() {
 	if err != nil {
 		mongoErr := connector.FinishJob(env[BazookaEnvJobID], lib.JOB_ERRORED, time.Now())
 		if mongoErr != nil {
-			log.Fatal(mongoErr)
+			l.Error.Fatal(mongoErr)
 		}
-		log.Fatal(err)
+		l.Error.Fatal(err)
 	}
 	if success {
 		err = connector.FinishJob(env[BazookaEnvJobID], lib.JOB_SUCCESS, time.Now())
@@ -154,10 +154,10 @@ func main() {
 		err = connector.FinishJob(env[BazookaEnvJobID], lib.JOB_FAILED, time.Now())
 	}
 	if err != nil {
-		log.Fatal(err)
+		l.Error.Fatal(err)
 	}
 
 	elapsed := time.Since(start)
-	log.Printf("Job Orchestration took %s", elapsed)
+	l.Info.Printf("Job Orchestration took %s", elapsed)
 
 }
