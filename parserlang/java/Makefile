@@ -8,3 +8,9 @@ devimage: gox
 
 gox:
 	gox -osarch="linux/amd64" -output="dev/main"
+
+godep-restore:
+	godep restore ./...
+
+godep-save:
+	godep save ./...

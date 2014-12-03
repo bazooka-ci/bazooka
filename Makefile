@@ -11,3 +11,9 @@ setup:
 
 run:
 	./run.sh
+
+godep-save:
+	./godep-save.sh
+
+godep-restore:
+	./godep-restore.sh
