@@ -29,10 +29,11 @@ func (f *SCMFetcher) Fetch(logger Logger) error {
 
 	log.Printf("Fetching SCM From Source Repo %s\n", f.Options.URL)
 
-	image, err := resolveSCMImage(f.Options.Scm)
+	image, err := f.resolveSCMImage(f.Options.Scm)
 	if err != nil {
 		return err
 	}
+	log.Printf("Using image '%s'\n", image)
 
 	client, err := docker.NewDocker(DockerEndpoint)
 	if err != nil {
@@ -86,13 +87,11 @@ func (f *SCMFetcher) Fetch(logger Logger) error {
 	return err
 }
 
-func resolveSCMImage(scm string) (string, error) {
+func (f *SCMFetcher) resolveSCMImage(scm string) (string, error) {
 	//TODO extract this from db
-	scmMap := map[string]string{
-		"git": "bazooka/scm-git",
+	image, err := f.MongoConnector.GetImage(fmt.Sprintf("scm/fetch/%s", scm))
+	if err != nil {
+		return "", fmt.Errorf("Unable to find Bazooka Docker Image for SCM %s\n", scm)
 	}
-	if val, ok := scmMap[scm]; ok {
-		return val, nil
-	}
-	return "", fmt.Errorf("Unable to find Bazooka Docker Image for SCM %s\n", scm)
+	return image, nil
 }

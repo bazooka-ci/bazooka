@@ -5,6 +5,7 @@ import (
 	"log"
 
 	docker "github.com/bywan/go-dockercommand"
+	"github.com/haklop/bazooka/commons/mongo"
 )
 
 const (
@@ -12,7 +13,8 @@ const (
 )
 
 type Parser struct {
-	Options *ParseOptions
+	MongoConnector *mongo.MongoConnector
+	Options        *ParseOptions
 }
 
 type ParseOptions struct {
@@ -31,8 +33,16 @@ func (p *Parser) Parse(logger Logger) error {
 	if err != nil {
 		return err
 	}
+
+	image, err := p.resolveParserImage()
+	if err != nil {
+		return err
+	}
+
+	log.Printf("Using image '%s'\n", image)
+
 	container, err := client.Run(&docker.RunOptions{
-		Image: BazookaParseImage,
+		Image: image,
 		Env:   p.Options.Env,
 		VolumeBinds: []string{
 			fmt.Sprintf("%s:/bazooka", p.Options.InputFolder),
@@ -65,4 +75,13 @@ func (p *Parser) Parse(logger Logger) error {
 	}
 	log.Printf("Configuration parsed and Dockerfiles generated in %s\n", p.Options.OutputFolder)
 	return nil
+}
+
+func (f *Parser) resolveParserImage() (string, error) {
+	//TODO extract this from db
+	image, err := f.MongoConnector.GetImage("parser")
+	if err != nil {
+		return "", fmt.Errorf("Unable to find Bazooka Docker Image for parser\n")
+	}
+	return image, nil
 }
