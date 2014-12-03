@@ -82,6 +82,10 @@ func notFound(msg string) (*response, error) {
 	return nil, &errorResponse{404, msg}
 }
 
+func conflict(msg string) (*response, error) {
+	return nil, &errorResponse{409, msg}
+}
+
 func mkHandler(f func(map[string]string, bodyFunc) (*response, error)) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		bf := func(b interface{}) {
@@ -98,7 +102,10 @@ func mkHandler(f func(map[string]string, bodyFunc) (*response, error)) func(http
 			w.Header().Set("Content-Type", "application/json; charset=utf-8")
 			switch e := err.(type) {
 			case errorResponse:
-				w.WriteHeader(400)
+				w.WriteHeader(e.Code)
+				encoder.Encode(e)
+			case *errorResponse:
+				w.WriteHeader(e.Code)
 				encoder.Encode(e)
 			default:
 				writeError(e, w)
@@ -124,10 +131,7 @@ func mkHandler(f func(map[string]string, bodyFunc) (*response, error)) func(http
 		}
 
 		if rb != nil {
-			fmt.Printf("rb=%#v\n", rb)
-
 			for k, v := range rb.Headers {
-				fmt.Printf("add header %s=%s\n", k, v)
 				w.Header().Set(k, v)
 			}
 

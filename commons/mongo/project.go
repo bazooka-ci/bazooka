@@ -11,21 +11,26 @@ import (
 	"gopkg.in/mgo.v2/bson"
 )
 
-func (c *MongoConnector) GetProject(scmType string, scmURI string) (lib.Project, error) {
-	result := lib.Project{}
+func (c *MongoConnector) HasProject(name string, scmType string, scmURI string) (bool, error) {
+	request := bson.M{}
 
-	request := bson.M{
-		"scm_uri":  scmURI,
-		"scm_type": scmType,
+	if len(name) > 0 {
+		request["name"] = name
 	}
-	err := c.database.C("projects").Find(request).One(&result)
-	fmt.Printf("retrieve project: %#v\n", result)
-	return result, err
+	if len(scmType) > 0 {
+		request["scm_type"] = scmType
+	}
+	if len(scmURI) > 0 {
+		request["scm_uri"] = scmURI
+	}
+
+	count, err := c.database.C("projects").Find(request).Count()
+	return count > 0, err
 }
 
 func (c *MongoConnector) GetProjectById(id string) (*lib.Project, error) {
 	result := &lib.Project{}
-	if err := c.ById("projects", id, result); err != nil {
+	if err := c.ByIdOrName("projects", id, result); err != nil {
 		return nil, err
 	}
 	return result, nil
