@@ -2,16 +2,13 @@ package main
 
 import (
 	"bufio"
-	"encoding/json"
 	"fmt"
 	"io"
 	"log"
-	"net/http"
 	"os"
 	"time"
 
 	docker "github.com/bywan/go-dockercommand"
-	"github.com/gorilla/mux"
 	lib "github.com/haklop/bazooka/commons"
 	"github.com/haklop/bazooka/commons/mongo"
 )
@@ -22,52 +19,26 @@ const (
 	// keyFolderPattern   = "%s/key/%s"         // $bzk_home/key/$keyName
 )
 
-func (c *Context) startBuild(res http.ResponseWriter, req *http.Request) {
-	params := mux.Vars(req)
+func (c *Context) startBuild(params map[string]string, body BodyFunc) (*Response, error) {
 	var startJob lib.StartJob
 
-	decoder := json.NewDecoder(req.Body)
-	encoder := json.NewEncoder(res)
-	res.Header().Set("Content-Type", "application/json; charset=utf-8")
-
-	err := decoder.Decode(&startJob)
-	if err != nil {
-		res.WriteHeader(400)
-		encoder.Encode(&ErrorResponse{
-			Code:    400,
-			Message: "Invalid body : " + err.Error(),
-		})
-		return
-	}
+	body(&startJob)
 
 	if len(startJob.ScmReference) == 0 {
-		res.WriteHeader(400)
-		encoder.Encode(&ErrorResponse{
-			Code:    400,
-			Message: "reference is mandatory",
-		})
-
-		return
+		return BadRequest("reference is mandatory")
 	}
 
 	project, err := c.Connector.GetProjectById(params["id"])
 	if err != nil {
 		if err.Error() != "not found" {
-			WriteError(err, res, encoder)
-			return
+			return nil, err
 		}
-		res.WriteHeader(404)
-		encoder.Encode(&ErrorResponse{
-			Code:    404,
-			Message: "project not found",
-		})
-		return
+		return NotFound("project not found")
 	}
 
 	client, err := docker.NewDocker(c.DockerEndpoint)
 	if err != nil {
-		WriteError(err, res, encoder)
-		return
+		return nil, err
 	}
 
 	runningJob := &lib.Job{
@@ -76,8 +47,7 @@ func (c *Context) startBuild(res http.ResponseWriter, req *http.Request) {
 	}
 
 	if err := c.Connector.AddJob(runningJob); err != nil {
-		WriteError(err, res, encoder)
-		return
+		return nil, err
 	}
 
 	buildFolder := fmt.Sprintf(buildFolderPattern, c.Env[BazookaEnvHome], runningJob.ProjectID, runningJob.ID)
@@ -107,11 +77,11 @@ func (c *Context) startBuild(res http.ResponseWriter, req *http.Request) {
 	// Ensure directory exists
 	err = os.MkdirAll(logFolder, 0755)
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 	logFileWriter, err := os.Create(logFolder + "/job.log")
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	runningJob.OrchestrationID = container.ID()
@@ -120,8 +90,7 @@ func (c *Context) startBuild(res http.ResponseWriter, req *http.Request) {
 	c.Connector.SetJobOrchestrationId(runningJob.ID, container.ID())
 	if err != nil {
 		orchestrationLog.Println(err.Error())
-		WriteError(err, res, encoder)
-		return
+		return nil, err
 	}
 
 	r, w := io.Pipe()
@@ -137,74 +106,43 @@ func (c *Context) startBuild(res http.ResponseWriter, req *http.Request) {
 		logFileWriter.Close()
 	}(r, logFileWriter)
 
-	res.Header().Set("Location", "/job/"+runningJob.ID)
-
-	res.WriteHeader(202)
-	encoder.Encode(runningJob)
+	return Accepted(runningJob, "/job/"+runningJob.ID)
 }
 
-func (c *Context) getJob(res http.ResponseWriter, req *http.Request) {
-	params := mux.Vars(req)
-
-	encoder := json.NewEncoder(res)
-	res.Header().Set("Content-Type", "application/json; charset=utf-8")
+func (c *Context) getJob(params map[string]string, body BodyFunc) (*Response, error) {
 
 	job, err := c.Connector.GetJobByID(params["id"])
 	if err != nil {
 		if err.Error() != "not found" {
-			WriteError(err, res, encoder)
-			return
+			return nil, err
 		}
-		res.WriteHeader(404)
-		encoder.Encode(&ErrorResponse{
-			Code:    404,
-			Message: "job not found",
-		})
-		return
+		return NotFound("job not found")
 	}
 
-	res.WriteHeader(200)
-	encoder.Encode(&job)
+	return Ok(&job)
 }
 
-func (c *Context) getJobs(res http.ResponseWriter, req *http.Request) {
-	params := mux.Vars(req)
-
-	encoder := json.NewEncoder(res)
-	res.Header().Set("Content-Type", "application/json; charset=utf-8")
+func (c *Context) getJobs(params map[string]string, body BodyFunc) (*Response, error) {
 
 	jobs, err := c.Connector.GetJobs(params["id"])
 	if err != nil {
-		WriteError(err, res, encoder)
-		return
+		return nil, err
 	}
 
-	res.WriteHeader(200)
-	encoder.Encode(&jobs)
+	return Ok(&jobs)
 }
 
-func (c *Context) getJobLog(res http.ResponseWriter, req *http.Request) {
-	params := mux.Vars(req)
-
-	encoder := json.NewEncoder(res)
-	res.Header().Set("Content-Type", "application/json; charset=utf-8")
+func (c *Context) getJobLog(params map[string]string, body BodyFunc) (*Response, error) {
 
 	log, err := c.Connector.GetLog(&mongo.LogExample{
 		JobID: params["id"],
 	})
 	if err != nil {
 		if err.Error() != "not found" {
-			WriteError(err, res, encoder)
-			return
+			return nil, err
 		}
-		res.WriteHeader(404)
-		encoder.Encode(&ErrorResponse{
-			Code:    404,
-			Message: "log not found",
-		})
-		return
+		return NotFound("log not found")
 	}
 
-	res.WriteHeader(200)
-	encoder.Encode(&log)
+	return Ok(&log)
 }

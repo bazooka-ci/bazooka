@@ -44,18 +44,19 @@ func main() {
 	// Configure web server
 	r := mux.NewRouter()
 
-	r.HandleFunc("/project", ctx.createProject).Methods("POST")
-	r.HandleFunc("/project", ctx.getProjects).Methods("GET")
-	r.HandleFunc("/project/{id}", ctx.getProject).Methods("GET")
-	r.HandleFunc("/project/{id}/job", ctx.startBuild).Methods("POST")
-	r.HandleFunc("/project/{id}/job", ctx.getJobs).Methods("GET")
+	r.HandleFunc("/project", MkHandler(ctx.createProject)).Methods("POST")
 
-	r.HandleFunc("/job/{id}", ctx.getJob).Methods("GET")
-	r.HandleFunc("/job/{id}/log", ctx.getJobLog).Methods("GET")
-	r.HandleFunc("/job/{id}/variant", ctx.getVariants).Methods("GET")
+	r.HandleFunc("/project", MkHandler(ctx.getProjects)).Methods("GET")
+	r.HandleFunc("/project/{id}", MkHandler(ctx.getProject)).Methods("GET")
+	r.HandleFunc("/project/{id}/job", MkHandler(ctx.startBuild)).Methods("POST")
+	r.HandleFunc("/project/{id}/job", MkHandler(ctx.getJobs)).Methods("GET")
 
-	r.HandleFunc("/variant/{id}", ctx.getVariant).Methods("GET")
-	r.HandleFunc("/variant/{id}/log", ctx.getVariantLog).Methods("GET")
+	r.HandleFunc("/job/{id}", MkHandler(ctx.getJob)).Methods("GET")
+	r.HandleFunc("/job/{id}/log", MkHandler(ctx.getJobLog)).Methods("GET")
+	r.HandleFunc("/job/{id}/variant", MkHandler(ctx.getVariants)).Methods("GET")
+
+	r.HandleFunc("/variant/{id}", MkHandler(ctx.getVariant)).Methods("GET")
+	r.HandleFunc("/variant/{id}/log", MkHandler(ctx.getVariantLog)).Methods("GET")
 
 	r.HandleFunc("/fetcher", ctx.createFetcher).Methods("POST")
 	r.HandleFunc("/fetcher", ctx.getFetchers).Methods("GET")
