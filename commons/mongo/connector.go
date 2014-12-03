@@ -94,6 +94,26 @@ func (m *MongoConnector) ById(collection, id string, result interface{}) error {
 	}
 }
 
-// func (m *MongoConnector) Add(collection string, object interface{}) error {
+func (m *MongoConnector) ByIdOrName(collection, id string, result interface{}) error {
+	err := m.ById(collection, id, result)
+	switch err.(type) {
+	case *NotFoundError:
+		q := m.database.C(collection).Find(bson.M{"name": id})
+		count, err := q.Count()
+		if err != nil {
+			return err
+		}
+		switch count {
+		case 0:
+			return &NotFoundError{collection, id}
+		case 1:
+			return q.One(result)
 
-// }
+		default:
+			return &ManyFoundError{collection, id, count}
+		}
+	default:
+		return err
+	}
+
+}

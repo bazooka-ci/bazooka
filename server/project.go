@@ -7,23 +7,29 @@ func (p *context) createProject(params map[string]string, body bodyFunc) (*respo
 
 	body(&project)
 
-	if len(project.ScmURI) == 0 {
+	switch {
+	case len(project.ScmURI) == 0:
 		return badRequest("scm_uri is mandatory")
-	}
-
-	if len(project.ScmType) == 0 {
+	case len(project.ScmType) == 0:
 		return badRequest("scm_type is mandatory")
+	case len(project.Name) == 0:
+		return badRequest("name is mandatory")
 	}
 
-	existantProject, err := p.Connector.GetProject(project.ScmType, project.ScmURI)
-	if err != nil {
-		if err.Error() != "not found" {
-			return nil, err
-		}
+	exists, err := p.Connector.HasProject("", project.ScmType, project.ScmURI)
+	switch {
+	case err != nil:
+		return nil, err
+	case exists:
+		return conflict("scm_uri is already known")
 	}
 
-	if len(existantProject.ScmURI) > 0 {
-		return nil, errorResponse{409, "scm_uri is already known"}
+	exists, err = p.Connector.HasProject(project.Name, "", "")
+	switch {
+	case err != nil:
+		return nil, err
+	case exists:
+		return conflict("name is already known")
 	}
 
 	// TODO : validate scm_type
