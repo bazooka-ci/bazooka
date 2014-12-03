@@ -77,6 +77,12 @@ type Image struct {
 	ID          string `bson:"id" json:"id"`
 }
 
+type User struct {
+	ID       string `bson:"id" json:"id"`
+	Email    string `bson:"email" json:"email"`
+	Password string `bson:"password" json:"password"`
+}
+
 type Config struct {
 	Language      string       `yaml:"language"`
 	Setup         Commands     `yaml:"setup,omitempty"`
