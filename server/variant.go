@@ -2,28 +2,28 @@ package main
 
 import "github.com/haklop/bazooka/commons/mongo"
 
-func (c *Context) getVariant(params map[string]string, body BodyFunc) (*Response, error) {
+func (c *context) getVariant(params map[string]string, body bodyFunc) (*response, error) {
 	variant, err := c.Connector.GetVariantByID(params["id"])
 	if err != nil {
 		if err.Error() != "not found" {
 			return nil, err
 		}
-		return NotFound("variant not found")
+		return notFound("variant not found")
 	}
 
-	return Ok(&variant)
+	return ok(&variant)
 }
 
-func (c *Context) getVariants(params map[string]string, body BodyFunc) (*Response, error) {
+func (c *context) getVariants(params map[string]string, body bodyFunc) (*response, error) {
 	variants, err := c.Connector.GetVariants(params["id"])
 	if err != nil {
 		return nil, err
 	}
 
-	return Ok(&variants)
+	return ok(&variants)
 }
 
-func (c *Context) getVariantLog(params map[string]string, body BodyFunc) (*Response, error) {
+func (c *context) getVariantLog(params map[string]string, body bodyFunc) (*response, error) {
 	log, err := c.Connector.GetLog(&mongo.LogExample{
 		VariantID: params["id"],
 	})
@@ -31,8 +31,8 @@ func (c *Context) getVariantLog(params map[string]string, body BodyFunc) (*Respo
 		if err.Error() != "not found" {
 			return nil, err
 		}
-		return NotFound("log not found")
+		return notFound("log not found")
 	}
 
-	return Ok(&log)
+	return ok(&log)
 }

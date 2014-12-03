@@ -19,13 +19,13 @@ const (
 	// keyFolderPattern   = "%s/key/%s"         // $bzk_home/key/$keyName
 )
 
-func (c *Context) startBuild(params map[string]string, body BodyFunc) (*Response, error) {
+func (c *context) startBuild(params map[string]string, body bodyFunc) (*response, error) {
 	var startJob lib.StartJob
 
 	body(&startJob)
 
 	if len(startJob.ScmReference) == 0 {
-		return BadRequest("reference is mandatory")
+		return badRequest("reference is mandatory")
 	}
 
 	project, err := c.Connector.GetProjectById(params["id"])
@@ -33,7 +33,7 @@ func (c *Context) startBuild(params map[string]string, body BodyFunc) (*Response
 		if err.Error() != "not found" {
 			return nil, err
 		}
-		return NotFound("project not found")
+		return notFound("project not found")
 	}
 
 	client, err := docker.NewDocker(c.DockerEndpoint)
@@ -106,33 +106,33 @@ func (c *Context) startBuild(params map[string]string, body BodyFunc) (*Response
 		logFileWriter.Close()
 	}(r, logFileWriter)
 
-	return Accepted(runningJob, "/job/"+runningJob.ID)
+	return accepted(runningJob, "/job/"+runningJob.ID)
 }
 
-func (c *Context) getJob(params map[string]string, body BodyFunc) (*Response, error) {
+func (c *context) getJob(params map[string]string, body bodyFunc) (*response, error) {
 
 	job, err := c.Connector.GetJobByID(params["id"])
 	if err != nil {
 		if err.Error() != "not found" {
 			return nil, err
 		}
-		return NotFound("job not found")
+		return notFound("job not found")
 	}
 
-	return Ok(&job)
+	return ok(&job)
 }
 
-func (c *Context) getJobs(params map[string]string, body BodyFunc) (*Response, error) {
+func (c *context) getJobs(params map[string]string, body bodyFunc) (*response, error) {
 
 	jobs, err := c.Connector.GetJobs(params["id"])
 	if err != nil {
 		return nil, err
 	}
 
-	return Ok(&jobs)
+	return ok(&jobs)
 }
 
-func (c *Context) getJobLog(params map[string]string, body BodyFunc) (*Response, error) {
+func (c *context) getJobLog(params map[string]string, body bodyFunc) (*response, error) {
 
 	log, err := c.Connector.GetLog(&mongo.LogExample{
 		JobID: params["id"],
@@ -141,8 +141,8 @@ func (c *Context) getJobLog(params map[string]string, body BodyFunc) (*Response,
 		if err.Error() != "not found" {
 			return nil, err
 		}
-		return NotFound("log not found")
+		return notFound("log not found")
 	}
 
-	return Ok(&log)
+	return ok(&log)
 }

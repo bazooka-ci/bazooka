@@ -35,7 +35,7 @@ func main() {
 	connector := mongo.NewConnector()
 	defer connector.Close()
 
-	ctx := Context{
+	ctx := context{
 		Connector:      connector,
 		DockerEndpoint: serverEndpoint,
 		Env:            env,
@@ -44,23 +44,19 @@ func main() {
 	// Configure web server
 	r := mux.NewRouter()
 
-	r.HandleFunc("/project", MkHandler(ctx.createProject)).Methods("POST")
+	r.HandleFunc("/project", mkHandler(ctx.createProject)).Methods("POST")
 
-	r.HandleFunc("/project", MkHandler(ctx.getProjects)).Methods("GET")
-	r.HandleFunc("/project/{id}", MkHandler(ctx.getProject)).Methods("GET")
-	r.HandleFunc("/project/{id}/job", MkHandler(ctx.startBuild)).Methods("POST")
-	r.HandleFunc("/project/{id}/job", MkHandler(ctx.getJobs)).Methods("GET")
+	r.HandleFunc("/project", mkHandler(ctx.getProjects)).Methods("GET")
+	r.HandleFunc("/project/{id}", mkHandler(ctx.getProject)).Methods("GET")
+	r.HandleFunc("/project/{id}/job", mkHandler(ctx.startBuild)).Methods("POST")
+	r.HandleFunc("/project/{id}/job", mkHandler(ctx.getJobs)).Methods("GET")
 
-	r.HandleFunc("/job/{id}", MkHandler(ctx.getJob)).Methods("GET")
-	r.HandleFunc("/job/{id}/log", MkHandler(ctx.getJobLog)).Methods("GET")
-	r.HandleFunc("/job/{id}/variant", MkHandler(ctx.getVariants)).Methods("GET")
+	r.HandleFunc("/job/{id}", mkHandler(ctx.getJob)).Methods("GET")
+	r.HandleFunc("/job/{id}/log", mkHandler(ctx.getJobLog)).Methods("GET")
+	r.HandleFunc("/job/{id}/variant", mkHandler(ctx.getVariants)).Methods("GET")
 
-	r.HandleFunc("/variant/{id}", MkHandler(ctx.getVariant)).Methods("GET")
-	r.HandleFunc("/variant/{id}/log", MkHandler(ctx.getVariantLog)).Methods("GET")
-
-	r.HandleFunc("/fetcher", ctx.createFetcher).Methods("POST")
-	r.HandleFunc("/fetcher", ctx.getFetchers).Methods("GET")
-	r.HandleFunc("/fetcher/{id}", ctx.getFetcher).Methods("GET")
+	r.HandleFunc("/variant/{id}", mkHandler(ctx.getVariant)).Methods("GET")
+	r.HandleFunc("/variant/{id}/log", mkHandler(ctx.getVariantLog)).Methods("GET")
 
 	http.Handle("/", r)
 	log.Fatal(http.ListenAndServe(":3000", nil))

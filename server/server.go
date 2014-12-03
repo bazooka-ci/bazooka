@@ -22,73 +22,73 @@ const (
 	BazookaHome    = "/bazooka"
 )
 
-type ErrorResponse struct {
+type errorResponse struct {
 	Code    int    `json:"error_code"`
 	Message string `json:"error_msg"`
 }
 
-func (e ErrorResponse) Error() string {
+func (e errorResponse) Error() string {
 	return fmt.Sprintf("%d: %s", e.Code, e.Message)
 }
 
-type Context struct {
+type context struct {
 	Connector      *mongo.MongoConnector
 	DockerEndpoint string
 	Env            map[string]string
 }
 
-func WriteError(err error, res http.ResponseWriter, encoder *json.Encoder) {
+func writeError(err error, res http.ResponseWriter) {
 	res.WriteHeader(500)
-	encoder.Encode(&ErrorResponse{
+	json.NewEncoder(res).Encode(&errorResponse{
 		Code:    500,
 		Message: err.Error(),
 	})
 }
 
-type BodyFunc func(interface{})
+type bodyFunc func(interface{})
 
-type Response struct {
+type response struct {
 	Code    int
 	Payload interface{}
 	Headers map[string]string
 }
 
-func Ok(payload interface{}) (*Response, error) {
-	return &Response{
+func ok(payload interface{}) (*response, error) {
+	return &response{
 		Code:    200,
 		Payload: payload,
 	}, nil
 }
 
-func Created(payload interface{}, location string) (*Response, error) {
-	return &Response{
+func created(payload interface{}, location string) (*response, error) {
+	return &response{
 		201,
 		payload,
 		map[string]string{"Location": location},
 	}, nil
 }
-func Accepted(payload interface{}, location string) (*Response, error) {
-	return &Response{
+func accepted(payload interface{}, location string) (*response, error) {
+	return &response{
 		202,
 		payload,
 		map[string]string{"Location": location},
 	}, nil
 }
-func BadRequest(msg string) (*Response, error) {
-	return nil, &ErrorResponse{400, msg}
+func badRequest(msg string) (*response, error) {
+	return nil, &errorResponse{400, msg}
 }
 
-func NotFound(msg string) (*Response, error) {
-	return nil, &ErrorResponse{404, msg}
+func notFound(msg string) (*response, error) {
+	return nil, &errorResponse{404, msg}
 }
 
-func MkHandler(f func(map[string]string, BodyFunc) (*Response, error)) func(http.ResponseWriter, *http.Request) {
+func mkHandler(f func(map[string]string, bodyFunc) (*response, error)) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		bf := func(b interface{}) {
 			defer r.Body.Close()
 			decoder := json.NewDecoder(r.Body)
 			if err := decoder.Decode(b); err != nil {
-				panic(ErrorResponse{400, "Unable to decode your json : " + err.Error()})
+				panic(errorResponse{400, "Unable to decode your json : " + err.Error()})
 			}
 		}
 
@@ -97,11 +97,11 @@ func MkHandler(f func(map[string]string, BodyFunc) (*Response, error)) func(http
 		dispatchError := func(err error) {
 			w.Header().Set("Content-Type", "application/json; charset=utf-8")
 			switch e := err.(type) {
-			case ErrorResponse:
+			case errorResponse:
 				w.WriteHeader(400)
 				encoder.Encode(e)
 			default:
-				WriteError(e, w, encoder)
+				writeError(e, w)
 			}
 		}
 
@@ -111,7 +111,7 @@ func MkHandler(f func(map[string]string, BodyFunc) (*Response, error)) func(http
 				case error:
 					dispatchError(rt)
 				default:
-					WriteError(fmt.Errorf("Caught a panic: %v", r), w, encoder)
+					writeError(fmt.Errorf("Caught a panic: %v", r), w)
 				}
 			}
 		}()
