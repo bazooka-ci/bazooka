@@ -45,10 +45,11 @@ func (p *context) createProject(params map[string]string, body bodyFunc) (*respo
 	}
 	// TODO : validate scm_type
 	// TODO : validate data by scm_type
-
+	fmt.Printf("Add project: %#v\n", project)
 	if err = p.Connector.AddProject(&project); err != nil {
 		return nil, err
 	}
+
 	return created(&project, "/project/"+project.ID)
 }
 
@@ -66,6 +67,7 @@ func (p *context) getProject(params map[string]string, body bodyFunc) (*response
 
 func (p *context) getProjects(params map[string]string, body bodyFunc) (*response, error) {
 	projects, err := p.Connector.GetProjects()
+	fmt.Printf("Retrieve projects: %#v\n", projects)
 	if err != nil {
 		return nil, err
 	}

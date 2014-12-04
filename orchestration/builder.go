@@ -76,11 +76,11 @@ func buildContainer(client *docker.Docker, variantID int, b *Builder, file *buil
 	}
 
 	tag := fmt.Sprintf("bazooka/build-%s-%s-%d", b.Options.ProjectID, b.Options.JobID, variantID)
-	err := client.Build(&docker.BuildOptions{
+	err := client.BuildWithLogger(&docker.BuildOptions{
 		Tag:        tag,
 		Dockerfile: file.Dockerfile,
 		Path:       b.Options.SourceFolder,
-	})
+	}, l.Docker)
 	if err != nil {
 		errChan <- err
 	} else {

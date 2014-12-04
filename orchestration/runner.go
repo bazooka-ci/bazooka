@@ -118,7 +118,7 @@ func (r *Runner) runContainer(logger Logger, buildImage BuiltImage, env map[stri
 		return
 	}
 
-	container.Logs(buildImage.Image)
+	container.LogsWith(buildImage.Image, l.Docker)
 	logger(buildImage.Image, variant.ID, container)
 
 	exitCode, err := container.Wait()

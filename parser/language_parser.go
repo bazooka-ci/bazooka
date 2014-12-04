@@ -38,7 +38,7 @@ func (p *LanguageParser) Parse() error {
 		return err
 	}
 
-	container.LogsWith(p.Image, l.Docker)
+	container.Logs(p.Image)
 
 	exitCode, err := container.Wait()
 	if err != nil {
