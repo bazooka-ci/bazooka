@@ -57,7 +57,7 @@ func main() {
 
 	var containerLogger Logger = func(image string, variantID string, container *docker.Container) {
 		r, w := io.Pipe()
-		container.StreamLogs(io.MultiWriter(os.Stdout, w))
+		container.StreamLogs(w)
 		connector.FeedLog(r, lib.LogEntry{
 			ProjectID: env[BazookaEnvProjectID],
 			JobID:     env[BazookaEnvJobID],
@@ -69,7 +69,7 @@ func main() {
 	//redirect the log to mongo
 	func() {
 		r, w := io.Pipe()
-		l.Init(ioutil.Discard, io.MultiWriter(os.Stdout, w), io.MultiWriter(os.Stdout, w), io.MultiWriter(os.Stdout, w))
+		l.Init(ioutil.Discard, io.MultiWriter(os.Stdout, w), io.MultiWriter(os.Stdout, w), io.MultiWriter(os.Stdout, w), os.Stdout)
 		connector.FeedLog(r, lib.LogEntry{
 			ProjectID: env[BazookaEnvProjectID],
 			JobID:     env[BazookaEnvJobID],

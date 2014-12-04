@@ -2,10 +2,10 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"os"
 
 	docker "github.com/bywan/go-dockercommand"
+	l "github.com/haklop/bazooka/commons/logger"
 )
 
 const (
@@ -18,7 +18,7 @@ type LanguageParser struct {
 
 func (p *LanguageParser) Parse() error {
 
-	log.Printf("Lauching language parser %s\n", p.Image)
+	l.Info.Printf("Lauching language parser %s\n", p.Image)
 
 	client, err := docker.NewDocker(dockerEndpoint)
 	if err != nil {
@@ -38,7 +38,7 @@ func (p *LanguageParser) Parse() error {
 		return err
 	}
 
-	container.Logs(p.Image)
+	container.LogsWith(p.Image, l.Docker)
 
 	exitCode, err := container.Wait()
 	if err != nil {

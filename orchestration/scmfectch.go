@@ -53,7 +53,7 @@ func (f *SCMFetcher) Fetch(logger Logger) error {
 		return err
 	}
 
-	container.Logs(image)
+	container.LogsWith(image, l.Docker)
 	logger(image, "", container)
 
 	exitCode, err := container.Wait()
@@ -78,7 +78,6 @@ func (f *SCMFetcher) Fetch(logger Logger) error {
 	if err != nil {
 		return err
 	}
-	l.Info.Printf("Metadata Parsed is %+v\n", scmMetadata)
 
 	err = f.MongoConnector.AddJobSCMMetadata(f.Options.JobID, scmMetadata)
 	if err != nil {

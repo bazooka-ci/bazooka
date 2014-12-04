@@ -56,7 +56,7 @@ func (p *Parser) Parse(logger Logger) error {
 		return err
 	}
 
-	container.Logs(BazookaParseImage)
+	container.LogsWith(BazookaParseImage, l.Docker)
 	logger(BazookaParseImage, "", container)
 
 	exitCode, err := container.Wait()
