@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 
 	docker "github.com/bywan/go-dockercommand"
 	l "github.com/haklop/bazooka/commons/logger"
@@ -40,7 +39,7 @@ func (p *Parser) Parse(logger Logger) error {
 		return err
 	}
 
-	log.Printf("Using image '%s'\n", image)
+	l.Info.Printf("Using image '%s'\n", image)
 
 	container, err := client.Run(&docker.RunOptions{
 		Image: image,

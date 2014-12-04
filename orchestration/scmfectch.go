@@ -33,7 +33,7 @@ func (f *SCMFetcher) Fetch(logger Logger) error {
 	if err != nil {
 		return err
 	}
-	log.Printf("Using image '%s'\n", image)
+	l.Info.Printf("Using image '%s'\n", image)
 
 	client, err := docker.NewDocker(DockerEndpoint)
 	if err != nil {
