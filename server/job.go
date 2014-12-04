@@ -41,6 +41,11 @@ func (c *context) startBuild(params map[string]string, body bodyFunc) (*response
 		return nil, err
 	}
 
+	orchestrationImage, err := c.Connector.GetImage("orchestration")
+	if err != nil {
+		return nil, &errorResponse{500, fmt.Sprintf("Failed to retrieve the orchestration image: %v", err)}
+	}
+
 	runningJob := &lib.Job{
 		ProjectID: project.ID,
 		Started:   time.Now(),
@@ -65,7 +70,7 @@ func (c *context) startBuild(params map[string]string, body bodyFunc) (*response
 	}
 
 	container, err := client.Run(&docker.RunOptions{
-		Image:       "bazooka/orchestration",
+		Image:       orchestrationImage,
 		VolumeBinds: []string{fmt.Sprintf("%s:/bazooka", buildFolder), fmt.Sprintf("%s:/var/run/docker.sock", c.Env[BazookaEnvDockerSock])},
 		Env:         orchestrationEnv,
 		Detach:      true,

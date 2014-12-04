@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -35,6 +36,10 @@ func main() {
 	connector := mongo.NewConnector()
 	defer connector.Close()
 
+	if err := ensureDefaultImagesExist(connector); err != nil {
+		log.Fatal(err)
+	}
+
 	ctx := context{
 		Connector:      connector,
 		DockerEndpoint: serverEndpoint,
@@ -58,6 +63,34 @@ func main() {
 	r.HandleFunc("/variant/{id}", mkHandler(ctx.getVariant)).Methods("GET")
 	r.HandleFunc("/variant/{id}/log", mkHandler(ctx.getVariantLog)).Methods("GET")
 
+	r.HandleFunc("/image", mkHandler(ctx.getImages)).Methods("GET")
+	r.HandleFunc("/image/{name:.*}", mkHandler(ctx.setImage)).Methods("PUT")
+	// r.HandleFunc("/image/{name}", mkHandler(ctx.unsetImage)).Methods("DELETE")
+
 	http.Handle("/", r)
 	log.Fatal(http.ListenAndServe(":3000", nil))
+}
+
+var (
+	defaultImages = map[string]string{
+		"orchestration": "bazooka/orchestration",
+		"parser":        "bazooka/parser",
+		"scm/fetch/git": "bazooka/scm-git",
+	}
+)
+
+func ensureDefaultImagesExist(c *mongo.MongoConnector) error {
+	for name, image := range defaultImages {
+		exist, err := c.HasImage(name)
+		if err != nil {
+			return err
+		}
+		if !exist {
+			if err := c.SetImage(name, image); err != nil {
+				return fmt.Errorf("Error while registering %s:%s: %v", name, image, err)
+			}
+		}
+
+	}
+	return nil
 }

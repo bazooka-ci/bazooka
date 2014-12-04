@@ -1,6 +1,10 @@
 package main
 
-import lib "github.com/haklop/bazooka/commons"
+import (
+	"fmt"
+
+	lib "github.com/haklop/bazooka/commons"
+)
 
 func (p *context) createProject(params map[string]string, body bodyFunc) (*response, error) {
 	var project lib.Project
@@ -32,6 +36,13 @@ func (p *context) createProject(params map[string]string, body bodyFunc) (*respo
 		return conflict("name is already known")
 	}
 
+	supported, err := p.Connector.HasImage(fmt.Sprintf("scm/fetch/%s", project.ScmType))
+	switch {
+	case err != nil:
+		return nil, err
+	case !supported:
+		return badRequest(fmt.Sprintf("unsupported scm_type:'%s'", project.ScmType))
+	}
 	// TODO : validate scm_type
 	// TODO : validate data by scm_type
 

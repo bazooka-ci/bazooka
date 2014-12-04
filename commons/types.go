@@ -69,10 +69,10 @@ type Person struct {
 	Email string `bson:"email" json:"email" yaml:"email"`
 }
 
-type ScmFetcher struct {
+type Image struct {
 	Name        string `bson:"name" json:"name"`
 	Description string `bson:"description" json:"description"`
-	ImageName   string `bson:"image_name" json:"image_name"`
+	Image       string `bson:"image" json:"image"`
 	ID          string `bson:"id" json:"id"`
 }
 

@@ -22,6 +22,10 @@ func main() {
 			Name:        "variant",
 			Usage:       "Actions on variants",
 			Subcommands: []cli.Command{listVariantsCommand(), variantLogCommand()},
+		}, {
+			Name:        "image",
+			Usage:       "Actions on images",
+			Subcommands: []cli.Command{listImagesCommand(), setImageCommand()},
 		},
 	}
 	app.Run(os.Args)

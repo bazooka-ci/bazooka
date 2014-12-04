@@ -101,6 +101,7 @@ func main() {
 	}
 
 	p := &Parser{
+		MongoConnector: connector,
 		Options: &ParseOptions{
 			InputFolder:    checkoutFolder,
 			OutputFolder:   fmt.Sprintf(WorkdirFolderPattern, env[BazookaEnvHome]),

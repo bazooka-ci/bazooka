@@ -183,6 +183,48 @@ func (c *Client) VariantLog(variantID string) ([]lib.LogEntry, error) {
 	return log, nil
 }
 
+func (c *Client) ListImages() ([]*lib.Image, error) {
+	resp, err := http.Get(fmt.Sprintf("%s/image", c.URL))
+	if err != nil {
+		return nil, err
+	}
+	err = c.checkResponse(resp)
+	if err != nil {
+		return nil, err
+	}
+	body, err := body(resp)
+	if err != nil {
+		return nil, err
+	}
+	var images []*lib.Image
+	err = json.Unmarshal(body, &images)
+	if err != nil {
+		return nil, err
+	}
+	return images, nil
+}
+
+func (c *Client) SetImage(name, image string) error {
+	p, err := json.Marshal(struct {
+		Image string `json:"image"`
+	}{image})
+	if err != nil {
+		return err
+	}
+
+	req, err := http.NewRequest("PUT", fmt.Sprintf("%s/image/%s", c.URL, name), bytes.NewBuffer(p))
+	if err != nil {
+		return err
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return err
+	}
+	return c.checkResponse(resp)
+}
+
 func (c *Client) checkResponse(s *http.Response) error {
 	switch {
 	case s.StatusCode == http.StatusNotFound:
