@@ -34,7 +34,7 @@ func (p *Parser) Parse(logger Logger) error {
 		return err
 	}
 
-	image, err := p.resolveParserImage()
+	image, err := p.resolveImage()
 	if err != nil {
 		return err
 	}
@@ -77,8 +77,7 @@ func (p *Parser) Parse(logger Logger) error {
 	return nil
 }
 
-func (f *Parser) resolveParserImage() (string, error) {
-	//TODO extract this from db
+func (f *Parser) resolveImage() (string, error) {
 	image, err := f.MongoConnector.GetImage("parser")
 	if err != nil {
 		return "", fmt.Errorf("Unable to find Bazooka Docker Image for parser\n")
