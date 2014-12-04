@@ -24,6 +24,7 @@ const (
 
 func main() {
 	l.Init(ioutil.Discard, os.Stdout, os.Stdout, os.Stdout, os.Stdout)
+	l.Info.Println("Starting Parsing Phase")
 	// Find either .travis.yml or .bazooka.yml file in the project
 	configFile, err := lib.ResolveConfigFile(SourceFolder)
 	if err != nil {
@@ -36,7 +37,7 @@ func main() {
 	if err != nil {
 		l.Error.Fatal(err)
 	}
-	l.Info.Printf("Parsed configuration: %+v\n", config)
+	l.Trace.Printf("Parsed configuration is %+v\n", config)
 
 	// resolve the docker image corresponding to this particular language parser
 	image, err := resolveLanguageParser(config.Language)
@@ -58,6 +59,8 @@ func main() {
 	//
 	// they are also supposed to enrich it with a from attribute corresponding to a base docker image
 	// to be used to run the build
+
+	l.Info.Println("Starting Matrix generation")
 	files, err := lib.ListFilesWithPrefix(OutputFolder, ".bazooka")
 	if err != nil {
 		l.Error.Fatal(err)
@@ -147,7 +150,9 @@ func main() {
 			l.Error.Fatal(fmt.Errorf("Error while removing meta folders: %v", err))
 		}
 	}
+	l.Info.Println("Matrix generated")
 
+	l.Info.Println("Starting generating Dockerfiles from Matrix")
 	// Now we're left with the final build files
 	files, err = lib.ListFilesWithPrefix(OutputFolder, ".bazooka")
 	if err != nil {
@@ -172,6 +177,7 @@ func main() {
 			l.Error.Fatal("Error while generating a dockerfile: %v", err)
 		}
 	}
+	l.Info.Println("Dockerfiles all created successfully")
 
 }
 

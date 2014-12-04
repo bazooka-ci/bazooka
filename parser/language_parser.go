@@ -18,7 +18,7 @@ type LanguageParser struct {
 
 func (p *LanguageParser) Parse() error {
 
-	l.Info.Printf("Lauching language parser %s\n", p.Image)
+	l.Info.Printf("Lauching language parsing %s\n", p.Image)
 
 	client, err := docker.NewDocker(dockerEndpoint)
 	if err != nil {
@@ -48,8 +48,13 @@ func (p *LanguageParser) Parse() error {
 		return fmt.Errorf("Error during execution of Language Parser container %s/parser\n Check Docker container logs, id is %s\n", p.Image, container.ID())
 	}
 
-	return container.Remove(&docker.RemoveOptions{
+	err = container.Remove(&docker.RemoveOptions{
 		Force:         true,
 		RemoveVolumes: true,
 	})
+	if err != nil {
+		return err
+	}
+	l.Info.Println("Language parsing finished")
+	return nil
 }

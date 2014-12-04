@@ -77,6 +77,8 @@ func main() {
 		})
 	}()
 
+	l.Trace.Printf("Starting Orchestration with the following environment %+v\n", env)
+
 	checkoutFolder := fmt.Sprintf(CheckoutFolderPattern, env[BazookaEnvHome])
 	metaFolder := fmt.Sprintf(MetaFolderPattern, env[BazookaEnvHome])
 	f := &SCMFetcher{

@@ -29,7 +29,7 @@ type ParseOptions struct {
 
 func (p *Parser) Parse(logger Logger) error {
 
-	l.Info.Printf("Parsing Configuration from checked-out source %s\n", p.Options.InputFolder)
+	l.Info.Printf("Running Parsing Image %s on checked-out source\n", BazookaParseImage)
 	client, err := docker.NewDocker(DockerEndpoint)
 	if err != nil {
 		return err
@@ -74,7 +74,7 @@ func (p *Parser) Parse(logger Logger) error {
 	if err != nil {
 		return err
 	}
-	l.Info.Printf("Configuration parsed and Dockerfiles generated in %s\n", p.Options.OutputFolder)
+	l.Info.Printf("Parsing Image ran sucessfully, Dockerfiles generated in %s\n", p.Options.OutputFolder)
 	return nil
 }
 

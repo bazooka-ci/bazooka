@@ -27,7 +27,7 @@ type FetchOptions struct {
 
 func (f *SCMFetcher) Fetch(logger Logger) error {
 
-	l.Info.Printf("Fetching SCM From Source Repo %s\n", f.Options.URL)
+	l.Info.Printf("Fetching SCM From Source Repository at %s\n", f.Options.URL)
 
 	image, err := f.resolveImage()
 	if err != nil {
@@ -73,7 +73,6 @@ func (f *SCMFetcher) Fetch(logger Logger) error {
 	scmMetadata := &lib.SCMMetadata{}
 	localMetaFolder := fmt.Sprintf(MetaFolderPattern, BazookaInput)
 	scmMetadataFile := fmt.Sprintf("%s/scm", localMetaFolder)
-	l.Info.Printf("Parsing SCM Metadata in %s\n", scmMetadataFile)
 	err = lib.Parse(scmMetadataFile, scmMetadata)
 	if err != nil {
 		return err
