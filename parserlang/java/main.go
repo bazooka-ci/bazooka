@@ -2,11 +2,13 @@ package main
 
 import (
 	"fmt"
-	"log"
+	"io/ioutil"
+	"os"
 
 	"github.com/haklop/bazooka/commons/matrix"
 
 	bazooka "github.com/haklop/bazooka/commons"
+	l "github.com/haklop/bazooka/commons/logger"
 )
 
 const (
@@ -17,19 +19,20 @@ const (
 )
 
 func main() {
+	l.Init(ioutil.Discard, os.Stdout, os.Stdout, os.Stdout, os.Stdout)
 	file, err := bazooka.ResolveConfigFile(SourceFolder)
 	if err != nil {
-		log.Fatal(err)
+		l.Error.Fatal(err)
 	}
 
 	conf := &ConfigJava{}
 	err = bazooka.Parse(file, conf)
 	if err != nil {
-		log.Fatal(err)
+		l.Error.Fatal(err)
 	}
 	buildTool, err := detectBuildTool(SourceFolder)
 	if err != nil {
-		log.Fatal(err)
+		l.Error.Fatal(err)
 	}
 
 	mx := matrix.Matrix{
@@ -43,7 +46,7 @@ func main() {
 
 	mx.IterAll(func(permutation map[string]string, counter string) {
 		if err := manageJdkVersion(counter, conf, permutation[Jdk], buildTool); err != nil {
-			log.Fatal(err)
+			l.Error.Fatal(err)
 		}
 	}, nil)
 }

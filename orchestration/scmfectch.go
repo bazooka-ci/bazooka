@@ -2,10 +2,10 @@ package main
 
 import (
 	"fmt"
-	"log"
 
 	docker "github.com/bywan/go-dockercommand"
 	lib "github.com/haklop/bazooka/commons"
+	l "github.com/haklop/bazooka/commons/logger"
 	"github.com/haklop/bazooka/commons/mongo"
 )
 
@@ -27,13 +27,13 @@ type FetchOptions struct {
 
 func (f *SCMFetcher) Fetch(logger Logger) error {
 
-	log.Printf("Fetching SCM From Source Repo %s\n", f.Options.URL)
+	l.Info.Printf("Fetching SCM From Source Repository at %s\n", f.Options.URL)
 
 	image, err := f.resolveImage()
 	if err != nil {
 		return err
 	}
-	log.Printf("Using image '%s'\n", image)
+	l.Info.Printf("Using image '%s'\n", image)
 
 	client, err := docker.NewDocker(DockerEndpoint)
 	if err != nil {
@@ -53,7 +53,7 @@ func (f *SCMFetcher) Fetch(logger Logger) error {
 		return err
 	}
 
-	container.Logs(image)
+	container.LogsWith(image, l.Docker)
 	logger(image, "", container)
 
 	exitCode, err := container.Wait()
@@ -64,7 +64,7 @@ func (f *SCMFetcher) Fetch(logger Logger) error {
 		return fmt.Errorf("Error during execution of SCM container %s\n Check Docker container logs, id is %s\n", image, container.ID())
 	}
 
-	log.Printf("SCM Source Repo Fetched in %s\n", f.Options.LocalFolder)
+	l.Info.Printf("SCM Source Repo Fetched in %s\n", f.Options.LocalFolder)
 	err = container.Remove(&docker.RemoveOptions{
 		Force:         true,
 		RemoveVolumes: true,
@@ -73,12 +73,10 @@ func (f *SCMFetcher) Fetch(logger Logger) error {
 	scmMetadata := &lib.SCMMetadata{}
 	localMetaFolder := fmt.Sprintf(MetaFolderPattern, BazookaInput)
 	scmMetadataFile := fmt.Sprintf("%s/scm", localMetaFolder)
-	log.Printf("Parsing SCM Metadata in %s\n", scmMetadataFile)
 	err = lib.Parse(scmMetadataFile, scmMetadata)
 	if err != nil {
 		return err
 	}
-	log.Printf("Metadata Parsed is %+v\n", scmMetadata)
 
 	err = f.MongoConnector.AddJobSCMMetadata(f.Options.JobID, scmMetadata)
 	if err != nil {

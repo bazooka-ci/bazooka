@@ -2,15 +2,18 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
 
 	"github.com/gorilla/mux"
+	l "github.com/haklop/bazooka/commons/logger"
 	"github.com/haklop/bazooka/commons/mongo"
 )
 
 func main() {
+	l.Init(ioutil.Discard, os.Stdout, os.Stdout, os.Stdout, os.Stdout)
 	// Configure Bazooka
 	env := map[string]string{
 		BazookaEnvSCMKeyfile: os.Getenv(BazookaEnvSCMKeyfile),
@@ -68,7 +71,7 @@ func main() {
 	// r.HandleFunc("/image/{name}", mkHandler(ctx.unsetImage)).Methods("DELETE")
 
 	http.Handle("/", r)
-	log.Fatal(http.ListenAndServe(":3000", nil))
+	l.Error.Fatal(http.ListenAndServe(":3000", nil))
 }
 
 var (

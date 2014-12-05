@@ -135,7 +135,6 @@ func (t *YamlTime) UnmarshalYAML(unmarshal func(interface{}) error) error {
 			*t = YamlTime{
 				test,
 			}
-			fmt.Printf("Parsed time is %v\n", t)
 			return nil
 		}
 	}

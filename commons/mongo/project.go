@@ -2,7 +2,6 @@ package mongo
 
 import (
 	"bufio"
-	"fmt"
 	"io"
 	"log"
 	"time"
@@ -40,7 +39,6 @@ func (c *MongoConnector) GetProjects() ([]*lib.Project, error) {
 	result := []*lib.Project{}
 
 	err := c.database.C("projects").Find(bson.M{}).All(&result)
-	fmt.Printf("retrieve projects: %#v\n", result)
 	return result, err
 }
 
@@ -50,7 +48,6 @@ func (c *MongoConnector) AddProject(project *lib.Project) error {
 		return err
 	}
 
-	fmt.Printf("add project: %#v\n", project)
 	return c.database.C("projects").Insert(project)
 }
 
@@ -136,13 +133,12 @@ func (c *MongoConnector) FeedLog(r io.Reader, template lib.LogEntry) {
 			c.AddLog(&template)
 		}
 		if err := scanner.Err(); err != nil {
-			log.Println("There was an error with the scanner in attached container", err)
+			log.Println("There was an error with the scanner", err)
 		}
 	}(r)
 }
 
 func (c *MongoConnector) SetJobOrchestrationId(id string, orchestrationId string) error {
-	fmt.Printf("set job: %v orchestration id to %v", id, orchestrationId)
 	selector := bson.M{
 		"id": id,
 	}
@@ -155,7 +151,6 @@ func (c *MongoConnector) SetJobOrchestrationId(id string, orchestrationId string
 }
 
 func (c *MongoConnector) FinishJob(id string, status lib.JobStatus, completed time.Time) error {
-	fmt.Printf("finish job: %v with status %v\n", id, status)
 	request := bson.M{
 		"$set": bson.M{
 			"status":    status,
@@ -168,7 +163,6 @@ func (c *MongoConnector) FinishJob(id string, status lib.JobStatus, completed ti
 }
 
 func (c *MongoConnector) AddJobSCMMetadata(id string, metadata *lib.SCMMetadata) error {
-	fmt.Printf("adding metadata: %v for job %v\n", metadata, id)
 	selector := bson.M{
 		"id": id,
 	}
@@ -183,7 +177,6 @@ func (c *MongoConnector) AddJobSCMMetadata(id string, metadata *lib.SCMMetadata)
 }
 
 func (c *MongoConnector) FinishVariant(id string, status lib.JobStatus, completed time.Time) error {
-	fmt.Printf("finish variant: %v with status %v\n", id, status)
 	request := bson.M{
 		"$set": bson.M{
 			"status":    status,
@@ -221,7 +214,6 @@ func (c *MongoConnector) GetJobs(projectID string) ([]*lib.Job, error) {
 	err = c.database.C("jobs").Find(bson.M{
 		"project_id": proj.ID,
 	}).All(&result)
-	fmt.Printf("retrieve jobs: %#v\n", result)
 	return result, err
 }
 
@@ -236,6 +228,5 @@ func (c *MongoConnector) GetVariants(jobID string) ([]*lib.Variant, error) {
 	err = c.database.C("variants").Find(bson.M{
 		"job_id": job.ID,
 	}).All(&result)
-	fmt.Printf("retrieve variants: %#v\n", result)
 	return result, err
 }
