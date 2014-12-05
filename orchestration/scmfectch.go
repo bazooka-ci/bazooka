@@ -39,15 +39,20 @@ func (f *SCMFetcher) Fetch(logger Logger) error {
 	if err != nil {
 		return err
 	}
+
+	volumes := []string{
+		fmt.Sprintf("%s:/bazooka", f.Options.LocalFolder),
+		fmt.Sprintf("%s:/meta", f.Options.MetaFolder),
+	}
+	if len(f.Options.KeyFile) > 0 {
+		volumes = append(volumes, fmt.Sprintf("%s:/bazooka-key", f.Options.KeyFile))
+	}
+
 	container, err := client.Run(&docker.RunOptions{
-		Image: image,
-		VolumeBinds: []string{
-			fmt.Sprintf("%s:/bazooka", f.Options.LocalFolder),
-			fmt.Sprintf("%s:/bazooka-key", f.Options.KeyFile),
-			fmt.Sprintf("%s:/meta", f.Options.MetaFolder),
-		},
-		Env:    f.Options.Env,
-		Detach: true,
+		Image:       image,
+		VolumeBinds: volumes,
+		Env:         f.Options.Env,
+		Detach:      true,
 	})
 	if err != nil {
 		return err
