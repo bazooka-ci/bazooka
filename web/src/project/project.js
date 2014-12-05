@@ -51,7 +51,7 @@ angular.module('bzk.project').controller('JobsController', function($scope, Proj
 			$scope.jobs = jobs;
 		});
 	};
-	
+
 	$scope.refreshJobs();
 
 	$scope.buildProject = function() {
@@ -79,15 +79,15 @@ angular.module('bzk.project').controller('JobController', function($scope, Proje
 	function refreshVariants() {
 		ProjectResource.variants(jId).success(function(variants){
 			$scope.variants = variants;
-			
+
 			if(_.findWhere($scope.variants, {status: 'RUNNING'})) {
-				
+
 				if(!refreshPromise) {
-					
+
 					refreshPromise= $interval(refreshVariants, 3000);
 				}
 			} else if(refreshPromise) {
-				
+
 				$interval.cancel(refreshPromise);
 				refreshPromise=null;
 			}
@@ -98,7 +98,6 @@ angular.module('bzk.project').controller('JobController', function($scope, Proje
 		jId = $location.search().j;
   		if(jId) {
 			ProjectResource.job(jId).success(function(job){
-				console.log('job:',job);
 				$scope.job = job;
 			});
 			refreshVariants();
@@ -124,9 +123,9 @@ angular.module('bzk.project').controller('VariantsController', function($scope, 
 			ProjectResource.variantLog(vId).success(function(logs){
 				// console.log('got logs', logs)
 				// $scope.logs = logs;
-				
+
 				$scope.logger.finish(logs);
-				
+
 
 			});
 		}
@@ -177,4 +176,3 @@ angular.module('bzk.project').directive('bzkLog', function(){
 		}
 	};
 });
-

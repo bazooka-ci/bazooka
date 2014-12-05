@@ -35,7 +35,7 @@
 			<div class="scroll list">
 				<div class="info">
 					<p><b>{{job.scm_metadata.reference}}</b> - {{job.scm_metadata.message}}</p>
-					<p>{{job.scm_metadata.author.name}} authored {{job.scm_metadata.date | bzkDate}}</p>
+					<p>{{job.scm_metadata | bzkAuthor}} {{job.scm_metadata.date | bzkDate}}</p>
 					<p>Commit {{job.scm_metadata.commit_id}}</p>
 				</div>
 				<table  class="variants">
