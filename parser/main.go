@@ -202,8 +202,10 @@ func handlePermutation(permutation map[string]string, config *lib.Config, counte
 	// do the same for the meta file
 	// start from the language specific permutation meta file
 	rootMetaFile := fmt.Sprintf("%s/%s", MetaFolder, rootCounter)
+	metaFile := fmt.Sprintf("%s/%s%s", MetaFolder, rootCounter, counter)
+
 	// copy it to a global (lang specific+env vars) permutation meta file
-	if err := lib.CopyFile(rootMetaFile, fmt.Sprintf("%s/%s%s", MetaFolder, rootCounter, counter)); err != nil {
+	if err := lib.CopyFile(rootMetaFile, metaFile); err != nil {
 		return err
 	}
 	// and add to it this unique permutation of env variables
@@ -213,7 +215,7 @@ func handlePermutation(permutation map[string]string, config *lib.Config, counte
 		buffer.WriteString(fmt.Sprintf(" - %s\n", env))
 	}
 	// and write it to disk
-	if err := lib.AppendToFile(fmt.Sprintf("%s/%s", MetaFolder, counter), buffer.String(), 0755); err != nil {
+	if err := lib.AppendToFile(metaFile, buffer.String(), 0644); err != nil {
 		return err
 	}
 
