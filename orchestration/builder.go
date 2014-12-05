@@ -2,9 +2,10 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
-	"strconv"
 	"strings"
+	"time"
+
+	"github.com/haklop/bazooka/commons/parallel"
 
 	log "github.com/Sirupsen/logrus"
 	docker "github.com/bywan/go-dockercommand"
@@ -16,116 +17,63 @@ type Builder struct {
 }
 
 type BuildOptions struct {
-	DockerfileFolder string
-	SourceFolder     string
-	ProjectID        string
-	JobID            string
+	SourceFolder string
+	ProjectID    string
+	Variants     []*variantData
 }
 
-type BuiltImage struct {
-	Image     string
-	VariantID int
-}
-
-func (b *Builder) Build() ([]BuiltImage, error) {
-
+func (b *Builder) Build() error {
 	log.Info("Starting building Dockerfiles")
-	files, err := listBuildfiles(b.Options.DockerfileFolder)
-	if err != nil {
-		return nil, err
-	}
 
 	client, err := docker.NewDocker(DockerEndpoint)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	errChan := make(chan error)
-	successChan := make(chan BuiltImage)
-	remainingBuilds := len(files)
-
-	for i, file := range files {
-		go buildContainer(client, i, b, file, successChan, errChan)
+	par := parallel.New()
+	for _, ivariant := range b.Options.Variants {
+		variant := ivariant
+		par.Submit(func() error {
+			return b.buildContainer(client, variant)
+		}, variant)
 	}
 
-	var buildImages []BuiltImage
-	for {
-		select {
-		case tag := <-successChan:
-			buildImages = append(buildImages, tag)
-			remainingBuilds--
-		case err := <-errChan:
-			return nil, err
-		}
-
-		if remainingBuilds == 0 {
-			break
-		}
-	}
-	return buildImages, nil
-}
-
-func buildContainer(client *docker.Docker, variantID int, b *Builder, file *buildFiles, successChan chan BuiltImage, errChan chan error) {
-	for _, buildFile := range file.BuildFiles {
-		splitString := strings.Split(buildFile, "/")
-		err := lib.CopyFile(buildFile, fmt.Sprintf("%s/%s", b.Options.SourceFolder, splitString[len(splitString)-1]))
+	par.Exec(func(tag interface{}, err error) {
+		v := tag.(*variantData)
 		if err != nil {
-			errChan <- err
+			log.Errorf("Build error %v for variant %v\n", err, v)
+			v.variant.Status = lib.JOB_ERRORED
+			v.variant.Completed = time.Now()
 			return
 		}
+		log.Infof("Build success for variant %v\n", v)
+	})
+	return nil
+}
+
+func (b *Builder) buildContainer(client *docker.Docker, vd *variantData) error {
+	log.Infof("build container for variant %#v\n", vd)
+
+	for _, script := range vd.scripts {
+
+		splitString := strings.Split(script, "/")
+		dest := fmt.Sprintf("%s/%s", b.Options.SourceFolder, splitString[len(splitString)-1])
+		err := lib.CopyFile(script, dest)
+		if err != nil {
+			return err
+		}
 	}
 
-	tag := fmt.Sprintf("bazooka/build-%s-%s-%d", b.Options.ProjectID, b.Options.JobID, variantID)
+	tag := fmt.Sprintf("bazooka/build-%s-%s-%d", b.Options.ProjectID, vd.variant.JobID, vd.variant.Number)
+
 	err := client.Build(&docker.BuildOptions{
 		Tag:        tag,
-		Dockerfile: file.Dockerfile,
+		Dockerfile: vd.dockerFile,
 		Path:       b.Options.SourceFolder,
 	})
 	if err != nil {
-		errChan <- err
-	} else {
-		successChan <- BuiltImage{
-			Image:     tag,
-			VariantID: variantID,
-		}
+		return err
 	}
-}
-
-func listBuildfiles(source string) ([]*buildFiles, error) {
-	files, err := ioutil.ReadDir(source)
-	if err != nil {
-		return nil, err
-	}
-	var output []*buildFiles
-	for _, file := range files {
-		if file.Mode().IsDir() {
-			index, err := strconv.ParseInt(file.Name(), 10, 64)
-			if err != nil {
-				return nil, err
-			}
-			filesBuild, err := ioutil.ReadDir(fmt.Sprintf("%s/%s", source, file.Name()))
-			if err != nil {
-				return nil, err
-			}
-			var result []string
-			for _, fileBuild := range filesBuild {
-				if fileBuild.Name() != "Dockerfile" {
-					result = append(result, fmt.Sprintf("%s/%s/%s", source, file.Name(), fileBuild.Name()))
-				}
-			}
-			output = append(output, &buildFiles{
-				Dockerfile: fmt.Sprintf("%s/%s/Dockerfile", source, file.Name()),
-				BuildFiles: result,
-				JobIndex:   index,
-			})
-
-		}
-	}
-	return output, nil
-}
-
-type buildFiles struct {
-	Dockerfile string
-	BuildFiles []string
-	JobIndex   int64
+	vd.imageTag = tag
+	return nil
 }

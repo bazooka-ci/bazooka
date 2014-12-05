@@ -5,6 +5,7 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"os/exec"
 	"strings"
 )
 
@@ -98,5 +99,10 @@ func copyFileContents(src, dst string) (err error) {
 		return
 	}
 	err = out.Sync()
+
+	// This is an ugly hack to fix sporadic problems with boot2docker and virtualbox
+	// where the copied file is sometimes empty
+	exec.Command("sync").Run()
+
 	return
 }

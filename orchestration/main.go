@@ -114,36 +114,71 @@ func main() {
 			Env:            env,
 		},
 	}
-	if err := p.Parse(containerLogger); err != nil {
-		mongoErr := connector.FinishJob(env[BazookaEnvJobID], lib.JOB_ERRORED, time.Now())
-		if mongoErr != nil {
-			log.Fatal(mongoErr)
-		}
-		log.Fatal(err)
-	}
-	b := &Builder{
-		Options: &BuildOptions{
-			DockerfileFolder: fmt.Sprintf(WorkdirFolderPattern, BazookaInput),
-			SourceFolder:     fmt.Sprintf(CheckoutFolderPattern, BazookaInput),
-			ProjectID:        env[BazookaEnvProjectID],
-			JobID:            env[BazookaEnvJobID],
-		},
-	}
-	buildImages, err := b.Build()
+	parsedVariants, err := p.Parse(containerLogger)
 	if err != nil {
 		mongoErr := connector.FinishJob(env[BazookaEnvJobID], lib.JOB_ERRORED, time.Now())
 		if mongoErr != nil {
+			log.Fatal(err, mongoErr)
+		}
+		log.Fatal(err)
+	}
+
+	for i, v := range parsedVariants {
+		variant := &lib.Variant{
+			Started: time.Now(),
+			Status:  lib.JOB_RUNNING,
+			Number:  i,
+			JobID:   env[BazookaEnvJobID],
+			Metas:   v.meta,
+		}
+		err := connector.AddVariant(variant)
+		if err != nil {
+			mongoErr := connector.FinishJob(env[BazookaEnvJobID], lib.JOB_ERRORED, time.Now())
+			if mongoErr != nil {
+				log.Fatal(err, mongoErr)
+			}
+			log.Fatal(err)
+		}
+		v.variant = variant
+
+	}
+
+	b := &Builder{
+		Options: &BuildOptions{
+			SourceFolder: fmt.Sprintf(CheckoutFolderPattern, BazookaInput),
+			ProjectID:    env[BazookaEnvProjectID],
+			Variants:     parsedVariants,
+		},
+	}
+
+	if err := b.Build(); err != nil {
+		mongoErr := connector.FinishJob(env[BazookaEnvJobID], lib.JOB_ERRORED, time.Now())
+		if mongoErr != nil {
 			log.Fatal(mongoErr)
 		}
 		log.Fatal(err)
+	}
+
+	// variantsToBuild are the variants that we succeeded in generating a doocker image for them
+	variantsToBuild := []*variantData{}
+	for _, vd := range parsedVariants {
+		switch vd.variant.Status {
+		case lib.JOB_ERRORED:
+			if err := connector.FinishVariant(vd.variant.ID, lib.JOB_ERRORED, vd.variant.Completed); err != nil {
+				log.Fatal(err)
+			}
+		default:
+			variantsToBuild = append(variantsToBuild, vd)
+		}
 	}
 
 	r := &Runner{
-		BuildImages: buildImages,
-		Env:         env,
-		Mongo:       connector,
+		Variants: variantsToBuild,
+		Env:      env,
+		Mongo:    connector,
 	}
-	success, err := r.Run(containerLogger)
+
+	err = r.Run(containerLogger)
 	if err != nil {
 		mongoErr := connector.FinishJob(env[BazookaEnvJobID], lib.JOB_ERRORED, time.Now())
 		if mongoErr != nil {
@@ -151,18 +186,49 @@ func main() {
 		}
 		log.Fatal(err)
 	}
-	if success {
-		err = connector.FinishJob(env[BazookaEnvJobID], lib.JOB_SUCCESS, time.Now())
-	} else {
-		err = connector.FinishJob(env[BazookaEnvJobID], lib.JOB_FAILED, time.Now())
-	}
-	if err != nil {
-		log.Fatal(err)
+
+	for _, vd := range variantsToBuild {
+		if err := connector.FinishVariant(vd.variant.ID, vd.variant.Status, vd.variant.Completed); err != nil {
+			log.Fatal(err)
+		}
 	}
 
+	var (
+		errorCount   = 0
+		successCount = 0
+		failCount    = 0
+	)
+	for _, vd := range parsedVariants {
+		switch vd.variant.Status {
+		case lib.JOB_ERRORED:
+			errorCount++
+		case lib.JOB_SUCCESS:
+			successCount++
+		case lib.JOB_FAILED:
+			failCount++
+		default:
+			log.Fatal(fmt.Errorf("Found a variant without a status %v", vd))
+		}
+	}
+
+	log.Infof("Job completed: ERRORED=%d, SUCCEEDED=%d, FAILED=%d\n", errorCount, successCount, failCount)
+
+	var jobStatus lib.JobStatus
+	switch {
+	case errorCount > 0:
+		jobStatus = lib.JOB_ERRORED
+	case failCount > 0:
+		jobStatus = lib.JOB_FAILED
+	default:
+		jobStatus = lib.JOB_SUCCESS
+
+	}
+	if err = connector.FinishJob(env[BazookaEnvJobID], jobStatus, time.Now()); err != nil {
+		log.Fatal(err)
+	}
 	elapsed := time.Since(start)
+
 	log.WithFields(log.Fields{
 		"elapsed": elapsed,
 	}).Info("Job Orchestration finished")
-
 }
