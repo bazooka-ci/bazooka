@@ -10,8 +10,7 @@ fi
 
 export PREFIX=$s
 
-docker_projects=( "parser" "parserlang/golang" "parserlang/java" "orchestration" \
-"server"  "runner/golang" "runner/java" "scm/git")
+docker_projects=( "parser" "parserlang/golang" "parserlang/java" "orchestration" "server")
 
 for project in "${docker_projects[@]}"
 do
