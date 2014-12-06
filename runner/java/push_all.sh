@@ -10,5 +10,3 @@ for d in */ ; do
     $s docker push $BZK_REGISTRY_HOST/bazooka/runner-java:${d%?}
     popd
 done
-
-$s docker push bazooka/runner-java:latest $BZK_REGISTRY_HOST/bazooka/runner-java:latest
