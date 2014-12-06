@@ -11,4 +11,4 @@ for d in */ ; do
     popd
 done
 
-docker push bazooka/runner-java:latest $(BZK_REGISTRY_HOST)/bazooka/runner-java:latest
+$s docker push bazooka/runner-java:latest $(BZK_REGISTRY_HOST)/bazooka/runner-java:latest

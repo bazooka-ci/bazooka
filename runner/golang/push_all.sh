@@ -11,4 +11,4 @@ for d in */ ; do
     popd
 done
 
-docker push bazooka/runner-golang:latest $(BZK_REGISTRY_HOST)/bazooka/runner-golang:latest
+$s docker push bazooka/runner-golang:latest $(BZK_REGISTRY_HOST)/bazooka/runner-golang:latest

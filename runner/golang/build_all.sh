@@ -10,4 +10,4 @@ for d in */ ; do
     popd
 done
 
-docker tag bazooka/runner-golang:1.3.1 bazooka/runner-golang:latest
+$s docker tag bazooka/runner-golang:1.3.1 bazooka/runner-golang:latest
