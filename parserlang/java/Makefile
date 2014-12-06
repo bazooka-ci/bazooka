@@ -8,3 +8,7 @@ devimage: gox
 
 gox:
 	gox -osarch="linux/amd64" -output="dev/main"
+
+push:
+	$(PREFIX) docker tag bazooka/parser-java $(BZK_REGISTRY_HOST)/bazooka/parser-java
+	$(PREFIX) docker push $(BZK_REGISTRY_HOST)/bazooka/parser-java
