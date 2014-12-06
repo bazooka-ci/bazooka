@@ -13,7 +13,7 @@ go_projects=( "runner/golang" "runner/java" )
 
 for project in "${go_projects[@]}"
 do
-  pushd "../$project"
+  pushd "$GOPATH/src/github.com/haklop/bazooka/$project"
   make
   popd
 done

@@ -24,7 +24,7 @@ scm:
 push:
 	./scripts/push-images.sh
 
-deploy: devimages runner scm push
+deploy: setup devimages runner scm push
 
 updatedeps:
 	go get -u -v ./...

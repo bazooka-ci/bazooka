@@ -15,7 +15,7 @@ docker_projects=( "parser" "parserlang/golang" "parserlang/java" "orchestration"
 
 for project in "${docker_projects[@]}"
 do
-  pushd "$project"
+  pushd "$GOPATH/src/github.com/haklop/bazooka/$project"
     make devimage
   popd
 done
