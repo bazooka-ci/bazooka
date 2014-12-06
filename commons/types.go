@@ -60,6 +60,7 @@ type SCMMetadata struct {
 	Reference string   `bson:"reference" json:"reference" yaml:"reference"`
 	CommitID  string   `bson:"commit_id" json:"commit_id" yaml:"commit_id"`
 	Author    Person   `bson:"author" json:"author" yaml:"author"`
+	Committer Person   `bson:"committer" json:"committer" yaml:"committer"`
 	Date      YamlTime `bson:"time" json:"date" yaml:"date"`
 	Message   string   `bson:"message" json:"message" yaml:"message"`
 }

@@ -30,6 +30,16 @@ angular.module('bzk.utils').filter('bzkDate', function(){
 	};
 });
 
+angular.module('bzk.utils').filter('bzkAuthor', function(){
+	return function(d) {
+		if (typeof d != 'undefined') {
+			if (d.author.name == d.committer.name) {
+				return d.author.name + " authored and committed"
+			}
+			return d.author.name+ " authored and " + d.committer.name + " committed"
+		}
+	};
+});
 
 angular.module('bzk.utils').filter('bzkDuration', function(){
 	return function(job) {
