@@ -15,6 +15,17 @@ run:
 errcheck:
 	./scripts/errcheck.sh
 
+runner:
+	./scripts/build-runner.sh
+
+scm:
+	./scripts/build-scm.sh
+
+push:
+	./scripts/push-images.sh
+
+deploy: devimages runner scm push
+
 updatedeps:
 	go get -u -v ./...
 
