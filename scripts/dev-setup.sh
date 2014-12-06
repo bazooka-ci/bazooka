@@ -11,6 +11,6 @@ go_projects=( "parser" "parserlang/golang" "parserlang/java" "orchestration" "se
 for project in "${go_projects[@]}"
 do
   pushd "../$project"
-    go get -u -v ./...
+    go get -v ./...
   popd
 done

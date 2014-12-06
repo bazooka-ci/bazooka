@@ -15,4 +15,7 @@ run:
 errcheck:
 	./scripts/errcheck.sh
 
+updatedeps:
+	go get -u -v ./...
+
 test: errcheck devimages # Include errcheck in build phase
