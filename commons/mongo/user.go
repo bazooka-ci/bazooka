@@ -19,7 +19,7 @@ func (c *MongoConnector) GetUserByEmail(email string) (*lib.User, error) {
 	return result, nil
 }
 
-func (c *MongoConnector) GetUsers(email string) ([]*lib.User, error) {
+func (c *MongoConnector) GetUsers() ([]*lib.User, error) {
 	result := []*lib.User{}
 
 	err := c.database.C("user").Find(bson.M{}).All(&result)
