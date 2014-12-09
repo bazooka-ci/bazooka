@@ -104,8 +104,11 @@ func (r *Runner) runContainer(logger Logger, buildImage BuiltImage, env map[stri
 
 	// TODO link containers
 	container, err := r.client.Run(&docker.RunOptions{
-		Image:  buildImage.Image,
-		Links:  containerLinks,
+		Image: buildImage.Image,
+		Links: containerLinks,
+		VolumeBinds: []string{
+			fmt.Sprintf("%s:/var/run/docker.sock", DockerSock),
+		},
 		Detach: true,
 	})
 	if err != nil {

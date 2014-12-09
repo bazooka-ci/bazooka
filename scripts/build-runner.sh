@@ -3,14 +3,17 @@ set -e
 
 : ${GOPATH:?"GOPATH has to be set. See https://golang.org/doc/code.html#GOPATH for more information."}
 
-go get -u github.com/mitchellh/gox
-go get -u github.com/kisielk/errcheck
+if [ "$(uname)" != "Darwin" ]; then
+  s=sudo
+fi
 
-go_projects=( "parser" "parserlang/golang" "parserlang/java" "orchestration" "server" "cli" )
+export PREFIX=$s
+
+go_projects=( "runner/golang" "runner/java" )
 
 for project in "${go_projects[@]}"
 do
   pushd "$GOPATH/src/github.com/haklop/bazooka/$project"
-    go get -v ./...
+  make
   popd
 done

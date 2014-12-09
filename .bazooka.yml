@@ -1,0 +1,8 @@
+language: golang
+install:
+  - make setup
+  - curl -sSL https://get.docker.com/ubuntu/ | sudo sh
+script:
+  - make devimages
+after_success:
+  - make push
