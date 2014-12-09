@@ -3,11 +3,13 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/gorilla/mux"
 
 	"github.com/haklop/bazooka/commons/mongo"
+	basic "github.com/haklop/go-http-basic-auth"
 )
 
 const (
@@ -150,4 +152,24 @@ func mkHandler(f func(map[string]string, bodyFunc) (*response, error)) func(http
 		}
 
 	}
+}
+
+func (ctx *context) authenticationHandler(next http.Handler) http.Handler {
+	users, err := ctx.Connector.GetUsers()
+	if err != nil {
+		// TODO error
+		log.Fatal(err)
+	}
+
+	if len(users) > 0 {
+		authenticator := basic.NewAuthenticator(ctx.userAuthentication, "bazooka")
+
+		return authenticator.Wrap(next)
+	} else {
+		return next
+	}
+}
+
+func (ctx *context) userAuthentication(email string, password string) bool {
+	return ctx.Connector.ComparePassword(email, password)
 }

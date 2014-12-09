@@ -70,7 +70,7 @@ func main() {
 	r.HandleFunc("/image/{name:.*}", mkHandler(ctx.setImage)).Methods("PUT")
 	// r.HandleFunc("/image/{name}", mkHandler(ctx.unsetImage)).Methods("DELETE")
 
-	http.Handle("/", r)
+	http.Handle("/", ctx.authenticationHandler(r))
 	l.Error.Fatal(http.ListenAndServe(":3000", nil))
 }
 
