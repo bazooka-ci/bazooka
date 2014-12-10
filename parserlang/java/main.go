@@ -143,6 +143,7 @@ func resolveJdkImage(version string) (string, error) {
 	javaMap := map[string]string{
 		"openjdk6":   "bazooka/runner-java:openjdk6",
 		"openjdk7":   "bazooka/runner-java:openjdk7",
+		"openjdk8":   "bazooka/runner-java:openjdk8",
 		"oraclejdk6": "bazooka/runner-java:oraclejdk6",
 		"oraclejdk7": "bazooka/runner-java:oraclejdk7",
 		"oraclejdk8": "bazooka/runner-java:oraclejdk8",

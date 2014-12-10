@@ -1,4 +1,4 @@
-FROM phusion/baseimage:0.9.9
+FROM debian:jessie
 
 RUN apt-get update
 RUN apt-get install -y git

@@ -152,12 +152,13 @@ func setDefaultScript(conf *ConfigGolang) error {
 func resolveGoImage(version string) (string, error) {
 	//TODO extract this from db
 	goMap := map[string]string{
-		"1.2.2": "bazooka/runner-golang:1.2.2",
-		"1.3":   "bazooka/runner-golang:1.3",
-		"1.3.1": "bazooka/runner-golang:1.3.1",
-		"1.3.2": "bazooka/runner-golang:1.3.2",
-		"1.3.3": "bazooka/runner-golang:1.3.3",
-		"tip":   "bazooka/runner-golang:latest",
+		"1.2.2":  "bazooka/runner-golang:1.2.2",
+		"1.3":    "bazooka/runner-golang:1.3",
+		"1.3.1":  "bazooka/runner-golang:1.3.1",
+		"1.3.2":  "bazooka/runner-golang:1.3.2",
+		"1.3.3":  "bazooka/runner-golang:1.3.3",
+		"tip":    "bazooka/runner-golang:latest",
+		"latest": "bazooka/runner-golang:latest",
 	}
 	if val, ok := goMap[version]; ok {
 		return val, nil

@@ -1,7 +1,7 @@
-FROM java:openjdk-6
+FROM java:openjdk-8
 
 RUN apt-get update
-RUN apt-get install -y curl maven ant
+RUN apt-get install -y software-properties-common python-software-properties
 
 ENV GRADLE_VERSION 2.2.1
 
