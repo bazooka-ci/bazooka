@@ -1,5 +1,7 @@
 default: images
 
+.PHONY: scm runner
+
 devimages:
 	./scripts/build-devimages.sh
 
