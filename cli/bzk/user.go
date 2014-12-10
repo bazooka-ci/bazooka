@@ -7,6 +7,7 @@ import (
 	"text/tabwriter"
 
 	"github.com/codegangsta/cli"
+	"github.com/howeyc/gopass"
 )
 
 func createUserCommand() cli.Command {
@@ -26,7 +27,10 @@ func createUserCommand() cli.Command {
 			if err != nil {
 				log.Fatal(err)
 			}
-			res, err := client.CreateUser(c.Args()[0], c.Args()[1])
+			fmt.Printf("Enter user password: ")
+			password := string(gopass.GetPasswd())
+
+			res, err := client.CreateUser(c.Args()[0], password)
 			if err != nil {
 				log.Fatal(err)
 			}

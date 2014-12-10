@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"github.com/codegangsta/cli"
+	"github.com/howeyc/gopass"
 )
 
 func login(c *cli.Context) {
@@ -19,7 +20,8 @@ func login(c *cli.Context) {
 	}
 
 	if len(password) == 0 {
-		password = interactiveInput("Password")
+		fmt.Printf("Password: ")
+		password = string(gopass.GetPasswd())
 	}
 
 	_, err := NewClient(host)
