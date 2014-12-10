@@ -22,13 +22,12 @@ func login(c *cli.Context) {
 		password = interactiveInput("Password")
 	}
 
-	client, err := NewClient(host)
+	_, err := NewClient(host)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	client.Username = email
-	client.Password = password
+	// TODO check credential. Create a /auth ressource ?
 
 	authConfig := &AuthConfig{
 		Username: email,

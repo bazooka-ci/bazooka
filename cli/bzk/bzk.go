@@ -27,6 +27,10 @@ func main() {
 			Usage:       "Actions on images",
 			Subcommands: []cli.Command{listImagesCommand(), setImageCommand()},
 		}, {
+			Name:        "user",
+			Usage:       "Actions on users",
+			Subcommands: []cli.Command{listUsersCommand(), createUserCommand()},
+		}, {
 			Name:   "login",
 			Usage:  "Log in to a Bazooka server",
 			Action: login,

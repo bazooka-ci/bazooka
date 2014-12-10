@@ -143,6 +143,37 @@ func (c *Client) SetImage(name, image string) error {
 	return err
 }
 
+func (c *Client) ListUsers() ([]lib.User, error) {
+	var u []lib.User
+
+	ep := fmt.Sprintf("%s/user", c.URL)
+	err := perigee.Get(ep, perigee.Options{
+		Results:    &u,
+		OkCodes:    []int{200},
+		SetHeaders: c.authenticateRequest,
+	})
+
+	return u, err
+}
+
+func (c *Client) CreateUser(email, password string) (*lib.User, error) {
+	user := lib.User{
+		Email:    email,
+		Password: password,
+	}
+	createdUser := &lib.User{}
+
+	ep := fmt.Sprintf("%s/user", c.URL)
+	err := perigee.Post(ep, perigee.Options{
+		ReqBody:    &user,
+		Results:    &createdUser,
+		OkCodes:    []int{201},
+		SetHeaders: c.authenticateRequest,
+	})
+
+	return createdUser, err
+}
+
 func (c *Client) authenticateRequest(r *http.Request) error {
 	authConfig, err := loadConfig()
 	if err != nil {
