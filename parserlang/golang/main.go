@@ -57,7 +57,7 @@ func manageGoVersion(counter string, conf *ConfigGolang, version string) error {
 		return err
 	}
 	image, err := resolveGoImage(version)
-	conf.FromImage = image
+	conf.Base.FromImage = image
 	if err != nil {
 		return err
 	}
@@ -70,7 +70,7 @@ func manageGoVersion(counter string, conf *ConfigGolang, version string) error {
 }
 
 func setGodir(conf *ConfigGolang) {
-	env := bazooka.GetEnvMap(conf.Env)
+	env := bazooka.GetEnvMap(conf.Base.Env)
 
 	godirExist, err := bazooka.FileExists("/bazooka/.godir")
 	if err != nil {
@@ -126,25 +126,25 @@ func setGodir(conf *ConfigGolang) {
 
 	env["BZK_BUILD_DIR"] = []string{buildDir}
 
-	conf.Env = flattenEnvMap(env)
+	conf.Base.Env = flattenEnvMap(env)
 }
 
 func setDefaultInstall(conf *ConfigGolang) {
-	if len(conf.Install) == 0 {
-		conf.Install = []string{"go get -d -v ./... && go build -v ./..."}
+	if len(conf.Base.Install) == 0 {
+		conf.Base.Install = []string{"go get -d -v ./... && go build -v ./..."}
 	}
 }
 
 func setDefaultScript(conf *ConfigGolang) error {
-	if len(conf.Script) == 0 {
+	if len(conf.Base.Script) == 0 {
 		if _, err := os.Open(fmt.Sprintf("%s/Makefile", SourceFolder)); err != nil {
 			if os.IsNotExist(err) {
-				conf.Script = []string{"go test -v ./..."}
+				conf.Base.Script = []string{"go test -v ./..."}
 				return nil
 			}
 			return err
 		}
-		conf.Script = []string{"make"}
+		conf.Base.Script = []string{"make"}
 	}
 	return nil
 }

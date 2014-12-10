@@ -82,7 +82,7 @@ func manageJdkVersion(counter string, conf *ConfigJava, version, buildTool strin
 	setDefaultInstall(conf, buildTool)
 	setDefaultScript(conf, buildTool)
 	image, err := resolveJdkImage(version)
-	conf.FromImage = image
+	conf.Base.FromImage = image
 	if err != nil {
 		return err
 	}
@@ -95,10 +95,10 @@ func manageJdkVersion(counter string, conf *ConfigJava, version, buildTool strin
 }
 
 func setDefaultInstall(conf *ConfigJava, buildTool string) {
-	if len(conf.Install) == 0 {
+	if len(conf.Base.Install) == 0 {
 		instruction := switchDefaultInstall(buildTool)
 		if len(instruction) != 0 {
-			conf.Install = []string{instruction}
+			conf.Base.Install = []string{instruction}
 		}
 	}
 }
@@ -118,8 +118,8 @@ func switchDefaultInstall(buildTool string) string {
 }
 
 func setDefaultScript(conf *ConfigJava, buildTool string) {
-	if len(conf.Script) == 0 {
-		conf.Script = []string{switchDefaultScript(buildTool)}
+	if len(conf.Base.Script) == 0 {
+		conf.Base.Script = []string{switchDefaultScript(buildTool)}
 	}
 }
 
