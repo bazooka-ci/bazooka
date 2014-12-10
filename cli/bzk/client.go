@@ -123,8 +123,9 @@ func (c *Client) ListImages() ([]*lib.Image, error) {
 
 	ep := fmt.Sprintf(fmt.Sprintf("%s/image", c.URL))
 	err := perigee.Get(ep, perigee.Options{
-		Results: &images,
-		OkCodes: []int{200},
+		Results:    &images,
+		OkCodes:    []int{200},
+		SetHeaders: c.authenticateRequest,
 	})
 
 	return images, err
@@ -137,7 +138,8 @@ func (c *Client) SetImage(name, image string) error {
 		ReqBody: &struct {
 			Image string `json:"image"`
 		}{image},
-		OkCodes: []int{200},
+		OkCodes:    []int{200},
+		SetHeaders: c.authenticateRequest,
 	})
 
 	return err
