@@ -72,7 +72,7 @@ func (mx Matrix) iter(it Iterator, permutation map[string]string, exclusions []*
 		}
 
 		// call the iterator and return
-		it(permutation, strings.Join(counter, ""))
+		it(copyMap(permutation), strings.Join(counter, ""))
 		return
 	}
 
@@ -97,4 +97,12 @@ func (mx Matrix) iter(it Iterator, permutation map[string]string, exclusions []*
 		// recursively call _iter with a n-1 vars array (after removing self)
 		mx.iter(it, permutation, exclusions, counter, vars[1:]...)
 	}
+}
+
+func copyMap(m map[string]string) map[string]string {
+	res := map[string]string{}
+	for k, v := range m {
+		res[k] = v
+	}
+	return res
 }
