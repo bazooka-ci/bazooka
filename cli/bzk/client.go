@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"net/http"
 
 	lib "github.com/haklop/bazooka/commons"
 	"github.com/racker/perigee"
@@ -24,8 +25,9 @@ func (c *Client) ListProjects() ([]lib.Project, error) {
 
 	ep := fmt.Sprintf("%s/project", c.URL)
 	err := perigee.Get(ep, perigee.Options{
-		Results: &p,
-		OkCodes: []int{200},
+		Results:    &p,
+		OkCodes:    []int{200},
+		SetHeaders: c.authenticateRequest,
 	})
 
 	return p, err
@@ -36,8 +38,9 @@ func (c *Client) ListJobs(projectID string) ([]lib.Job, error) {
 
 	ep := fmt.Sprintf("%s/project/%s/job", c.URL, projectID)
 	err := perigee.Get(ep, perigee.Options{
-		Results: &j,
-		OkCodes: []int{200},
+		Results:    &j,
+		OkCodes:    []int{200},
+		SetHeaders: c.authenticateRequest,
 	})
 
 	return j, err
@@ -47,8 +50,9 @@ func (c *Client) ListVariants(jobID string) ([]lib.Variant, error) {
 	var v []lib.Variant
 	ep := fmt.Sprintf("%s/job/%s/variant", c.URL, jobID)
 	err := perigee.Get(ep, perigee.Options{
-		Results: &v,
-		OkCodes: []int{200},
+		Results:    &v,
+		OkCodes:    []int{200},
+		SetHeaders: c.authenticateRequest,
 	})
 
 	return v, err
@@ -64,9 +68,10 @@ func (c *Client) CreateProject(name, scm, scmUri string) (*lib.Project, error) {
 
 	ep := fmt.Sprintf("%s/project", c.URL)
 	err := perigee.Post(ep, perigee.Options{
-		ReqBody: &project,
-		Results: &createdProject,
-		OkCodes: []int{201},
+		ReqBody:    &project,
+		Results:    &createdProject,
+		OkCodes:    []int{201},
+		SetHeaders: c.authenticateRequest,
 	})
 
 	return createdProject, err
@@ -80,9 +85,10 @@ func (c *Client) StartJob(projectID, scmReference string) (*lib.Job, error) {
 
 	ep := fmt.Sprintf("%s/project/%s/job", c.URL, projectID)
 	err := perigee.Post(ep, perigee.Options{
-		ReqBody: &startJob,
-		Results: &createdJob,
-		OkCodes: []int{202},
+		ReqBody:    &startJob,
+		Results:    &createdJob,
+		OkCodes:    []int{202},
+		SetHeaders: c.authenticateRequest,
 	})
 
 	return createdJob, err
@@ -93,8 +99,9 @@ func (c *Client) JobLog(jobID string) ([]lib.LogEntry, error) {
 
 	ep := fmt.Sprintf("%s/job/%s/log", c.URL, jobID)
 	err := perigee.Get(ep, perigee.Options{
-		Results: &log,
-		OkCodes: []int{200},
+		Results:    &log,
+		OkCodes:    []int{200},
+		SetHeaders: c.authenticateRequest,
 	})
 
 	return log, err
@@ -105,8 +112,9 @@ func (c *Client) VariantLog(variantID string) ([]lib.LogEntry, error) {
 
 	ep := fmt.Sprintf("%s/variant/%v/log", c.URL, variantID)
 	err := perigee.Get(ep, perigee.Options{
-		Results: &log,
-		OkCodes: []int{200},
+		Results:    &log,
+		OkCodes:    []int{200},
+		SetHeaders: c.authenticateRequest,
 	})
 	return log, err
 }
@@ -135,4 +143,11 @@ func (c *Client) SetImage(name, image string) error {
 	})
 
 	return err
+}
+
+func (c *Client) authenticateRequest(r *http.Request) error {
+	if len(c.Username) > 0 {
+		r.SetBasicAuth(c.Username, c.Password)
+	}
+	return nil
 }
