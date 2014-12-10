@@ -1,3 +1,8 @@
 site_name: Bazooka Documentation
 repo_url: https://github.com/haklop/bazooka/
 theme: readthedocs
+pages:
+- [index.md, Home]
+- [travis.md, Travis Compatibility]
+- [internals/dockerindocker.md, Bazooka Internals, Docker in Docker]
+- [internals/plugin.md, Bazooka Internals, Docker as a plugin Architecture]
