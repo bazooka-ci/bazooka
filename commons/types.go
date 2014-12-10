@@ -79,18 +79,45 @@ type Image struct {
 
 type Config struct {
 	Language      string       `yaml:"language"`
-	Setup         []string     `yaml:"setup,omitempty"`
-	BeforeInstall []string     `yaml:"before_install,omitempty"`
-	Install       []string     `yaml:"install,omitempty"`
-	BeforeScript  []string     `yaml:"before_script,omitempty"`
-	Script        []string     `yaml:"script,omitempty"`
-	AfterScript   []string     `yaml:"after_script,omitempty"`
-	AfterSuccess  []string     `yaml:"after_success,omitempty"`
-	AfterFailure  []string     `yaml:"after_failure,omitempty"`
+	Setup         Commands     `yaml:"setup,omitempty"`
+	BeforeInstall Commands     `yaml:"before_install,omitempty"`
+	Install       Commands     `yaml:"install,omitempty"`
+	BeforeScript  Commands     `yaml:"before_script,omitempty"`
+	Script        Commands     `yaml:"script,omitempty"`
+	AfterScript   Commands     `yaml:"after_script,omitempty"`
+	AfterSuccess  Commands     `yaml:"after_success,omitempty"`
+	AfterFailure  Commands     `yaml:"after_failure,omitempty"`
 	Services      []string     `yaml:"services,omitempty"`
 	Env           []string     `yaml:"env,omitempty"`
 	FromImage     string       `yaml:"from"`
 	Matrix        ConfigMatrix `yaml:"matrix,omitempty"`
+}
+
+type Commands []string
+
+func (c *Commands) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	var raw interface{}
+	if err := unmarshal(&raw); err != nil {
+		return err
+	}
+
+	switch convCmd := raw.(type) {
+	case string:
+		*c = []string{convCmd}
+		return nil
+	case []interface{}:
+		*c = make([]string, len(convCmd))
+		for i, rawCmd := range convCmd {
+			cmd, ok := rawCmd.(string)
+			if !ok {
+				return fmt.Errorf("Command list (install, script, ...) can only contain strings")
+			}
+			(*c)[i] = cmd
+		}
+		return nil
+	default:
+		return fmt.Errorf("Commands (install, script, ...) can be either a tring or a list of strings")
+	}
 }
 
 type ConfigMatrix struct {
