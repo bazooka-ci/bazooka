@@ -155,19 +155,22 @@ func mkHandler(f func(map[string]string, bodyFunc) (*response, error)) func(http
 }
 
 func (ctx *context) authenticationHandler(next http.Handler) http.Handler {
-	users, err := ctx.Connector.GetUsers()
-	if err != nil {
-		// TODO error
-		log.Fatal(err)
-	}
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		users, err := ctx.Connector.GetUsers()
+		if err != nil {
+			// TODO error
+			log.Fatal(err)
+		}
 
-	if len(users) > 0 {
-		authenticator := basic.NewAuthenticator(ctx.userAuthentication, "bazooka")
+		if len(users) > 0 {
+			authenticator := basic.NewAuthenticator(ctx.userAuthentication, "bazooka")
 
-		return authenticator.Wrap(next)
-	} else {
-		return next
-	}
+		  authenticator.Wrap(next).ServeHTTP(w, r)
+		} else {
+			next.ServeHTTP(w, r)
+		}
+	})
+
 }
 
 func (ctx *context) userAuthentication(email string, password string) bool {
