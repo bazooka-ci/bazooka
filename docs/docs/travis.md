@@ -12,3 +12,6 @@ Those containers are then linked to your build container and you have access to 
 * **Matrix**: Partially Compatible
 
 TO EXPLAIN
+
+* **Branches to Build** (attributes `branches` in yaml): Not implemented yet
+* **Notifications** (attributes `branches` in yaml): Not implemented yet
