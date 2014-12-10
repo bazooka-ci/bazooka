@@ -1,7 +1,5 @@
 FROM golang:1.3.3
 
-VOLUME ["/bazooka"]
-
 ADD . /go/src/github.com/haklop/bazooka/server
 RUN go get -d -v ./...
 RUN go install -v github.com/haklop/bazooka/server
