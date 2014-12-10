@@ -1,7 +1,7 @@
 FROM java:openjdk-7
 
 RUN apt-get update
-RUN apt-get install -y software-properties-common python-software-properties
+RUN apt-get install -y curl maven ant
 
 ENV GRADLE_VERSION 2.2.1
 
