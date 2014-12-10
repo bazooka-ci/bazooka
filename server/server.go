@@ -3,11 +3,13 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/gorilla/mux"
 
 	"github.com/haklop/bazooka/commons/mongo"
+	basic "github.com/haklop/go-http-basic-auth"
 )
 
 const (
@@ -86,8 +88,13 @@ func conflict(msg string) (*response, error) {
 	return nil, &errorResponse{409, msg}
 }
 
+func unauthorized() (*response, error) {
+	return nil, &errorResponse{401, "Unauthorized"}
+}
+
 func mkHandler(f func(map[string]string, bodyFunc) (*response, error)) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
+
 		bf := func(b interface{}) {
 			defer r.Body.Close()
 			decoder := json.NewDecoder(r.Body)
@@ -145,4 +152,27 @@ func mkHandler(f func(map[string]string, bodyFunc) (*response, error)) func(http
 		}
 
 	}
+}
+
+func (ctx *context) authenticationHandler(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		users, err := ctx.Connector.GetUsers()
+		if err != nil {
+			// TODO error
+			log.Fatal(err)
+		}
+
+		if len(users) > 0 {
+			authenticator := basic.NewAuthenticator(ctx.userAuthentication, "bazooka")
+
+			authenticator.Wrap(next).ServeHTTP(w, r)
+		} else {
+			next.ServeHTTP(w, r)
+		}
+	})
+
+}
+
+func (ctx *context) userAuthentication(email string, password string) bool {
+	return ctx.Connector.ComparePassword(email, password)
 }
