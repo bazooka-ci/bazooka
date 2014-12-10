@@ -12,7 +12,7 @@ import (
 func login(c *cli.Context) {
 	email := c.String("email")
 	password := c.String("password")
-	//host := c.String("bazooka-uri")
+	host := c.String("bazooka-uri")
 
 	if len(email) == 0 {
 		email = interactiveInput("Email")
@@ -22,10 +22,20 @@ func login(c *cli.Context) {
 		password = interactiveInput("Password")
 	}
 
-	_, err := NewClient(c.String("bazooka-uri"))
+	client, err := NewClient(host)
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	client.Username = email
+	client.Password = password
+
+	authConfig := &AuthConfig{
+		Username: email,
+		Password: password,
+	}
+
+	saveConfig(authConfig)
 }
 
 func interactiveInput(name string) string {
