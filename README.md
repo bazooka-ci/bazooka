@@ -6,3 +6,17 @@
 * Install gulp via npm `npm install -g gulp`
 * Run `make devimages` to build docker images
 * Run `make run` to start bazooka
+
+# Build the documentation
+
+## Install [mkdocs](http://www.mkdocs.org/)
+
+```
+pip install mkdocs
+```
+
+## Serve the docs
+
+```
+mkdocs serve --dev-addr=0.0.0.0:8081
+```

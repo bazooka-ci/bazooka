@@ -1,12 +1,15 @@
 default: images
 
-.PHONY: scm runner
+.PHONY: scm runner docs
 
 devimages:
 	./scripts/build-devimages.sh
 
 images:
 	./scripts/build-images.sh
+
+docs:
+	mkdocs build
 
 setup:
 	./scripts/dev-setup.sh
