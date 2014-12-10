@@ -9,9 +9,7 @@ import (
 )
 
 type Client struct {
-	URL      string
-	Username string
-	Password string
+	URL string
 }
 
 func NewClient(endpoint string) (*Client, error) {
@@ -146,8 +144,13 @@ func (c *Client) SetImage(name, image string) error {
 }
 
 func (c *Client) authenticateRequest(r *http.Request) error {
-	if len(c.Username) > 0 {
-		r.SetBasicAuth(c.Username, c.Password)
+	authConfig, err := loadConfig()
+	if err != nil {
+		return err
+	}
+
+	if len(authConfig.Username) > 0 {
+		r.SetBasicAuth(authConfig.Username, authConfig.Password)
 	}
 	return nil
 }
