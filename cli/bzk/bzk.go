@@ -26,6 +26,28 @@ func main() {
 			Name:        "image",
 			Usage:       "Actions on images",
 			Subcommands: []cli.Command{listImagesCommand(), setImageCommand()},
+		}, {
+			Name:   "login",
+			Usage:  "Log in to a Bazooka server",
+			Action: login,
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:   "bazooka-uri",
+					Value:  "http://localhost:3000",
+					Usage:  "URI for the bazooka server",
+					EnvVar: "BZK_URI",
+				},
+				cli.StringFlag{
+					Name:   "email",
+					Usage:  "User email",
+					EnvVar: "BZK_USER_EMAIL",
+				},
+				cli.StringFlag{
+					Name:   "password",
+					Usage:  "User password",
+					EnvVar: "BZK_USER_PASSWORD",
+				},
+			},
 		},
 	}
 	app.Run(os.Args)

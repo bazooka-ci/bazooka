@@ -165,7 +165,7 @@ func (ctx *context) authenticationHandler(next http.Handler) http.Handler {
 		if len(users) > 0 {
 			authenticator := basic.NewAuthenticator(ctx.userAuthentication, "bazooka")
 
-		  authenticator.Wrap(next).ServeHTTP(w, r)
+			authenticator.Wrap(next).ServeHTTP(w, r)
 		} else {
 			next.ServeHTTP(w, r)
 		}

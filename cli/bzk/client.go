@@ -1,17 +1,16 @@
 package main
 
 import (
-	"bytes"
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
-	"net/http"
 
 	lib "github.com/haklop/bazooka/commons"
+	"github.com/racker/perigee"
 )
 
 type Client struct {
-	URL string
+	URL      string
+	Username string
+	Password string
 }
 
 func NewClient(endpoint string) (*Client, error) {
@@ -21,66 +20,38 @@ func NewClient(endpoint string) (*Client, error) {
 }
 
 func (c *Client) ListProjects() ([]lib.Project, error) {
-	resp, err := http.Get(fmt.Sprintf("%s/project", c.URL))
-	if err != nil {
-		return nil, err
-	}
-	err = c.checkResponse(resp)
-	if err != nil {
-		return nil, err
-	}
-	body, err := body(resp)
-	if err != nil {
-		return nil, err
-	}
-	var projects []lib.Project
-	err = json.Unmarshal(body, &projects)
-	if err != nil {
-		return nil, err
-	}
-	return projects, nil
+	var p []lib.Project
+
+	ep := fmt.Sprintf("%s/project", c.URL)
+	err := perigee.Get(ep, perigee.Options{
+		Results: &p,
+		OkCodes: []int{200},
+	})
+
+	return p, err
 }
 
 func (c *Client) ListJobs(projectID string) ([]lib.Job, error) {
-	resp, err := http.Get(fmt.Sprintf("%s/project/%s/job", c.URL, projectID))
-	if err != nil {
-		return nil, err
-	}
-	err = c.checkResponse(resp)
-	if err != nil {
-		return nil, err
-	}
-	body, err := body(resp)
-	if err != nil {
-		return nil, err
-	}
-	var jobs []lib.Job
-	err = json.Unmarshal(body, &jobs)
-	if err != nil {
-		return nil, err
-	}
-	return jobs, nil
+	var j []lib.Job
+
+	ep := fmt.Sprintf("%s/project/%s/job", c.URL, projectID)
+	err := perigee.Get(ep, perigee.Options{
+		Results: &j,
+		OkCodes: []int{200},
+	})
+
+	return j, err
 }
 
 func (c *Client) ListVariants(jobID string) ([]lib.Variant, error) {
-	resp, err := http.Get(fmt.Sprintf("%s/job/%s/variant", c.URL, jobID))
-	if err != nil {
-		return nil, err
-	}
-	err = c.checkResponse(resp)
-	if err != nil {
-		return nil, err
-	}
-	body, err := body(resp)
-	if err != nil {
-		return nil, err
-	}
-	var variants []lib.Variant
-	err = json.Unmarshal(body, &variants)
-	if err != nil {
-		return nil, err
-	}
-	return variants, nil
+	var v []lib.Variant
+	ep := fmt.Sprintf("%s/job/%s/variant", c.URL, jobID)
+	err := perigee.Get(ep, perigee.Options{
+		Results: &v,
+		OkCodes: []int{200},
+	})
+
+	return v, err
 }
 
 func (c *Client) CreateProject(name, scm, scmUri string) (*lib.Project, error) {
@@ -89,165 +60,79 @@ func (c *Client) CreateProject(name, scm, scmUri string) (*lib.Project, error) {
 		ScmType: scm,
 		ScmURI:  scmUri,
 	}
-	p, err := json.Marshal(project)
-	if err != nil {
-		return nil, err
-	}
-	resp, err := http.Post(fmt.Sprintf("%s/project", c.URL), "application/json", bytes.NewBuffer(p))
-	if err != nil {
-		return nil, err
-	}
-	err = c.checkResponse(resp)
-	if err != nil {
-		return nil, err
-	}
-	body, err := body(resp)
-	if err != nil {
-		return nil, err
-	}
 	createdProject := &lib.Project{}
-	err = json.Unmarshal(body, createdProject)
-	if err != nil {
-		return nil, err
-	}
-	return createdProject, nil
+
+	ep := fmt.Sprintf("%s/project", c.URL)
+	err := perigee.Post(ep, perigee.Options{
+		ReqBody: &project,
+		Results: &createdProject,
+		OkCodes: []int{201},
+	})
+
+	return createdProject, err
 }
 
 func (c *Client) StartJob(projectID, scmReference string) (*lib.Job, error) {
 	startJob := lib.StartJob{
 		ScmReference: scmReference,
 	}
-	p, err := json.Marshal(startJob)
-	if err != nil {
-		return nil, err
-	}
-	resp, err := http.Post(fmt.Sprintf("%s/project/%s/job", c.URL, projectID), "application/json", bytes.NewBuffer(p))
-	if err != nil {
-		return nil, err
-	}
-	err = c.checkResponse(resp)
-	if err != nil {
-		return nil, err
-	}
-	body, err := body(resp)
-	if err != nil {
-		return nil, err
-	}
-	createJob := &lib.Job{}
-	err = json.Unmarshal(body, createJob)
-	if err != nil {
-		return nil, err
-	}
-	return createJob, nil
+	createdJob := &lib.Job{}
+
+	ep := fmt.Sprintf("%s/project/%s/job", c.URL, projectID)
+	err := perigee.Post(ep, perigee.Options{
+		ReqBody: &startJob,
+		Results: &createdJob,
+		OkCodes: []int{202},
+	})
+
+	return createdJob, err
 }
 
 func (c *Client) JobLog(jobID string) ([]lib.LogEntry, error) {
-	resp, err := http.Get(fmt.Sprintf("%s/job/%s/log", c.URL, jobID))
-	if err != nil {
-		return nil, err
-	}
-	err = c.checkResponse(resp)
-	if err != nil {
-		return nil, err
-	}
-	body, err := body(resp)
-	if err != nil {
-		return nil, err
-	}
 	var log []lib.LogEntry
-	err = json.Unmarshal(body, &log)
-	if err != nil {
-		return nil, err
-	}
-	return log, nil
+
+	ep := fmt.Sprintf("%s/job/%s/log", c.URL, jobID)
+	err := perigee.Get(ep, perigee.Options{
+		Results: &log,
+		OkCodes: []int{200},
+	})
+
+	return log, err
 }
 
 func (c *Client) VariantLog(variantID string) ([]lib.LogEntry, error) {
-	resp, err := http.Get(fmt.Sprintf("%s/variant/%v/log", c.URL, variantID))
-	if err != nil {
-		return nil, err
-	}
-	err = c.checkResponse(resp)
-	if err != nil {
-		return nil, err
-	}
-	body, err := body(resp)
-	if err != nil {
-		return nil, err
-	}
 	var log []lib.LogEntry
-	err = json.Unmarshal(body, &log)
-	if err != nil {
-		return nil, err
-	}
-	return log, nil
+
+	ep := fmt.Sprintf("%s/variant/%v/log", c.URL, variantID)
+	err := perigee.Get(ep, perigee.Options{
+		Results: &log,
+		OkCodes: []int{200},
+	})
+	return log, err
 }
 
 func (c *Client) ListImages() ([]*lib.Image, error) {
-	resp, err := http.Get(fmt.Sprintf("%s/image", c.URL))
-	if err != nil {
-		return nil, err
-	}
-	err = c.checkResponse(resp)
-	if err != nil {
-		return nil, err
-	}
-	body, err := body(resp)
-	if err != nil {
-		return nil, err
-	}
+
 	var images []*lib.Image
-	err = json.Unmarshal(body, &images)
-	if err != nil {
-		return nil, err
-	}
-	return images, nil
+
+	ep := fmt.Sprintf(fmt.Sprintf("%s/image", c.URL))
+	err := perigee.Get(ep, perigee.Options{
+		Results: &images,
+		OkCodes: []int{200},
+	})
+
+	return images, err
 }
 
 func (c *Client) SetImage(name, image string) error {
-	p, err := json.Marshal(struct {
-		Image string `json:"image"`
-	}{image})
-	if err != nil {
-		return err
-	}
 
-	req, err := http.NewRequest("PUT", fmt.Sprintf("%s/image/%s", c.URL, name), bytes.NewBuffer(p))
-	if err != nil {
-		return err
-	}
+	ep := fmt.Sprintf("%s/image/%s", c.URL, name)
+	err := perigee.Put(ep, perigee.Options{
+		ReqBody: &struct {
+			Image string `json:"image"`
+		}{image},
+		OkCodes: []int{200},
+	})
 
-	req.Header.Set("Content-Type", "application/json")
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return err
-	}
-	return c.checkResponse(resp)
-}
-
-func (c *Client) checkResponse(s *http.Response) error {
-	switch {
-	case s.StatusCode == http.StatusNotFound:
-		return fmt.Errorf("Object not found")
-	case s.StatusCode >= 400 && s.StatusCode < 500:
-		b, err := body(s)
-		if err != nil {
-			return fmt.Errorf("Error (%v)", s.Status)
-		}
-		return fmt.Errorf("Internal error:\n%v", string(b))
-	case s.StatusCode == 500:
-		b, err := body(s)
-		if err != nil {
-			return fmt.Errorf("Internal error (%v)", s.Status)
-		}
-		return fmt.Errorf("Internal error:\n%v", string(b))
-	case s.StatusCode >= 501 && s.StatusCode < 505:
-		return fmt.Errorf("Service maintainance (%v)", s.Status)
-	default:
-		return nil
-	}
-}
-
-func body(s *http.Response) ([]byte, error) {
-	return ioutil.ReadAll(s.Body)
+	return err
 }
