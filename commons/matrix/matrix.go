@@ -2,6 +2,7 @@ package matrix
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 )
 
@@ -33,6 +34,7 @@ func (mx *Matrix) IterAll(it Iterator, exclusions []*Matrix) {
 	for key := range *mx {
 		keys = append(keys, key)
 	}
+	sort.Strings(keys)
 	mx.iter(it, map[string]string{}, exclusions, []string{}, keys...)
 }
 
