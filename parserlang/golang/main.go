@@ -131,7 +131,7 @@ func setGodir(conf *ConfigGolang) {
 
 func setDefaultInstall(conf *ConfigGolang) {
 	if len(conf.Base.Install) == 0 {
-		conf.Base.Install = []string{"go get -d -v ./... && go build -v ./..."}
+		conf.Base.Install = []string{"go get -d -t -v ./... && go build -v ./..."}
 	}
 }
 
