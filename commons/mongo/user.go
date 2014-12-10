@@ -19,6 +19,14 @@ func (c *MongoConnector) GetUserByEmail(email string) (*lib.User, error) {
 	return result, nil
 }
 
+func (c *MongoConnector) HasUser(email string) (bool, error) {
+	request := bson.M{}
+	request["email"] = email
+
+	count, err := c.database.C("user").Find(request).Count()
+	return count > 0, err
+}
+
 func (c *MongoConnector) GetUsers() ([]*lib.User, error) {
 	result := []*lib.User{}
 
@@ -44,7 +52,13 @@ func (c *MongoConnector) AddUser(user *lib.User) error {
 	user.Password = string(hashedPassword)
 
 	fmt.Printf("add user: %s\n", user.Email)
-	return c.database.C("user").Insert(user)
+	err = c.database.C("user").Insert(user)
+	if err != nil {
+		return err
+	} else {
+		user.Password = ""
+		return nil
+	}
 }
 
 func (c *MongoConnector) ComparePassword(email string, password string) bool {

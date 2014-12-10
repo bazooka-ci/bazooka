@@ -70,6 +70,10 @@ func main() {
 	r.HandleFunc("/image/{name:.*}", mkHandler(ctx.setImage)).Methods("PUT")
 	// r.HandleFunc("/image/{name}", mkHandler(ctx.unsetImage)).Methods("DELETE")
 
+	r.HandleFunc("/user", mkHandler(ctx.getUsers)).Methods("GET")
+	r.HandleFunc("/user", mkHandler(ctx.createUser)).Methods("POST")
+	r.HandleFunc("/user/{id}", mkHandler(ctx.getUser)).Methods("GET")
+
 	http.Handle("/", ctx.authenticationHandler(r))
 	l.Error.Fatal(http.ListenAndServe(":3000", nil))
 }
