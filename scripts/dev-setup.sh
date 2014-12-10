@@ -11,6 +11,6 @@ go_projects=( "parser" "parserlang/golang" "parserlang/java" "orchestration" "se
 for project in "${go_projects[@]}"
 do
   pushd "$GOPATH/src/github.com/haklop/bazooka/$project"
-    go get -v ./...
+    go get -t -v ./...
   popd
 done
