@@ -6,9 +6,9 @@ import (
 	"os"
 	"time"
 
+	log "github.com/Sirupsen/logrus"
 	docker "github.com/bywan/go-dockercommand"
 	commons "github.com/haklop/bazooka/commons"
-	l "github.com/haklop/bazooka/commons/logger"
 	"github.com/haklop/bazooka/commons/mongo"
 )
 
@@ -49,7 +49,7 @@ func (r *Runner) Run(logger Logger) (bool, error) {
 		}
 	}
 
-	l.Info.Printf("Dockerfiles builds finished\n")
+	log.Info("Dockerfiles builds finished")
 	return success, lastError
 }
 
@@ -121,7 +121,7 @@ func (r *Runner) runContainer(logger Logger, buildImage BuiltImage, env map[stri
 		return
 	}
 
-	container.LogsWith(buildImage.Image, l.Docker)
+	container.Logs(buildImage.Image)
 	logger(buildImage.Image, variant.ID, container)
 
 	exitCode, err := container.Wait()

@@ -1,12 +1,10 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
-	"io"
-	"log"
-	"os"
 	"time"
+
+	log "github.com/Sirupsen/logrus"
 
 	docker "github.com/bywan/go-dockercommand"
 	lib "github.com/haklop/bazooka/commons"
@@ -76,40 +74,18 @@ func (c *context) startBuild(params map[string]string, body bodyFunc) (*response
 		Detach:      true,
 	})
 
-	logFolder := fmt.Sprintf(logFolderPattern, BazookaHome, runningJob.ProjectID, runningJob.ID)
-
-	// Ensure directory exists
-	err = os.MkdirAll(logFolder, 0755)
-	if err != nil {
-		return nil, err
-	}
-	logFileWriter, err := os.Create(logFolder + "/job.log")
-	if err != nil {
-		return nil, err
-	}
-
 	runningJob.OrchestrationID = container.ID()
-	orchestrationLog := log.New(logFileWriter, "", log.LstdFlags)
-	orchestrationLog.Printf("Start job %s on project %s with container %s\n", runningJob.ID, runningJob.ProjectID, runningJob.OrchestrationID)
+	log.WithFields(log.Fields{
+		"job_id":           runningJob.ID,
+		"project_id":       runningJob.ProjectID,
+		"orchestration_id": runningJob.OrchestrationID,
+	}).Info("Starting job")
 
 	err = c.Connector.SetJobOrchestrationId(runningJob.ID, container.ID())
 	if err != nil {
-		orchestrationLog.Println(err.Error())
+		log.Error(err.Error())
 		return nil, err
 	}
-
-	r, w := io.Pipe()
-	container.StreamLogs(w)
-	go func(reader io.Reader, logFileWriter *os.File) {
-		scanner := bufio.NewScanner(reader)
-		for scanner.Scan() {
-			orchestrationLog.Printf("%s \n", scanner.Text())
-		}
-		if err := scanner.Err(); err != nil {
-			orchestrationLog.Println("There was an error with the scanner in attached container", err)
-		}
-		logFileWriter.Close()
-	}(r, logFileWriter)
 
 	return accepted(runningJob, "/job/"+runningJob.ID)
 }

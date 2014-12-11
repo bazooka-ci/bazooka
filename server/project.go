@@ -3,8 +3,8 @@ package main
 import (
 	"fmt"
 
+	log "github.com/Sirupsen/logrus"
 	lib "github.com/haklop/bazooka/commons"
-	l "github.com/haklop/bazooka/commons/logger"
 )
 
 func (p *context) createProject(params map[string]string, body bodyFunc) (*response, error) {
@@ -46,7 +46,9 @@ func (p *context) createProject(params map[string]string, body bodyFunc) (*respo
 	}
 	// TODO : validate scm_type
 	// TODO : validate data by scm_type
-	l.Info.Printf("Add project: %#v\n", project)
+	log.WithFields(log.Fields{
+		"project": project,
+	}).Info("Adding project")
 	if err = p.Connector.AddProject(&project); err != nil {
 		return nil, err
 	}
@@ -68,7 +70,9 @@ func (p *context) getProject(params map[string]string, body bodyFunc) (*response
 
 func (p *context) getProjects(params map[string]string, body bodyFunc) (*response, error) {
 	projects, err := p.Connector.GetProjects()
-	l.Info.Printf("Retrieve projects: %#v\n", projects)
+	log.WithFields(log.Fields{
+		"projects": projects,
+	}).Info("Retrieving projects")
 	if err != nil {
 		return nil, err
 	}
