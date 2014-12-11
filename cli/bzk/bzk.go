@@ -58,8 +58,12 @@ func main() {
 			Action: run,
 			Flags: []cli.Flag{
 				cli.BoolFlag{
+					Name:  "upgrade",
+					Usage: "Upgrade Bazooka to the latest version by pulling new images from the registry",
+				},
+				cli.BoolFlag{
 					Name:  "update",
-					Usage: "Update Bazooka to the latest version",
+					Usage: "Update Bazooka by destroying and recreating initial containers",
 				},
 				cli.BoolFlag{
 					Name:  "restart",
