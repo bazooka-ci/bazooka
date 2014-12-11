@@ -13,13 +13,41 @@ type Project struct {
 }
 
 type Variant struct {
-	Status     JobStatus `bson:"status" json:"status"`
-	Started    time.Time `bson:"started" json:"started"`
-	Completed  time.Time `bson:"completed" json:"completed"`
-	BuildImage string    `bson:"image" json:"image"`
-	JobID      string    `bson:"job_id" json:"job_id"`
-	Number     int       `bson:"number" json:"number"`
-	ID         string    `bson:"id" json:"id"`
+	Status     JobStatus     `bson:"status" json:"status"`
+	Started    time.Time     `bson:"started" json:"started"`
+	Completed  time.Time     `bson:"completed" json:"completed"`
+	BuildImage string        `bson:"image" json:"image"`
+	JobID      string        `bson:"job_id" json:"job_id"`
+	Number     int           `bson:"number" json:"number"`
+	ID         string        `bson:"id" json:"id"`
+	Metas      *VariantMetas `bson:"metas" json:"metas"`
+}
+
+type VariantMetas []*VariantMeta
+
+type VariantMeta struct {
+	Kind        MetaKind
+	Name, Value string
+}
+
+type MetaKind string
+
+const (
+	META_ENV  MetaKind = "env"
+	META_LANG          = "lang"
+)
+
+func (ms *VariantMetas) Append(m *VariantMeta) {
+	*ms = append(*ms, m)
+}
+func (ms *VariantMetas) Len() int      { return len(*ms) }
+func (ms *VariantMetas) Swap(i, j int) { (*ms)[i], (*ms)[j] = (*ms)[j], (*ms)[i] }
+func (ms *VariantMetas) Less(i, j int) bool {
+	a, b := (*ms)[i], (*ms)[j]
+	if a.Kind == b.Kind {
+		return a.Name < b.Name
+	}
+	return a.Kind == META_LANG
 }
 
 type StartJob struct {
