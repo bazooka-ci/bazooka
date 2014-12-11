@@ -14,9 +14,6 @@ docs:
 setup:
 	./scripts/dev-setup.sh
 
-run:
-	./scripts/run.sh
-
 errcheck:
 	./scripts/errcheck.sh
 
