@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"net/http"
+	"net/url"
 
 	lib "github.com/haklop/bazooka/commons"
 	"github.com/racker/perigee"
@@ -21,8 +22,12 @@ func NewClient(endpoint string) (*Client, error) {
 func (c *Client) ListProjects() ([]lib.Project, error) {
 	var p []lib.Project
 
-	ep := fmt.Sprintf("%s/project", c.URL)
-	err := perigee.Get(ep, perigee.Options{
+	requestURL, err := c.getRequestURL("project")
+	if err != nil {
+		return nil, err
+	}
+
+	err = perigee.Get(requestURL, perigee.Options{
 		Results:    &p,
 		OkCodes:    []int{200},
 		SetHeaders: c.authenticateRequest,
@@ -34,8 +39,12 @@ func (c *Client) ListProjects() ([]lib.Project, error) {
 func (c *Client) ListJobs(projectID string) ([]lib.Job, error) {
 	var j []lib.Job
 
-	ep := fmt.Sprintf("%s/project/%s/job", c.URL, projectID)
-	err := perigee.Get(ep, perigee.Options{
+	requestURL, err := c.getRequestURL(fmt.Sprintf("project/%s/job", url.QueryEscape(projectID)))
+	if err != nil {
+		return nil, err
+	}
+
+	err = perigee.Get(requestURL, perigee.Options{
 		Results:    &j,
 		OkCodes:    []int{200},
 		SetHeaders: c.authenticateRequest,
@@ -46,8 +55,13 @@ func (c *Client) ListJobs(projectID string) ([]lib.Job, error) {
 
 func (c *Client) ListVariants(jobID string) ([]lib.Variant, error) {
 	var v []lib.Variant
-	ep := fmt.Sprintf("%s/job/%s/variant", c.URL, jobID)
-	err := perigee.Get(ep, perigee.Options{
+
+	requestURL, err := c.getRequestURL(fmt.Sprintf("job/%s/variant", url.QueryEscape(jobID)))
+	if err != nil {
+		return nil, err
+	}
+
+	err = perigee.Get(requestURL, perigee.Options{
 		Results:    &v,
 		OkCodes:    []int{200},
 		SetHeaders: c.authenticateRequest,
@@ -64,8 +78,11 @@ func (c *Client) CreateProject(name, scm, scmUri string) (*lib.Project, error) {
 	}
 	createdProject := &lib.Project{}
 
-	ep := fmt.Sprintf("%s/project", c.URL)
-	err := perigee.Post(ep, perigee.Options{
+	requestURL, err := c.getRequestURL("project")
+	if err != nil {
+		return nil, err
+	}
+	err = perigee.Post(requestURL, perigee.Options{
 		ReqBody:    &project,
 		Results:    &createdProject,
 		OkCodes:    []int{201},
@@ -81,8 +98,12 @@ func (c *Client) StartJob(projectID, scmReference string) (*lib.Job, error) {
 	}
 	createdJob := &lib.Job{}
 
-	ep := fmt.Sprintf("%s/project/%s/job", c.URL, projectID)
-	err := perigee.Post(ep, perigee.Options{
+	requestURL, err := c.getRequestURL(fmt.Sprintf("project/%s/job", url.QueryEscape(projectID)))
+	if err != nil {
+		return nil, err
+	}
+
+	err = perigee.Post(requestURL, perigee.Options{
 		ReqBody:    &startJob,
 		Results:    &createdJob,
 		OkCodes:    []int{202},
@@ -95,8 +116,12 @@ func (c *Client) StartJob(projectID, scmReference string) (*lib.Job, error) {
 func (c *Client) JobLog(jobID string) ([]lib.LogEntry, error) {
 	var log []lib.LogEntry
 
-	ep := fmt.Sprintf("%s/job/%s/log", c.URL, jobID)
-	err := perigee.Get(ep, perigee.Options{
+	requestURL, err := c.getRequestURL(fmt.Sprintf("job/%s/log", url.QueryEscape(jobID)))
+	if err != nil {
+		return nil, err
+	}
+
+	err = perigee.Get(requestURL, perigee.Options{
 		Results:    &log,
 		OkCodes:    []int{200},
 		SetHeaders: c.authenticateRequest,
@@ -108,8 +133,12 @@ func (c *Client) JobLog(jobID string) ([]lib.LogEntry, error) {
 func (c *Client) VariantLog(variantID string) ([]lib.LogEntry, error) {
 	var log []lib.LogEntry
 
-	ep := fmt.Sprintf("%s/variant/%v/log", c.URL, variantID)
-	err := perigee.Get(ep, perigee.Options{
+	requestURL, err := c.getRequestURL(fmt.Sprintf("variant/%s/log", url.QueryEscape(variantID)))
+	if err != nil {
+		return nil, err
+	}
+
+	err = perigee.Get(requestURL, perigee.Options{
 		Results:    &log,
 		OkCodes:    []int{200},
 		SetHeaders: c.authenticateRequest,
@@ -121,8 +150,12 @@ func (c *Client) ListImages() ([]*lib.Image, error) {
 
 	var images []*lib.Image
 
-	ep := fmt.Sprintf(fmt.Sprintf("%s/image", c.URL))
-	err := perigee.Get(ep, perigee.Options{
+	requestURL, err := c.getRequestURL("image")
+	if err != nil {
+		return nil, err
+	}
+
+	err = perigee.Get(requestURL, perigee.Options{
 		Results:    &images,
 		OkCodes:    []int{200},
 		SetHeaders: c.authenticateRequest,
@@ -133,8 +166,12 @@ func (c *Client) ListImages() ([]*lib.Image, error) {
 
 func (c *Client) SetImage(name, image string) error {
 
-	ep := fmt.Sprintf("%s/image/%s", c.URL, name)
-	err := perigee.Put(ep, perigee.Options{
+	requestURL, err := c.getRequestURL(fmt.Sprintf("image/%s", url.QueryEscape(name)))
+	if err != nil {
+		return err
+	}
+
+	err = perigee.Put(requestURL, perigee.Options{
 		ReqBody: &struct {
 			Image string `json:"image"`
 		}{image},
@@ -148,8 +185,12 @@ func (c *Client) SetImage(name, image string) error {
 func (c *Client) ListUsers() ([]lib.User, error) {
 	var u []lib.User
 
-	ep := fmt.Sprintf("%s/user", c.URL)
-	err := perigee.Get(ep, perigee.Options{
+	requestURL, err := c.getRequestURL("user")
+	if err != nil {
+		return nil, err
+	}
+
+	err = perigee.Get(requestURL, perigee.Options{
 		Results:    &u,
 		OkCodes:    []int{200},
 		SetHeaders: c.authenticateRequest,
@@ -165,8 +206,12 @@ func (c *Client) CreateUser(email, password string) (*lib.User, error) {
 	}
 	createdUser := &lib.User{}
 
-	ep := fmt.Sprintf("%s/user", c.URL)
-	err := perigee.Post(ep, perigee.Options{
+	requestURL, err := c.getRequestURL("user")
+	if err != nil {
+		return nil, err
+	}
+
+	err = perigee.Post(requestURL, perigee.Options{
 		ReqBody:    &user,
 		Results:    &createdUser,
 		OkCodes:    []int{201},
@@ -186,4 +231,13 @@ func (c *Client) authenticateRequest(r *http.Request) error {
 		r.SetBasicAuth(authConfig.Username, authConfig.Password)
 	}
 	return nil
+}
+
+func (c *Client) getRequestURL(path string) (string, error) {
+	u, err := url.Parse(c.URL)
+	if err != nil {
+		return "", fmt.Errorf("Bazooka URL %s has an incorrect format: %v", c.URL, err)
+	}
+	u.Path = path
+	return u.String(), nil
 }
