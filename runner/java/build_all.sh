@@ -11,4 +11,4 @@ for d in */ ; do
     popd
 done
 
-docker tag bazooka/runner-java:oraclejdk8 bazooka/runner-java:latest
+$s docker tag bazooka/runner-java:oraclejdk8 bazooka/runner-java:latest
