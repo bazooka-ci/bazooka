@@ -238,6 +238,6 @@ func (c *Client) getRequestURL(path string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("Bazooka URL %s has an incorrect format: %v", c.URL, err)
 	}
-	u.Path = path
+	u.Path = u.Path + "/" + path
 	return u.String(), nil
 }
