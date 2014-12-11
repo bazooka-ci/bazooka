@@ -41,13 +41,20 @@ func run(c *cli.Context) {
 	if forceUpdate {
 		forceRestart = true
 		log.Printf("Pulling Bazooka images to check for new versions\n")
-		images := []string{"server", "web", "orchestration", "parser", "parser-java", "parser-golang", "scm-git",
+		mandatoryImages := []string{"server", "web", "orchestration", "parser"}
+		optionalImages := []string{"parser-java", "parser-golang", "scm-git",
 			"runner-java", "runner-java:oraclejdk8", "runner-java:oraclejdk7", "runner-java:oraclejdk6", "runner-java:openjdk8", "runner-java:openjdk7", "runner-java:openjdk6",
 			"runner-golang", "runner-golang:1.2.2", "runner-golang:1.3", "runner-golang:1.3.1", "runner-golang:1.3.2", "runner-golang:1.3.3", "runner-golang:1.4"}
-		for _, image := range images {
+		for _, image := range mandatoryImages {
 			err = client.Pull(&docker.PullOptions{Image: getImageLocation(fmt.Sprintf("bazooka/%s", image))})
 			if err != nil {
-				log.Printf("Skipping image, reason is: %v\n", err)
+				log.Fatal(fmt.Errorf("Unable to pull required image for Bazooka, reason is: %v\n", err))
+			}
+		}
+		for _, image := range optionalImages {
+			err = client.Pull(&docker.PullOptions{Image: getImageLocation(fmt.Sprintf("bazooka/%s", image))})
+			if err != nil {
+				log.Printf("Unable to pull image for Bazooka, as it is an optional one, let's move on. Reason is: %v\n", err)
 			}
 		}
 	}
@@ -119,7 +126,7 @@ func ensureContainerIsRestarted(client *docker.Docker, options *docker.RunOption
 		log.Printf("Container %s already Up & Running, keeping on\n", options.Name)
 		return false, nil
 	}
-	log.Printf("Container %s is not `Up`, restarting it\n", options.Name)
+	log.Printf("Container %s is not `Up`, starting it\n", options.Name)
 	return true, client.Start(&docker.StartOptions{
 		ID: container.ID,
 	})
