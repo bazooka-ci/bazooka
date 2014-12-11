@@ -1,15 +1,26 @@
 <div class="col project" ng-if="project">
 	<div class="col jobs" ng-controller="JobsController" >
-		<h1>
+		<h1 ng-class="{invert: showNewJob}">
 			builds
-			<a href="" ng-click="buildProject()">
+
+			<span class="ref">master</span>
+			<a href="" ng-click="newJobVisible(true)" ng-if="!showNewJob">
 				<span class="fa fa-play"></span>
 			</a>
+			<a href="" ng-click="newJobVisible(false)" ng-if="showNewJob">
+				<i class="fa fa-times"></i>
+			</a>
 		</h1>
+		<form class="new" ng-if="showNewJob">
+			<label for="job-reference">SCM ref</label>
+			<input type="text" name="reference" id="job-reference" ng-model="newJob.reference"/>
+
+			<button ng-click="startJob()">Start job</button>
+		</form>
 		<div class="scroll">
 			<ul>
 			    <li ng-repeat="job in jobs | orderBy:'started':true" ng-class="{selected: isSelected(job)}">
-			    	<a ng-href="#/{{project.id}}?j={{job.id}}" ng-class="job | bzkStatus">
+			    	<a ng-href="#/{{project.id}}?j={{job.id}}" ng-class="job | bzkStatus" title="{{job.status}}">
 			    		<span class="duration">
 			    			{{job | bzkDuration}}
 			    		</span>
@@ -24,48 +35,56 @@
 	</div>
 	<div class="col job" ng-controller="JobController" ng-class="{wide: variantSelected()}">
 		<h1>
-		{{project.name}}
-		<span class="meta">{{project.scm_uri}}</span>
-		<a href="">
-			<i class="fa fa-pencil"></i>
-		</a>
+			{{project.name}}
+			<span class="meta">{{project.scm_uri}}</span>
+			<a href="">
+				<i class="fa fa-pencil"></i>
+			</a>
 		</h1>
-		<div  ng-controller="VariantsController">
-
-			<div class="scroll list">
-				<div class="info">
-					<p><b>{{job.scm_metadata.reference}}</b> - {{job.scm_metadata.message}}</p>
-					<p>{{job.scm_metadata | bzkAuthor}} {{job.scm_metadata.date | bzkDate}}</p>
-					<p>Commit {{job.scm_metadata.commit_id}}</p>
+		<div class="scroll list">
+			<div class="info">
+				<div class="what">
+					<span class="ref">{{job.scm_metadata.reference}}</span>
+					<span class="id">{{job.scm_metadata.commit_id | bzkExcerpt:7}}</span>
 				</div>
-				<table  class="variants">
-					<thead>
-						<tr>
-							<th>#</th>
-							<th>Duration</th>
-							<th>Finished</th>
-							<th ng-repeat="label in metaLabels" class="meta">{{label}}</th>
-						</tr>
-					</thead>
-					<tbody>
-						<tr ng-repeat="variant in variants | orderBy:'number'"  ng-class="variant | bzkStatus" class="{{isSelected(variant)?'selected':''}}">
-							<td>
-								<a href="#/{{project.id}}?j={{job.id}}&v={{variant.id}}">{{variant.number}}</a>
-							</td>
-							<td>{{variant | bzkDuration}}</td>
-							<td>{{variant | bzkFinished}}</td>
-							<td ng-repeat="vmeta in variant.metas"
-							class="meta" 
-							ng-style="{'color': metaColor(vmeta)}">
-							{{vmeta.value}}
-							</td>
-						</tr>
-					</tbody>
-				</table>
+				
+				<pre>{{job.scm_metadata.message}}</pre>
+				
+				<div class="who">
+					<span class="author">{{job.scm_metadata.author.name}}</span>
+					<span class="committer" ng-if="job.scm_metadata.committer.name!=job.scm_metadata.author.name">{{job.scm_metadata.committer.name}}</span>
+					<span class="date">{{job.scm_metadata.date | bzkDate}}</span>
+				</div>
+				
 			</div>
+			<table  class="variants" ng-controller="VariantsController" ng-if="job">
+				<thead>
+					<tr>
+						<th>#</th>
+						<th>Duration</th>
+						<th>Finished</th>
+						<th ng-repeat="label in metaLabels" class="meta">{{label}}</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr ng-repeat="variant in variants | orderBy:'number'"  ng-class="variant | bzkStatus" class="{{isSelected(variant)?'selected':''}}"  title="{{variant.status}}">
+						<td>
+							<a href="#/{{project.id}}?j={{job.id}}&v={{variant.id}}">{{variant.number}}</a>
+						</td>
+						<td>{{variant | bzkDuration}}</td>
+						<td>{{variant | bzkFinished}}</td>
+						<td ng-repeat="vmeta in variant.metas"
+						class="meta" 
+						ng-style="{'color': metaColor(vmeta)}">
+						{{vmeta.value}}
+						</td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
 
-			<div class="scroll logs" bzk-log="logger">
-			</div>
-		</div
+		<div class="scroll logs" bzk-log="logger">
+		</div>
+		
 	</div>
 </div>

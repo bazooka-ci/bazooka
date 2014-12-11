@@ -101,8 +101,8 @@ a {
 		border-bottom: 1px solid darken($projects-new-bg, 8%);
 
 		a {
-			color: $projects-fg;
-			background: $projects-bg;
+			color: $projects-new-bg;
+			background: $projects-new-fg;
 		}
 	}
 

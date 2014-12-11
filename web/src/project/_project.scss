@@ -53,6 +53,50 @@
 			}
 		}
 
+		h1.invert {
+			background: darken($jobs-new-bg, 4%);
+			color: #fff;
+			border-bottom: 1px solid darken($jobs-new-bg, 8%);
+			
+			a {
+				color: $jobs-start-bg;
+				background: $jobs-start-fg;
+			}
+		}
+
+		.new {
+			width: $jobs-width;
+			background: $jobs-new-bg;
+			padding: 0 10px 20px 10px;
+			
+			position: relative;
+			z-index: 4;
+
+			label {
+				display: block;
+				color: #fff;
+				padding: 30px 0 10px 0;
+				text-transform: uppercase;
+				font-size: 24px;
+			}
+
+			input, button {
+				display: block;
+				padding: 10px;
+				font-size: 24px;
+				line-height: 24px;
+				width: $jobs-width - 40px;
+				border: none;
+			}
+
+			button {
+				margin: 40px 0 0 0;
+				background: lighten($jobs-new-bg, 4%);
+				text-transform: uppercase;
+				color: #fff;
+			}
+		}
+
 		ul {
 			list-style-type: none;
 			margin: 0;
@@ -125,15 +169,15 @@
 					height: $build-state-size;
 					border-radius: 50%;
 					margin: -$build-state-size/2 0 0 -$build-state-size/2;
-					background: red;
+					background: #fff;
 				}
 
 				a.success:before {
 					background: $success-color;
 				}
 
-				a.partial:before {
-					background: $partial-color;
+				a.errored:before {
+					background: $errored-color;
 				}
 
 				a.failed:before {
@@ -165,8 +209,74 @@
 		}
 
 		.info {
-			padding: 10px;
-			color: #999;
+			padding: 0;
+			font-size: 12px;
+			line-height: 16px;
+			.what {
+				padding: 4px 10px;
+				background: #e3f2fd;
+				
+				
+				.ref {
+					color: #666;
+					font-family: monospace;
+					font-weight: bold;
+				}
+
+				.id:before {
+					content: "commit: ";
+					color: #999;
+					
+				}
+				.id {
+					color: #666;
+					position: absolute;
+					right: 10px;
+					font-family: monospace;
+				}
+			}
+
+			.who {
+				border-top: 1px solid #e3f2fd;
+				padding: 4px 10px;
+				background: #e3f2fd;
+				font-size: 12px;
+				line-height: 12px;
+
+				.author:before {
+					content: "author: ";
+					color: #666;
+					font-weight: normal;
+				}
+
+				.author, .commiter {
+					color: #333;
+					font-weight: bold;
+					margin-right: 20px;
+				}
+
+				.committer:before {
+					content: "commiter: ";
+					color: #666;
+					font-weight: normal;
+				}
+
+				.date {
+					color: #333;
+					position: absolute;
+					right: 10px;
+					font-family: monospace;
+				}
+
+
+			}
+
+			pre {
+				margin: 0;
+				padding: 10px;
+				background: #BBDEFB;
+				color: #333;
+			}
 		}
 
 		.logs {
@@ -294,9 +404,9 @@
 				}
 			}
 
-			tr.partial {
+			tr.errored {
 				td:nth-of-type(1) a:before {
-					background: $partial-color;
+					background: $errored-color;
 				}
 			}
 

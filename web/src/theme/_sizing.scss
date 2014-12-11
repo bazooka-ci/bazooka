@@ -2,7 +2,7 @@ $header-height: 0px;
 $vsep : 0px;
 
 $projects-width: 200px;
-$projects-wide-width: $projects-width * 2;
+
 $build-state-size: 12px;
 
 $jobs-width: 300px;
@@ -11,3 +11,5 @@ $jobs-item-height: 40px;
 
 $job-width: 940px;
 $job-log-width: 1000px;
+
+$projects-wide-width: $projects-width + $jobs-width;

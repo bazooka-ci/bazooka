@@ -7,7 +7,7 @@ angular.module('bzk.utils').filter('bzkStatus', function(){
 		'RUNNING': 'running',
 		'SUCCESS': 'success',
 		'FAILED': 'failed',
-		'ERRORERD': 'errored'
+		'ERRORED': 'errored'
 	};
 
 	return function(job) {
@@ -30,17 +30,6 @@ angular.module('bzk.utils').filter('bzkDate', function(){
 	};
 });
 
-angular.module('bzk.utils').filter('bzkAuthor', function(){
-	return function(d) {
-		if (typeof d != 'undefined') {
-			if (d.author.name == d.committer.name) {
-				return d.author.name + " authored and committed";
-			}
-			return d.author.name+ " authored and " + d.committer.name + " committed";
-		}
-	};
-});
-
 angular.module('bzk.utils').filter('bzkDuration', function(){
 	return function(job) {
 		var m = moment(job.completed);
@@ -48,6 +37,15 @@ angular.module('bzk.utils').filter('bzkDuration', function(){
 			return moment().from(moment(job.started), true);
 		} else {
 			return m.from(job.started, true);
+		}
+	};
+});
+
+angular.module('bzk.utils').filter('bzkExcerpt', function(){
+	return function(s, width) {
+		width=width||7;
+		if (s) {
+			return s.substr(0, width);
 		}
 	};
 });

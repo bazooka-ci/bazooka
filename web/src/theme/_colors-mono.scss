@@ -2,13 +2,14 @@ $header-bg : #f1c40f;
 
 $projects-bg: #212121;
 $projects-fg: #9E9E9E;
-$projects-new-bg: #9E9E9E;
-$projects-new-fg: #333;
+$projects-new-bg: #009688;
+$projects-new-fg: #fff;
 
 $jobs-bg: #f8f8f8;
 $jobs-fg: #333;
-$jobs-start-bg: #9e9e9e;
+$jobs-start-bg: #2196F3;
 $jobs-start-fg: #fff;
+$jobs-new-bg: #2196F3;
 
 $job-bg: #fefefe;
 $job-fg: #333333;
@@ -17,6 +18,6 @@ $logs-bg: #222;
 $logs-fg: #eee;
 
 $success-color: #00C853;
-$partial-color: #FFEB3B;
+$errored-color: #666;
 $failure-color: #D32F2F;
 $running-color: #FFAB00;

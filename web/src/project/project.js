@@ -24,9 +24,9 @@ angular.module('bzk.project').factory('ProjectResource', function($http){
 		variants: function (jid) {
 			return $http.get('/api/job/'+jid+'/variant');
 		},
-		build: function (id) {
+		build: function (id, reference) {
 			return $http.post('/api/project/'+id+'/job', {
-				reference: 'master'
+				reference: reference
 			});
 		},
 		variantLog: function (vid) {
@@ -54,9 +54,18 @@ angular.module('bzk.project').controller('JobsController', function($scope, Proj
 
 	$scope.refreshJobs();
 
-	$scope.buildProject = function() {
-		ProjectResource.build($scope.project.id).success(function(){
+	$scope.newJob = {
+		reference: 'master'
+	};
+
+	$scope.newJobVisible = function(s) {
+		$scope.showNewJob = s;
+	};
+
+	$scope.startJob = function() {
+		ProjectResource.build($scope.project.id, $scope.newJob.reference).success(function(){
 			$scope.refreshJobs();
+			$scope.showNewJob = false;
 		});
 	};
 
@@ -64,46 +73,89 @@ angular.module('bzk.project').controller('JobsController', function($scope, Proj
 		return j.id===$location.search().j;
 	};
 
-	$interval(function() {
-		$scope.refreshJobs();
-	}, 3000);
+	var refreshPromise = $interval($scope.refreshJobs, 5000);
+	$scope.$on('$destroy', function() {
+		$interval.cancel(refreshPromise);
+	});
 });
 
-angular.module('bzk.project').controller('JobController', function($scope, ProjectResource, $location, $interval){
+angular.module('bzk.project').controller('JobController', function($scope, ProjectResource, $location, $timeout){
 	var jId;
 	var refreshPromise;
 
 	$scope.variantSelected = function() {
 		return $location.search().v;
 	};
-	function refreshVariants() {
-		ProjectResource.variants(jId).success(function(variants){
-			$scope.variants = variants;
-			setupMeta(variants);
+	
 
-			if(_.findWhere($scope.variants, {status: 'RUNNING'})) {
-
-				if(!refreshPromise) {
-
-					refreshPromise= $interval(refreshVariants, 3000);
-				}
-			} else if(refreshPromise) {
-
-				$interval.cancel(refreshPromise);
-				refreshPromise=null;
-			}
-		});
-	}
+	$scope.$on('$destroy', function() {
+		$timeout.cancel(refreshPromise);
+	});
 
 	function refresh() {
 		jId = $location.search().j;
   		if(jId) {
 			ProjectResource.job(jId).success(function(job){
 				$scope.job = job;
+
+				if (job.status==='RUNNING') {
+					refreshPromise = $timeout(refresh, 3000);
+				}
 			});
-			refreshVariants();
 		}
 	}
+
+	$scope.$on('$routeUpdate', refresh);
+
+	refresh();
+});
+
+angular.module('bzk.project').controller('VariantsController', function($scope, ProjectResource, bzkScroll, $location, $timeout){
+	$scope.isSelected = function(v) {
+		return v.id===$location.search().v;
+	};
+
+	var refreshPromise;
+
+	$scope.$on('$destroy', function() {
+		$timeout.cancel(refreshPromise);
+	});
+
+	function refreshVariants() {
+		var jId = $location.search().j;
+  		if(jId) {
+			ProjectResource.variants(jId).success(function(variants){
+				$scope.variants = variants;
+				setupMeta(variants);
+
+				if($scope.job.status==='RUNNING' || _.findWhere($scope.variants, {status: 'RUNNING'})) {
+					refreshPromise= $timeout(refreshVariants, 3000);
+				}
+			});
+		}
+	}
+
+	refreshVariants();
+
+	function loadLogs() {
+		var vId = $location.search().v;
+  		if(vId) {
+  			$scope.logger.prepare();
+  			bzkScroll.toTheRight();
+
+			ProjectResource.variantLog(vId).success(function(logs){
+				$scope.logger.finish(logs);
+			});
+		}
+	}
+
+	// yield to let give bzkLog directive time to set its sink in the scope
+	$timeout(loadLogs);
+
+	$scope.$on('$routeUpdate', function(){
+		refreshVariants();
+		loadLogs();
+	});
 
 	function setupMeta(variants) {
 		var colorsDb = ['#4a148c' /* Purple */,
@@ -158,40 +210,6 @@ angular.module('bzk.project').controller('JobController', function($scope, Proje
 	$scope.metaColor = function(vmeta) {
 		return $scope.metaColors[vmeta.name][vmeta.value];
 	};
-
-	$scope.$on('$routeUpdate', refresh);
-
-	refresh();
-});
-
-angular.module('bzk.project').controller('VariantsController', function($scope, ProjectResource, bzkScroll, $location, $timeout, $interval){
-	$scope.isSelected = function(v) {
-		return v.id===$location.search().v;
-	};
-
-	function loadLogs() {
-		var vId = $location.search().v;
-  		if(vId) {
-  			$scope.logger.prepare();
-  			bzkScroll.toTheRight();
-
-			ProjectResource.variantLog(vId).success(function(logs){
-				// console.log('got logs', logs)
-				// $scope.logs = logs;
-
-				$scope.logger.finish(logs);
-
-
-			});
-		}
-	}
-
-	// yield to let give bzkLog directive time to set its sink in the scope
-	$timeout(loadLogs);
-
-	$scope.$on('$routeUpdate', function(){
-		loadLogs();
-	});
 });
 
 angular.module('bzk.project').directive('bzkLog', function(){
