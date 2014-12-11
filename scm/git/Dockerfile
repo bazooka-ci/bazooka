@@ -1,7 +1,9 @@
 FROM debian:jessie
 
-RUN apt-get update
-RUN apt-get install -y git
+RUN apt-get update \
+	&& apt-get install -y git \
+	&& apt-get clean \
+	&& rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 ADD run.sh /run.sh
 RUN echo "    IdentityFile /bazooka-key" >> /etc/ssh/ssh_config
