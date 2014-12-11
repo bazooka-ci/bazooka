@@ -120,7 +120,9 @@ func setGodir(conf *ConfigGolang) {
 		}
 	}
 
-	log.Info("Buildir set to %s\n", buildDir)
+	log.WithFields(log.Fields{
+		"build_directory": buildDir,
+	}).Info("Build directory set")
 
 	env["BZK_BUILD_DIR"] = []string{buildDir}
 

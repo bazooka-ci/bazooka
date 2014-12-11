@@ -18,7 +18,9 @@ type LanguageParser struct {
 
 func (p *LanguageParser) Parse() error {
 
-	log.Info("Lauching language parsing %s\n", p.Image)
+	log.WithFields(log.Fields{
+		"image": p.Image,
+	}).Info("Lauching language parsing")
 
 	client, err := docker.NewDocker(dockerEndpoint)
 	if err != nil {

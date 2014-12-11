@@ -27,13 +27,17 @@ type FetchOptions struct {
 
 func (f *SCMFetcher) Fetch(logger Logger) error {
 
-	log.Info("Fetching SCM From Source Repository at %s\n", f.Options.URL)
+	log.WithFields(log.Fields{
+		"source": f.Options.URL,
+	}).Info("Fetching SCM From Source Repository")
 
 	image, err := f.resolveImage()
 	if err != nil {
 		return err
 	}
-	log.Info("Using image '%s'\n", image)
+	log.WithFields(log.Fields{
+		"image": image,
+	}).Info("Starting SCM Fetch")
 
 	client, err := docker.NewDocker(DockerEndpoint)
 	if err != nil {
@@ -69,7 +73,10 @@ func (f *SCMFetcher) Fetch(logger Logger) error {
 		return fmt.Errorf("Error during execution of SCM container %s\n Check Docker container logs, id is %s\n", image, container.ID())
 	}
 
-	log.Info("SCM Source Repo Fetched in %s\n", f.Options.LocalFolder)
+	log.WithFields(log.Fields{
+		"checkout_folder": f.Options.LocalFolder,
+	}).Info("SCM Source Repo Fetched")
+
 	err = container.Remove(&docker.RemoveOptions{
 		Force:         true,
 		RemoveVolumes: true,

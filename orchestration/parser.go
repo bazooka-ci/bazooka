@@ -8,10 +8,6 @@ import (
 	"github.com/haklop/bazooka/commons/mongo"
 )
 
-const (
-	BazookaParseImage = "bazooka/parser"
-)
-
 type Parser struct {
 	MongoConnector *mongo.MongoConnector
 	Options        *ParseOptions
@@ -28,7 +24,6 @@ type ParseOptions struct {
 
 func (p *Parser) Parse(logger Logger) error {
 
-	log.Info("Running Parsing Image %s on checked-out source\n", BazookaParseImage)
 	client, err := docker.NewDocker(DockerEndpoint)
 	if err != nil {
 		return err
@@ -39,7 +34,9 @@ func (p *Parser) Parse(logger Logger) error {
 		return err
 	}
 
-	log.Info("Using image '%s'\n", image)
+	log.WithFields(log.Fields{
+		"image": image,
+	}).Info("Running Parsing Image on checked-out source")
 
 	container, err := client.Run(&docker.RunOptions{
 		Image: image,
@@ -55,15 +52,15 @@ func (p *Parser) Parse(logger Logger) error {
 		return err
 	}
 
-	container.Logs(BazookaParseImage)
-	logger(BazookaParseImage, "", container)
+	container.Logs(image)
+	logger(image, "", container)
 
 	exitCode, err := container.Wait()
 	if err != nil {
 		return err
 	}
 	if exitCode != 0 {
-		return fmt.Errorf("Error during execution of Parser container %s/parser\n Check Docker container logs, id is %s\n", BazookaParseImage, container.ID())
+		return fmt.Errorf("Error during execution of Parser container %s/parser\n Check Docker container logs, id is %s\n", image, container.ID())
 	}
 
 	err = container.Remove(&docker.RemoveOptions{
@@ -73,7 +70,10 @@ func (p *Parser) Parse(logger Logger) error {
 	if err != nil {
 		return err
 	}
-	log.Info("Parsing Image ran sucessfully, Dockerfiles generated in %s\n", p.Options.OutputFolder)
+
+	log.WithFields(log.Fields{
+		"dockerfiles_path": p.Options.OutputFolder,
+	}).Info("Parsing Image ran sucessfully, Dockerfiles generated")
 	return nil
 }
 

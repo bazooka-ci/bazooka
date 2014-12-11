@@ -49,7 +49,7 @@ func (r *Runner) Run(logger Logger) (bool, error) {
 		}
 	}
 
-	log.Info("Dockerfiles builds finished\n")
+	log.Info("Dockerfiles builds finished")
 	return success, lastError
 }
 

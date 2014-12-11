@@ -35,7 +35,9 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Debug("Parsed configuration is %+v\n", config)
+	log.WithFields(log.Fields{
+		"config": config,
+	}).Debug("Configuration parsed")
 
 	// resolve the docker image corresponding to this particular language parser
 	image, err := resolveLanguageParser(config.Language)

@@ -76,7 +76,9 @@ func main() {
 		})
 	}()
 
-	log.Info("Starting Orchestration with the following environment %+v\n", env)
+	log.WithFields(log.Fields{
+		"environment": env,
+	}).Info("Starting Orchestration")
 
 	checkoutFolder := fmt.Sprintf(CheckoutFolderPattern, env[BazookaEnvHome])
 	metaFolder := fmt.Sprintf(MetaFolderPattern, env[BazookaEnvHome])
@@ -96,7 +98,7 @@ func main() {
 	if err := f.Fetch(containerLogger); err != nil {
 		mongoErr := connector.FinishJob(env[BazookaEnvJobID], lib.JOB_ERRORED, time.Now())
 		if mongoErr != nil {
-			log.Error(mongoErr)
+			log.Fatal(mongoErr)
 		}
 		log.Fatal(err)
 	}
@@ -159,6 +161,8 @@ func main() {
 	}
 
 	elapsed := time.Since(start)
-	log.Info("Job Orchestration took %s", elapsed)
+	log.WithFields(log.Fields{
+		"elapsed": elapsed,
+	}).Info("Job Orchestration finished")
 
 }
