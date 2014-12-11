@@ -6,9 +6,9 @@ import (
 	"strconv"
 	"strings"
 
+	log "github.com/Sirupsen/logrus"
 	docker "github.com/bywan/go-dockercommand"
 	lib "github.com/haklop/bazooka/commons"
-	l "github.com/haklop/bazooka/commons/logger"
 )
 
 type Builder struct {
@@ -29,7 +29,7 @@ type BuiltImage struct {
 
 func (b *Builder) Build() ([]BuiltImage, error) {
 
-	l.Info.Printf("Starting building Dockerfiles\n")
+	log.Info("Starting building Dockerfiles")
 	files, err := listBuildfiles(b.Options.DockerfileFolder)
 	if err != nil {
 		return nil, err
@@ -76,11 +76,11 @@ func buildContainer(client *docker.Docker, variantID int, b *Builder, file *buil
 	}
 
 	tag := fmt.Sprintf("bazooka/build-%s-%s-%d", b.Options.ProjectID, b.Options.JobID, variantID)
-	err := client.BuildWithLogger(&docker.BuildOptions{
+	err := client.Build(&docker.BuildOptions{
 		Tag:        tag,
 		Dockerfile: file.Dockerfile,
 		Path:       b.Options.SourceFolder,
-	}, l.Docker)
+	})
 	if err != nil {
 		errChan <- err
 	} else {

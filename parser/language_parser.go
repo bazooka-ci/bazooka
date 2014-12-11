@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"os"
 
+	log "github.com/Sirupsen/logrus"
 	docker "github.com/bywan/go-dockercommand"
-	l "github.com/haklop/bazooka/commons/logger"
 )
 
 const (
@@ -18,7 +18,7 @@ type LanguageParser struct {
 
 func (p *LanguageParser) Parse() error {
 
-	l.Info.Printf("Lauching language parsing %s\n", p.Image)
+	log.Info("Lauching language parsing %s\n", p.Image)
 
 	client, err := docker.NewDocker(dockerEndpoint)
 	if err != nil {
@@ -55,6 +55,6 @@ func (p *LanguageParser) Parse() error {
 	if err != nil {
 		return err
 	}
-	l.Info.Println("Language parsing finished")
+	log.Info("Language parsing finished")
 	return nil
 }

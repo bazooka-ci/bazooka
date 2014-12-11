@@ -3,8 +3,8 @@ package main
 import (
 	"fmt"
 
+	log "github.com/Sirupsen/logrus"
 	docker "github.com/bywan/go-dockercommand"
-	l "github.com/haklop/bazooka/commons/logger"
 	"github.com/haklop/bazooka/commons/mongo"
 )
 
@@ -28,7 +28,7 @@ type ParseOptions struct {
 
 func (p *Parser) Parse(logger Logger) error {
 
-	l.Info.Printf("Running Parsing Image %s on checked-out source\n", BazookaParseImage)
+	log.Info("Running Parsing Image %s on checked-out source\n", BazookaParseImage)
 	client, err := docker.NewDocker(DockerEndpoint)
 	if err != nil {
 		return err
@@ -39,7 +39,7 @@ func (p *Parser) Parse(logger Logger) error {
 		return err
 	}
 
-	l.Info.Printf("Using image '%s'\n", image)
+	log.Info("Using image '%s'\n", image)
 
 	container, err := client.Run(&docker.RunOptions{
 		Image: image,
@@ -55,7 +55,7 @@ func (p *Parser) Parse(logger Logger) error {
 		return err
 	}
 
-	container.LogsWith(BazookaParseImage, l.Docker)
+	container.Logs(BazookaParseImage)
 	logger(BazookaParseImage, "", container)
 
 	exitCode, err := container.Wait()
@@ -73,7 +73,7 @@ func (p *Parser) Parse(logger Logger) error {
 	if err != nil {
 		return err
 	}
-	l.Info.Printf("Parsing Image ran sucessfully, Dockerfiles generated in %s\n", p.Options.OutputFolder)
+	log.Info("Parsing Image ran sucessfully, Dockerfiles generated in %s\n", p.Options.OutputFolder)
 	return nil
 }
 

@@ -4,11 +4,10 @@ import (
 	"bufio"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"regexp"
 
-	l "github.com/haklop/bazooka/commons/logger"
+	log "github.com/Sirupsen/logrus"
 	"github.com/haklop/bazooka/commons/matrix"
 
 	bazooka "github.com/haklop/bazooka/commons"
@@ -22,16 +21,15 @@ const (
 )
 
 func main() {
-	l.Init(ioutil.Discard, os.Stdout, os.Stdout, os.Stdout, os.Stdout)
 	file, err := bazooka.ResolveConfigFile(SourceFolder)
 	if err != nil {
-		l.Error.Fatal(err)
+		log.Fatal(err)
 	}
 
 	conf := &ConfigGolang{}
 	err = bazooka.Parse(file, conf)
 	if err != nil {
-		l.Error.Fatal(err)
+		log.Fatal(err)
 	}
 
 	mx := matrix.Matrix{
@@ -43,7 +41,7 @@ func main() {
 	}
 	mx.IterAll(func(permutation map[string]string, counter string) {
 		if err := manageGoVersion(counter, conf, permutation[Golang]); err != nil {
-			l.Error.Fatal(err)
+			log.Fatal(err)
 		}
 	}, nil)
 }
@@ -74,7 +72,7 @@ func setGodir(conf *ConfigGolang) {
 
 	godirExist, err := bazooka.FileExists("/bazooka/.godir")
 	if err != nil {
-		l.Error.Fatal(err)
+		log.Fatal(err)
 	}
 
 	var buildDir string
@@ -82,7 +80,7 @@ func setGodir(conf *ConfigGolang) {
 		f, err := os.Open("/bazooka/.godir")
 		defer f.Close()
 		if err != nil {
-			l.Error.Fatal(err)
+			log.Fatal(err)
 		}
 
 		bf := bufio.NewReader(f)
@@ -93,9 +91,9 @@ func setGodir(conf *ConfigGolang) {
 		if err == io.EOF {
 			buildDir = "/go/src/app"
 		} else if err != nil {
-			l.Error.Fatal(err)
+			log.Fatal(err)
 		} else if isPrefix {
-			l.Error.Fatal("Unexpected long line reading", f.Name())
+			log.Fatal("Unexpected long line reading", f.Name())
 		} else {
 			buildDir = fmt.Sprintf("/go/src/%s", content)
 		}
@@ -108,7 +106,7 @@ func setGodir(conf *ConfigGolang) {
 		if len(scmMetadata.Origin) > 0 {
 			r, err := regexp.Compile("^(?:https://(?:\\w+@){0,1}|git@)(github.com|bitbucket.org)[:/]{0,1}([\\w-_]+/[\\w-_]+).git$")
 			if err != nil {
-				l.Error.Fatal(err)
+				log.Fatal(err)
 			}
 
 			res := r.FindStringSubmatch(scmMetadata.Origin)
@@ -122,7 +120,7 @@ func setGodir(conf *ConfigGolang) {
 		}
 	}
 
-	l.Info.Printf("Buildir set to %s\n", buildDir)
+	log.Info("Buildir set to %s\n", buildDir)
 
 	env["BZK_BUILD_DIR"] = []string{buildDir}
 

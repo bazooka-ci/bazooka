@@ -3,9 +3,9 @@ package main
 import (
 	"fmt"
 
+	log "github.com/Sirupsen/logrus"
 	docker "github.com/bywan/go-dockercommand"
 	lib "github.com/haklop/bazooka/commons"
-	l "github.com/haklop/bazooka/commons/logger"
 	"github.com/haklop/bazooka/commons/mongo"
 )
 
@@ -27,13 +27,13 @@ type FetchOptions struct {
 
 func (f *SCMFetcher) Fetch(logger Logger) error {
 
-	l.Info.Printf("Fetching SCM From Source Repository at %s\n", f.Options.URL)
+	log.Info("Fetching SCM From Source Repository at %s\n", f.Options.URL)
 
 	image, err := f.resolveImage()
 	if err != nil {
 		return err
 	}
-	l.Info.Printf("Using image '%s'\n", image)
+	log.Info("Using image '%s'\n", image)
 
 	client, err := docker.NewDocker(DockerEndpoint)
 	if err != nil {
@@ -58,7 +58,7 @@ func (f *SCMFetcher) Fetch(logger Logger) error {
 		return err
 	}
 
-	container.LogsWith(image, l.Docker)
+	container.Logs(image)
 	logger(image, "", container)
 
 	exitCode, err := container.Wait()
@@ -69,7 +69,7 @@ func (f *SCMFetcher) Fetch(logger Logger) error {
 		return fmt.Errorf("Error during execution of SCM container %s\n Check Docker container logs, id is %s\n", image, container.ID())
 	}
 
-	l.Info.Printf("SCM Source Repo Fetched in %s\n", f.Options.LocalFolder)
+	log.Info("SCM Source Repo Fetched in %s\n", f.Options.LocalFolder)
 	err = container.Remove(&docker.RemoveOptions{
 		Force:         true,
 		RemoveVolumes: true,

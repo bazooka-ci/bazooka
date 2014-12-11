@@ -3,13 +3,12 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"strings"
 
-	l "github.com/haklop/bazooka/commons/logger"
 	"github.com/haklop/bazooka/commons/matrix"
 
+	log "github.com/Sirupsen/logrus"
 	lib "github.com/haklop/bazooka/commons"
 )
 
@@ -23,26 +22,25 @@ const (
 )
 
 func main() {
-	l.Init(ioutil.Discard, os.Stdout, os.Stdout, os.Stdout, os.Stdout)
-	l.Info.Println("Starting Parsing Phase")
+	log.Info("Starting Parsing Phase")
 	// Find either .travis.yml or .bazooka.yml file in the project
 	configFile, err := lib.ResolveConfigFile(SourceFolder)
 	if err != nil {
-		l.Error.Fatal(err)
+		log.Fatal(err)
 	}
 
 	// parse the configuration
 	config := &lib.Config{}
 	err = lib.Parse(configFile, config)
 	if err != nil {
-		l.Error.Fatal(err)
+		log.Fatal(err)
 	}
-	l.Trace.Printf("Parsed configuration is %+v\n", config)
+	log.Debug("Parsed configuration is %+v\n", config)
 
 	// resolve the docker image corresponding to this particular language parser
 	image, err := resolveLanguageParser(config.Language)
 	if err != nil {
-		l.Error.Fatal(err)
+		log.Fatal(err)
 	}
 
 	// run the parser image
@@ -51,7 +49,7 @@ func main() {
 	}
 	err = langParser.Parse()
 	if err != nil {
-		l.Error.Fatal(err)
+		log.Fatal(err)
 	}
 
 	// if all went well, the parser should have generated one or more "sub" .bazooka.*.yml files
@@ -60,10 +58,10 @@ func main() {
 	// they are also supposed to enrich it with a from attribute corresponding to a base docker image
 	// to be used to run the build
 
-	l.Info.Println("Starting Matrix generation")
+	log.Info("Starting Matrix generation")
 	files, err := lib.ListFilesWithPrefix(OutputFolder, ".bazooka")
 	if err != nil {
-		l.Error.Fatal(err)
+		log.Fatal(err)
 	}
 
 	// for each of those files (the "sub" .bazooka.*.yml)
@@ -72,7 +70,7 @@ func main() {
 		config := &lib.Config{}
 		err = lib.Parse(file, config)
 		if err != nil {
-			l.Error.Fatal(fmt.Errorf("Error while parsing config file %s: %v", file, err))
+			log.Fatal(fmt.Errorf("Error while parsing config file %s: %v", file, err))
 		}
 
 		// create a matrix from the environment variables
@@ -110,19 +108,19 @@ func main() {
 		var langExtraVars map[string]interface{}
 		err := lib.Parse(rootMetaFile, &langExtraVars)
 		if err != nil {
-			l.Error.Fatal(err)
+			log.Fatal(err)
 		}
 		// and then add the new language specific variables parsed from the meta file to the build matrix (which already contains the env variables)
 		err = feedMatrix(langExtraVars, &mx)
 		if err != nil {
-			l.Error.Fatal(err)
+			log.Fatal(err)
 		}
 
 		// we're not done yet: we need to also handle the matrix exclusions
 		// we parse them into a list of matrices
 		exclusions, err := exclusionsMatrices(config.Matrix.Exclude)
 		if err != nil {
-			l.Error.Fatal(err)
+			log.Fatal(err)
 		}
 
 		// and finally, we iterate over all the permutations of the build matrix
@@ -133,7 +131,7 @@ func main() {
 			// and enrich it with the env variables combination
 			// the same goes for the meta file
 			if err := handlePermutation(permutation, config, counter, rootCounter); err != nil {
-				l.Error.Fatal(fmt.Errorf("Error while generating the permutations: %v", err))
+				log.Fatal(fmt.Errorf("Error while generating the permutations: %v", err))
 			}
 		}, exclusions)
 
@@ -141,29 +139,29 @@ func main() {
 		// we can now safely remove them
 		err = os.Remove(file)
 		if err != nil {
-			l.Error.Fatal(fmt.Errorf("Error while removing file %s: %v", file, err))
+			log.Fatal(fmt.Errorf("Error while removing file %s: %v", file, err))
 		}
 
 		// same for the meta files
 		err = os.Remove(fmt.Sprintf("%s/%s", MetaFolder, rootCounter))
 		if err != nil {
-			l.Error.Fatal(fmt.Errorf("Error while removing meta folders: %v", err))
+			log.Fatal(fmt.Errorf("Error while removing meta folders: %v", err))
 		}
 	}
-	l.Info.Println("Matrix generated")
+	log.Info("Matrix generated")
 
-	l.Info.Println("Starting generating Dockerfiles from Matrix")
+	log.Info("Starting generating Dockerfiles from Matrix")
 	// Now we're left with the final build files
 	files, err = lib.ListFilesWithPrefix(OutputFolder, ".bazooka")
 	if err != nil {
-		l.Error.Fatal(fmt.Errorf("Error while listing .bazooka* files: %v", err))
+		log.Fatal(fmt.Errorf("Error while listing .bazooka* files: %v", err))
 	}
 
 	for _, file := range files {
 		config := &lib.Config{}
 		err = lib.Parse(file, config)
 		if err != nil {
-			l.Error.Fatal(fmt.Errorf("Error while parsing config file %s: %v", file, err))
+			log.Fatal(fmt.Errorf("Error while parsing config file %s: %v", file, err))
 		}
 
 		// transform the .bazooka.x.yml file into a set of dockerfile + shell scripts who perform the actual build
@@ -174,10 +172,10 @@ func main() {
 		}
 		err = g.GenerateDockerfile()
 		if err != nil {
-			l.Error.Fatal("Error while generating a dockerfile: %v", err)
+			log.Fatal("Error while generating a dockerfile: %v", err)
 		}
 	}
-	l.Info.Println("Dockerfiles all created successfully")
+	log.Info("Dockerfiles all created successfully")
 
 }
 
