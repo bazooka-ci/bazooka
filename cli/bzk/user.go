@@ -7,6 +7,7 @@ import (
 	"text/tabwriter"
 
 	"github.com/codegangsta/cli"
+	"github.com/howeyc/gopass"
 )
 
 func createUserCommand() cli.Command {
@@ -20,13 +21,24 @@ func createUserCommand() cli.Command {
 				Usage:  "URI for the bazooka server",
 				EnvVar: "BZK_URI",
 			},
+			cli.StringFlag{
+				Name:   "password",
+				Usage:  "password of the user",
+				EnvVar: "BZK_USER_PASSWORD",
+			},
 		},
 		Action: func(c *cli.Context) {
 			client, err := NewClient(c.String("bazooka-uri"))
 			if err != nil {
 				log.Fatal(err)
 			}
-			res, err := client.CreateUser(c.Args()[0], c.Args()[1])
+			password := c.String("password")
+			if len(password) == 0 {
+				fmt.Printf("Enter user password: ")
+				password = string(gopass.GetPasswd())
+			}
+
+			res, err := client.CreateUser(c.Args()[0], password)
 			if err != nil {
 				log.Fatal(err)
 			}
