@@ -26,8 +26,9 @@ type Variant struct {
 type VariantMetas []*VariantMeta
 
 type VariantMeta struct {
-	Kind        MetaKind
-	Name, Value string
+	Kind  MetaKind `bson:"kind" json:"kind"`
+	Name  string   `bson:"name" json:"name"`
+	Value string   `bson:"value" json:"value"`
 }
 
 type MetaKind string

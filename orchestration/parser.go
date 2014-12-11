@@ -154,6 +154,9 @@ func parseMeta(file string, vf *variantData) error {
 			if vs, ok := v.([]interface{}); ok {
 				for _, envVar := range vs {
 					if strEnvVar, ok := envVar.(string); ok {
+						if strings.HasPrefix(strEnvVar, "BZK_") {
+							continue
+						}
 						nv := strings.Split(strEnvVar, "=")
 						vf.meta.Append(&lib.VariantMeta{Kind: lib.META_ENV, Name: nv[0], Value: nv[1]})
 					} else {
