@@ -1,4 +1,4 @@
-FROM golang:1.3.3
+FROM golang:1.4
 
 ADD . /go/src/github.com/haklop/bazooka/parserlang/java
 RUN go get -d -v ./...
