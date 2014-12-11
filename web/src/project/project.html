@@ -44,7 +44,7 @@
 							<th>#</th>
 							<th>Duration</th>
 							<th>Finished</th>
-							<th>os</th>
+							<th ng-repeat="label in metaLabels" class="meta">{{label}}</th>
 						</tr>
 					</thead>
 					<tbody>
@@ -54,7 +54,11 @@
 							</td>
 							<td>{{variant | bzkDuration}}</td>
 							<td>{{variant | bzkFinished}}</td>
-							<td>linux</td>
+							<td ng-repeat="vmeta in variant.metas"
+							class="meta" 
+							ng-style="{'color': metaColor(vmeta)}">
+							{{vmeta.value}}
+							</td>
 						</tr>
 					</tbody>
 				</table>

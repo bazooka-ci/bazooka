@@ -229,13 +229,28 @@
 				text-align: center;
 			}
 
-			tr {
+			th.meta {
+				background: darken($job-bg, 24%);
+				font-family: monospace;
+			}
 
+			th.meta:first-of-type {
+				border-left: 1px solid #eaeaea;
+			}
+
+			tr {
 				td {
-					// text-align: center;
 					padding: 4px;
 					border-bottom: 1px solid darken($job-bg, 8%);
+					position: relative;
 				}
+
+				td.meta {
+					border-left: 1px solid #eaeaea;
+					font-family: monospace;
+					font-weight: bold;
+				}
+
 
 
 				td:nth-of-type(1) a {
