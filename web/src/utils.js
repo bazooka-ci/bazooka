@@ -65,7 +65,7 @@ angular.module('bzk.utils').filter('bzkId', function($filter){
 	};
 });
 
-angular.module('bzk.utils').factory('bzkScroll', function($window){
+angular.module('bzk.utils').factory('Scroll', function($window){
 	return {
 		toTheRight: function(){
 			$('html, body').animate({

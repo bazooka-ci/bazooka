@@ -73,8 +73,11 @@
 			margin: 0;
 			padding: 0;
 
-			li.selected a {
-				background: darken($jobs-bg, 10%);
+			li.selected a, li.selected a:hover {
+				background: #90CAF9;
+				span:before {
+					color: #666;
+				}
 			}
 			li {
 				padding: 0;
@@ -177,6 +180,17 @@
 		h1 {
 			background: darken($job-bg, 4%);
 			border-bottom: 1px solid darken($job-bg, 8%);
+		}
+
+		h2 {
+			padding: 0;
+			a {
+				padding: 5px;
+				text-decoration: none;
+				color: #666;
+				display: block;
+				background: #eee;
+			}
 		}
 
 		.info {
@@ -302,7 +316,10 @@
 			width: $job-width;
 		}
 
-		.logs {
+		.jlogs {
+			// padding: 10px;
+		}
+		.vlogs {
 			left: $job-width;
 			width: $job-log-width;
 		}

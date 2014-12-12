@@ -45,7 +45,6 @@ a {
 
 	h1 {
 		font-family: Roboto, sans-serif;
-		// font-family: serif;
 		text-transform: lowercase;
 		font-weight: 100;
 		margin: 0;
@@ -79,6 +78,17 @@ a {
 			right: 5px;
 			top: 10px;
 		}
+	}
+
+	h2 {
+		font-family: sans-serif;
+		text-transform: lowercase;
+		font-weight: 100;
+		margin: 10px 0 0 0;
+		padding: 10px 5px;
+		font-size: 24px;
+		line-height: 24px;
+		position: relative;
 	}
 
 	.scroll {
@@ -224,7 +234,7 @@ a {
 		}
 
 		li.selected a {
-			background: darken($projects-bg, 12%);
+			background: #00695C;
 		}
 	}
 }

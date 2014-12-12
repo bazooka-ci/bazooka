@@ -65,7 +65,7 @@ angular.module('bzk').controller('ProjectsController', function($scope, Projects
 	};
 
 	$scope.isSelected = function(p) {
-		return p.id===$routeParams.pid;
+		return p.id.indexOf($routeParams.pid)===0;
 	};
 });
 

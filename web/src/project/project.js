@@ -29,6 +29,9 @@ angular.module('bzk.project').factory('ProjectResource', function($http){
 				reference: reference
 			});
 		},
+		jobLog: function (jid) {
+			return $http.get('/api/job/'+jid+'/log');
+		},
 		variantLog: function (vid) {
 			return $http.get('/api/variant/'+vid+'/log');
 		}
@@ -39,7 +42,6 @@ angular.module('bzk.project').controller('ProjectController', function($scope, $
 	var pId = $routeParams.pid;
 
 	ProjectResource.fetch(pId).success(function(project){
-		console.log(project);
 		$scope.project = project;
 	});
 });
@@ -70,7 +72,7 @@ angular.module('bzk.project').controller('JobsController', function($scope, Proj
 	};
 
 	$scope.isSelected = function(j) {
-		return j.id===$location.search().j;
+		return j.id.indexOf($location.search().j)===0;
 	};
 
 	var refreshPromise = $interval($scope.refreshJobs, 5000);
@@ -115,11 +117,38 @@ angular.module('bzk.project').controller('JobController', function($scope, Proje
 			return 'none';
 		}
 	};
-
 	
 });
 
-angular.module('bzk.project').controller('VariantsController', function($scope, ProjectResource, bzkScroll, $location, $timeout){
+angular.module('bzk.project').controller('JobLogsController', function($scope, ProjectResource, DateUtils, $location, $timeout){
+	var jId = $location.search().j;
+	$scope.logger={};
+
+	$scope.toggleJobLogs = function() {
+		$scope.jobLogsVisible=!$scope.jobLogsVisible;
+		if($scope.jobLogsVisible) {
+			$timeout(loadLogs);
+		}
+	};
+
+	function loadLogs() {
+  		$scope.logger.job.prepare();
+		ProjectResource.jobLog(jId).success(function(logs){
+			$scope.logger.job.finish(logs);
+		});	
+	}
+
+	$scope.$on('$routeUpdate', function(){
+		var newJid=$location.search().j;
+		if(newJid!=jId) {
+			$scope.jobLogsVisible=false;
+			$scope.logger={};
+		}
+	});
+	
+});
+
+angular.module('bzk.project').controller('VariantsController', function($scope, ProjectResource, $location, $timeout){
 	$scope.isSelected = function(v) {
 		return v.id===$location.search().v;
 	};
@@ -156,24 +185,9 @@ angular.module('bzk.project').controller('VariantsController', function($scope, 
 		}
 	};
 
-	function loadLogs() {
-		var vId = $location.search().v;
-  		if(vId) {
-  			$scope.logger.prepare();
-  			bzkScroll.toTheRight();
-
-			ProjectResource.variantLog(vId).success(function(logs){
-				$scope.logger.finish(logs);
-			});
-		}
-	}
-
-	// yield to let give bzkLog directive time to set its sink in the scope
-	$timeout(loadLogs);
-
 	$scope.$on('$routeUpdate', function(){
 		refreshVariants();
-		loadLogs();
+		
 	});
 
 	function setupMeta(variants) {
@@ -231,6 +245,23 @@ angular.module('bzk.project').controller('VariantsController', function($scope, 
 	};
 });
 
+
+angular.module('bzk.project').controller('VariantLogsController', function($scope, ProjectResource, Scroll, $location, $timeout){
+	var vId = $location.search().v;
+	$scope.logger={};
+	function loadLogs() {
+		$scope.logger.variant.prepare();
+		Scroll.toTheRight();
+
+		ProjectResource.variantLog(vId).success(function(logs){
+			$scope.logger.variant.finish(logs);
+		});
+	}
+
+	$timeout(loadLogs);
+	
+});
+
 angular.module('bzk.project').directive('bzkLog', function(){
 	return {
 		restrict: 'A',
@@ -268,3 +299,4 @@ angular.module('bzk.project').directive('bzkLog', function(){
 		}
 	};
 });
+
