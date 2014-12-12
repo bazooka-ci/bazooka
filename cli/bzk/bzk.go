@@ -52,6 +52,41 @@ func main() {
 					EnvVar: "BZK_USER_PASSWORD",
 				},
 			},
+		}, {
+			Name:   "run",
+			Usage:  "Run bazooka",
+			Action: run,
+			Flags: []cli.Flag{
+				cli.BoolFlag{
+					Name:  "update",
+					Usage: "Update Bazooka to the latest version by pulling new images from the registry",
+				},
+				cli.BoolFlag{
+					Name:  "restart",
+					Usage: "Restart Bazooka if already running",
+				},
+				cli.StringFlag{
+					Name:   "registry",
+					Usage:  "Custom registry to get Bazooka Docker images",
+					EnvVar: "BZK_REGISTRY",
+				},
+				cli.StringFlag{
+					Name:   "home",
+					Usage:  "Home Folder for Bazooka to work",
+					EnvVar: "BZK_HOME",
+				},
+				cli.StringFlag{
+					Name:   "docker-sock",
+					Usage:  "Location of the Docker unix socket, usually /var/run/docker.sock",
+					Value:  "/var/run/docker.sock",
+					EnvVar: "BZK_DOCKERSOCK",
+				},
+				cli.StringFlag{
+					Name:   "scm-key",
+					Usage:  "Location of the private SSH Key Bazooka will use for SCM Fetch",
+					EnvVar: "BZK_SCM_KEYFILE",
+				},
+			},
 		},
 	}
 	app.Run(os.Args)
