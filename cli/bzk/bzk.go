@@ -19,6 +19,10 @@ func main() {
 			Usage:       "Actions on projects",
 			Subcommands: []cli.Command{startJobCommand(), listJobsCommand(), jobLogCommand()},
 		}, {
+			Name:        "key",
+			Usage:       "Actions on key",
+			Subcommands: []cli.Command{addKeyCommand(), listKeysCommand(), updateKeyCommand()},
+		}, {
 			Name:        "variant",
 			Usage:       "Actions on variants",
 			Subcommands: []cli.Command{listVariantsCommand(), variantLogCommand()},

@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"net/url"
 
@@ -111,6 +112,80 @@ func (c *Client) StartJob(projectID, scmReference string) (*lib.Job, error) {
 	})
 
 	return createdJob, err
+}
+
+func (c *Client) ListKeys(projectID string) ([]*lib.SSHKey, error) {
+
+	var keys []*lib.SSHKey
+
+	requestURL, err := c.getRequestURL(fmt.Sprintf("project/%s/key", url.QueryEscape(projectID)))
+	if err != nil {
+		return nil, err
+	}
+
+	err = perigee.Get(requestURL, perigee.Options{
+		Results:    &keys,
+		OkCodes:    []int{200},
+		SetHeaders: c.authenticateRequest,
+	})
+
+	return keys, err
+}
+
+func (c *Client) AddKey(projectID, keyPath string) (*lib.SSHKey, error) {
+	fileContent, err := ioutil.ReadFile(keyPath)
+	if err != nil {
+		return nil, err
+	}
+
+	sshKey := &lib.SSHKey{
+		ProjectID: projectID,
+		Content:   string(fileContent),
+	}
+
+	requestURL, err := c.getRequestURL(fmt.Sprintf("project/%s/key", url.QueryEscape(projectID)))
+	if err != nil {
+		return nil, err
+	}
+
+	createdKey := &lib.SSHKey{}
+
+	err = perigee.Post(requestURL, perigee.Options{
+		ReqBody:    &sshKey,
+		Results:    &createdKey,
+		OkCodes:    []int{201},
+		SetHeaders: c.authenticateRequest,
+	})
+
+	return createdKey, err
+}
+
+func (c *Client) UpdateKey(projectID, keyPath string) (*lib.SSHKey, error) {
+	fileContent, err := ioutil.ReadFile(keyPath)
+	if err != nil {
+		return nil, err
+	}
+
+	sshKey := &lib.SSHKey{
+		ProjectID: projectID,
+		Content:   string(fileContent),
+	}
+
+	requestURL, err := c.getRequestURL(fmt.Sprintf("project/%s/key", url.QueryEscape(projectID)))
+	if err != nil {
+		return nil, err
+	}
+
+	updatedKey := &lib.SSHKey{}
+
+	err = perigee.Put(requestURL, perigee.Options{
+		ReqBody:    &sshKey,
+		Results:    &updatedKey,
+		OkCodes:    []int{200},
+		SetHeaders: c.authenticateRequest,
+	})
+
+	return updatedKey, err
 }
 
 func (c *Client) JobLog(jobID string) ([]lib.LogEntry, error) {
