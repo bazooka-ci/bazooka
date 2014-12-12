@@ -1,5 +1,7 @@
 # [Development Instructions](docs/developping.md)
 
+# [Installation Instructions](docs/installation.md)
+
 # Build the documentation
 
 ## Install [mkdocs](http://www.mkdocs.org/)
