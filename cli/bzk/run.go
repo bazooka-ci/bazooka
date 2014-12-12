@@ -63,7 +63,7 @@ func run(c *cli.Context) {
 		// Using the official mongo image from dockerhub, this may need a change later
 		Image:  "mongo",
 		Detach: true,
-	}, forceRestart || forceUpdate)
+	}, false)
 
 	serverRestarted, err := ensureContainerIsRestarted(client, &docker.RunOptions{
 		Name:   "bzk_server",
