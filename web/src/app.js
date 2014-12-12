@@ -21,7 +21,7 @@ angular.module('bzk').controller('RootController', function($scope, $routeParams
 	};
 
 	$scope.isVariantSelected = function() {
-		return $location.search().j;
+		return $location.search().v;
 	};
 });
 
