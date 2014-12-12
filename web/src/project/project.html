@@ -20,7 +20,7 @@
 		<div class="scroll">
 			<ul>
 			    <li ng-repeat="job in jobs | orderBy:'started':true" ng-class="{selected: isSelected(job)}">
-			    	<a ng-href="#/{{project.id}}?j={{job.id}}" ng-class="job | bzkStatus" title="{{job.status}}">
+			    	<a ng-href="#/{{project | bzkId}}?j={{job | bzkId}}" ng-class="job | bzkStatus" title="{{job.status}}">
 			    		<span class="duration">
 			    			{{job | bzkDuration}}
 			    		</span>
@@ -69,7 +69,7 @@
 				<tbody>
 					<tr ng-repeat="variant in variants | orderBy:'number'"  ng-class="variant | bzkStatus" class="{{isSelected(variant)?'selected':''}}"  title="{{variant.status}}">
 						<td>
-							<a href="#/{{project.id}}?j={{job.id}}&v={{variant.id}}">{{variant.number}}</a>
+							<a href="#/{{project | bzkId}}?j={{job | bzkId}}&v={{variant | bzkId}}">{{variant.number}}</a>
 						</td>
 						<td>{{variant | bzkDuration}}</td>
 						<td>{{variant | bzkFinished}}</td>

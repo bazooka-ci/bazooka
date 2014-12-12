@@ -50,6 +50,12 @@ angular.module('bzk.utils').filter('bzkExcerpt', function(){
 	};
 });
 
+angular.module('bzk.utils').filter('bzkId', function($filter){
+	return function(obj) {
+		return $filter('bzkExcerpt')(obj.id, 7);
+	};
+});
+
 angular.module('bzk.utils').factory('bzkScroll', function($window){
 	return {
 		toTheRight: function(){

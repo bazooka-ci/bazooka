@@ -27,7 +27,7 @@
 	<div class="scroll">
 		<ul>
 		    <li ng-repeat="project in projects | filter:filter"  ng-class="{selected: isSelected(project)}">
-		    	<a ng-href="#/{{project.id}}">{{project.name}}</a>
+		    	<a ng-href="#/{{project | bzkId}}">{{project.name}}</a>
 		    </li>
 		    
 		</ul>
