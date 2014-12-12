@@ -19,5 +19,5 @@ $ bzk run
 If you already installed bazooka once and want to upgrade it to the latest version, it's as simple as
 
 ```bash
-$ bzk run --upgrade
+$ bzk run --update
 ```
