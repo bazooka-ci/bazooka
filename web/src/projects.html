@@ -9,14 +9,17 @@
 		</a>
 	</h1>
 
-	<form class="new" ng-if="showNewProject">
+	<form class="new" ng-if="showNewProject" name="form">
 		<label for="project-name">Project name</label>
-		<input type="text" name="name" id="project-name" ng-model="newProj.name"/>
+		<input type="text" name="name" id="project-name" ng-model="newProj.name" required/>
 
-		<label for="project-uri">SCM uri</label>
-		<input type="text" name="uri" id="project-uri"  ng-model="newProj.scm_uri"/>
+		<label for="scm-type">SCM type</label>
+		<input type="text" name="scm_type" id="scm-type"  ng-model="newProj.scm_type" required/>
 
-		<button ng-click="createProject()">Create project</button>
+		<label for="scm-uri">SCM uri</label>
+		<input type="text" name="scm_uri" id="scm-uri"  ng-model="newProj.scm_uri" required/>
+
+		<button ng-click="createProject()" ng-disabled="form.$invalid">Create project</button>
 	</form>
 	<!-- <div class="search">
 		<input type="text" ng-model="filter"/>

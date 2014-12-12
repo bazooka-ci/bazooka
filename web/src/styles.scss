@@ -91,13 +91,58 @@ a {
 	}
 }
 
+@mixin form($width, $bg, $fg) {
+	padding: 0 10px 20px 10px;
+	width: $width - 20px;
+	background: $bg;
+	position: relative;
+	z-index: 4;
+
+	label {
+		color: $fg;
+		display: block;
+		padding: 30px 0 10px 0;
+		text-transform: uppercase;
+		font-size: 24px;
+	}
+
+	input, button {
+		display: block;
+		padding: 10px;
+		font-size: 24px;
+		line-height: 24px;
+		border: none;
+		width: $width - 40px;
+
+	}
+
+	button {
+		margin: 40px 0 0 0;
+		text-transform: uppercase;
+		width: $width - 20px;
+		color: $fg;
+		background: $bg;
+	}
+
+	button[disabled] {
+			color: darken($bg, 8%);
+	}
+
+	button[disabled]:hover {
+		background: $bg;
+	}
+
+	button:hover {
+		background: lighten($bg, 4%);
+	}
+}
+
 @import 'nothing';
 
 .projects.wide {
 	color: $projects-new-fg;
 	h1 {
 		background: darken($projects-new-bg, 4%);
-		
 		border-bottom: 1px solid darken($projects-new-bg, 8%);
 
 		a {
@@ -107,44 +152,7 @@ a {
 	}
 
 	.new {
-		width: $projects-wide-width - 20px;
-		background: $projects-new-bg;
-		padding: 0 10px 20px 10px;
-		// left: 0;
-		position: relative;
-		// transition: left 1s;
-		z-index: 4;
-
-		.ng-enter {
-			// left: -$projects-wide-width;
-			// opacity: 0;
-		}
-
-		.ng-enter-active {
-			// left: 0;
-		}
-
-		label {
-			display: block;
-			padding: 30px 0 10px 0;
-			text-transform: uppercase;
-			font-size: 24px;
-		}
-
-		input, button {
-			display: block;
-			padding: 10px;
-			font-size: 24px;
-			line-height: 24px;
-			width: $projects-wide-width - 40px;
-			border: none;
-		}
-
-		button {
-			margin: 40px 0 0 0;
-			background: lighten($projects-new-bg, 4%);
-			text-transform: uppercase;
-		}
+		@include form($projects-wide-width, $projects-new-bg, $projects-new-fg)
 	}
 
 }

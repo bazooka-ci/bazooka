@@ -11,11 +11,11 @@
 				<i class="fa fa-times"></i>
 			</a>
 		</h1>
-		<form class="new" ng-if="showNewJob">
+		<form class="new" ng-if="showNewJob" name="form">
 			<label for="job-reference">SCM ref</label>
-			<input type="text" name="reference" id="job-reference" ng-model="newJob.reference"/>
+			<input type="text" name="reference" id="job-reference" ng-model="newJob.reference" required/>
 
-			<button ng-click="startJob()">Start job</button>
+			<button ng-click="startJob()" ng-disabled="form.$invalid">Start job</button>
 		</form>
 		<div class="scroll">
 			<ul>
