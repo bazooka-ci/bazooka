@@ -23,7 +23,6 @@ func run(c *cli.Context) {
 		log.Fatal("$BZK_SCM_KEYFILE environment variable is needed (or use --scm-key option)")
 	}
 	forceRestart := c.Bool("restart")
-	forceUpgrade := c.Bool("upgrade")
 	forceUpdate := c.Bool("update")
 	registry = c.String("registry")
 
@@ -39,8 +38,7 @@ func run(c *cli.Context) {
 		log.Fatal(err)
 	}
 
-	if forceUpgrade {
-		forceRestart = true
+	if forceUpdate {
 		log.Printf("Pulling Bazooka images to check for new versions\n")
 		mandatoryImages := []string{"server", "web", "orchestration", "parser"}
 		optionalImages := []string{"parser-java", "parser-golang", "scm-git",
@@ -65,7 +63,7 @@ func run(c *cli.Context) {
 		// Using the official mongo image from dockerhub, this may need a change later
 		Image:  "mongo",
 		Detach: true,
-	}, forceRestart, forceUpdate)
+	}, forceRestart || forceUpdate)
 
 	serverRestarted, err := ensureContainerIsRestarted(client, &docker.RunOptions{
 		Name:   "bzk_server",
@@ -86,7 +84,7 @@ func run(c *cli.Context) {
 				dockerclient.PortBinding{HostPort: "3000"},
 			},
 		},
-	}, mongoRestarted || forceRestart, forceUpdate)
+	}, mongoRestarted || forceRestart || forceUpdate)
 
 	_, err = ensureContainerIsRestarted(client, &docker.RunOptions{
 		Name:   "bzk_web",
@@ -98,7 +96,7 @@ func run(c *cli.Context) {
 				dockerclient.PortBinding{HostPort: "8000"},
 			},
 		},
-	}, serverRestarted || forceRestart, forceUpdate)
+	}, serverRestarted || forceRestart || forceUpdate)
 
 	if err != nil {
 		log.Fatal(err)
@@ -106,15 +104,15 @@ func run(c *cli.Context) {
 
 }
 
-func ensureContainerIsRestarted(client *docker.Docker, options *docker.RunOptions, needRestart, needUpdate bool) (bool, error) {
+func ensureContainerIsRestarted(client *docker.Docker, options *docker.RunOptions, needRestart bool) (bool, error) {
 	container, err := getContainer(allContainers, options.Name)
 	if err != nil {
 		log.Printf("Container %s not found, Starting it\n", options.Name)
 		_, err := client.Run(options)
 		return true, err
 	}
-	if needUpdate {
-		log.Printf("Container %s Up & Running, updating it \n", options.Name)
+	if needRestart {
+		log.Printf("Restarting Container %s\n", options.Name)
 		err = client.Rm(&docker.RmOptions{
 			Container: []string{container.ID},
 			Force:     true,
@@ -126,16 +124,6 @@ func ensureContainerIsRestarted(client *docker.Docker, options *docker.RunOption
 		return true, err
 	}
 	if strings.HasPrefix(container.Status, "Up") {
-		if needRestart {
-			log.Printf("Container %s already Up & Running, restarting it anyway\n", options.Name)
-			err = client.Stop(&docker.StopOptions{
-				ID:      container.ID,
-				Timeout: 0,
-			})
-			return true, client.Start(&docker.StartOptions{
-				ID: container.ID,
-			})
-		}
 		log.Printf("Container %s already Up & Running, keeping on\n", options.Name)
 		return false, nil
 	}
