@@ -82,10 +82,6 @@ angular.module('bzk.project').controller('JobsController', function($scope, Proj
 angular.module('bzk.project').controller('JobController', function($scope, ProjectResource, $location, $timeout){
 	var jId;
 	var refreshPromise;
-
-	$scope.variantSelected = function() {
-		return $location.search().v;
-	};
 	
 
 	$scope.$on('$destroy', function() {

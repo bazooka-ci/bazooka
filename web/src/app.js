@@ -11,8 +11,18 @@ angular.module('bzk').config(function($routeProvider){
 	});
 });
 
-angular.module('bzk').controller('RootController', function($scope){
-	
+angular.module('bzk').controller('RootController', function($scope, $routeParams, $location){
+	$scope.isProjectSelected = function() {
+		return $routeParams.pid;
+	};
+
+	$scope.isJobSelected = function() {
+		return $location.search().j;
+	};
+
+	$scope.isVariantSelected = function() {
+		return $location.search().j;
+	};
 });
 
 angular.module('bzk').factory('ProjectsResource', function($http){

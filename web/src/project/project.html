@@ -1,9 +1,7 @@
-<div class="col project" ng-if="project">
+<div class="col project" ng-if="isProjectSelected()">
 	<div class="col jobs" ng-controller="JobsController" >
 		<h1 ng-class="{invert: showNewJob}">
 			builds
-
-			<span class="ref">master</span>
 			<a href="" ng-click="newJobVisible(true)" ng-if="!showNewJob">
 				<span class="fa fa-play"></span>
 			</a>
@@ -33,7 +31,7 @@
 			</ul>
 		</div>
 	</div>
-	<div class="col job" ng-controller="JobController" ng-class="{wide: variantSelected()}">
+	<div class="col job" ng-controller="JobController" ng-if="isJobSelected()" ng-class="{wide: isVariantSelected()}">
 		<h1>
 			{{project.name}}
 			<span class="meta">{{project.scm_uri}}</span>
