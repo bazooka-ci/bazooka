@@ -183,6 +183,7 @@
 			padding: 0;
 			font-size: 12px;
 			line-height: 16px;
+
 			.what {
 				padding: 4px 10px;
 				background: #e3f2fd;
@@ -238,8 +239,19 @@
 					right: 10px;
 					font-family: monospace;
 				}
+			}
 
+			.none, .pending {
+				color: #999;
+				text-align: center;
+				padding: 10px;
+			}
 
+			.pending {
+				span {
+					display: block;
+					text-align: center;
+				}
 			}
 
 			pre {
@@ -391,6 +403,18 @@
 				td:nth-of-type(1) a:before {
 					background: $running-color;
 				}
+			}
+
+			tr.none, tr.pending {
+				td {
+					color: #999;
+					text-align: center;
+					padding: 10px;
+				}
+			}
+			tr.pending span {
+				display: block;
+				text-align: center;
 			}
 		}
 

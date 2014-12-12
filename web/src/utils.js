@@ -16,6 +16,15 @@ angular.module('bzk.utils').filter('bzkStatus', function(){
 
 });
 
+angular.module('bzk.utils').factory('DateUtils', function(){
+	return {
+		isSet: function(date) {
+			var m = moment(date);
+			return m.year()!=1;
+		}
+	};
+});
+
 angular.module('bzk.utils').filter('bzkFinished', function(){
 	return function(job) {
 		var m = moment(job.completed);

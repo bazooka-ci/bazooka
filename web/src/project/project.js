@@ -79,10 +79,9 @@ angular.module('bzk.project').controller('JobsController', function($scope, Proj
 	});
 });
 
-angular.module('bzk.project').controller('JobController', function($scope, ProjectResource, $location, $timeout){
+angular.module('bzk.project').controller('JobController', function($scope, ProjectResource, DateUtils, $location, $timeout){
 	var jId;
 	var refreshPromise;
-	
 
 	$scope.$on('$destroy', function() {
 		$timeout.cancel(refreshPromise);
@@ -104,6 +103,20 @@ angular.module('bzk.project').controller('JobController', function($scope, Proje
 	$scope.$on('$routeUpdate', refresh);
 
 	refresh();
+
+	$scope.scmDataStatus = function() {
+		if(!$scope.job) {
+			return 'pending';
+		} else if(DateUtils.isSet($scope.job.scm_metadata.date)) {
+			return 'show';
+		} else if($scope.job.status==='RUNNING'){
+			return 'pending';
+		} else {
+			return 'none';
+		}
+	};
+
+	
 });
 
 angular.module('bzk.project').controller('VariantsController', function($scope, ProjectResource, bzkScroll, $location, $timeout){
@@ -132,6 +145,16 @@ angular.module('bzk.project').controller('VariantsController', function($scope, 
 	}
 
 	refreshVariants();
+
+	$scope.variantsStatus = function() {
+		if($scope.variants && $scope.variants.length>0) {
+			return 'show';
+		} else if($scope.job.status==='RUNNING'){
+			return 'pending';
+		} else {
+			return 'none';
+		}
+	};
 
 	function loadLogs() {
 		var vId = $location.search().v;
