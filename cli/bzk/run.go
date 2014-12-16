@@ -22,6 +22,7 @@ func run(c *cli.Context) {
 	if len(scmKey) == 0 {
 		log.Fatal("$BZK_SCM_KEYFILE environment variable is needed (or use --scm-key option)")
 	}
+	devMode := c.Bool("dev")
 	forceRestart := c.Bool("restart")
 	forceUpdate := c.Bool("update")
 	registry = c.String("registry")
@@ -58,12 +59,20 @@ func run(c *cli.Context) {
 		}
 	}
 
-	mongoRestarted, err := ensureContainerIsRestarted(client, &docker.RunOptions{
+	mongoOptions := &docker.RunOptions{
 		Name: "bzk_mongodb",
 		// Using the official mongo image from dockerhub, this may need a change later
 		Image:  "mongo",
 		Detach: true,
-	}, false)
+	}
+	if devMode {
+		mongoOptions.PortBindings = map[dockerclient.Port][]dockerclient.PortBinding{
+			"27017/tcp": []dockerclient.PortBinding{
+				dockerclient.PortBinding{HostPort: "27017"},
+			},
+		}
+	}
+	mongoRestarted, err := ensureContainerIsRestarted(client, mongoOptions, false)
 
 	serverRestarted, err := ensureContainerIsRestarted(client, &docker.RunOptions{
 		Name:   "bzk_server",

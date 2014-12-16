@@ -65,6 +65,10 @@ func main() {
 					Name:  "restart",
 					Usage: "Restart Bazooka if already running",
 				},
+				cli.BoolFlag{
+					Name:  "dev",
+					Usage: "Run bazooka in devmode",
+				},
 				cli.StringFlag{
 					Name:   "registry",
 					Usage:  "Custom registry to get Bazooka Docker images",
