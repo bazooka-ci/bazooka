@@ -3,96 +3,56 @@ package main
 import (
 	"os"
 
-	"github.com/codegangsta/cli"
+	"github.com/jawher/mow.cli"
+)
+
+var (
+	app    = cli.App("bzk", "Bazooka CI client")
+	bzkUri = app.String(cli.StringOpt{
+		Name:   "u bazooka-uri",
+		Desc:   "URI for the bazooka server",
+		Value:  "http://localhost:3000",
+		EnvVar: "BZK_URI",
+	})
 )
 
 func main() {
-	app := cli.NewApp()
+	app.Command("project", "Actions on projects", func(cmd *cli.Cmd) {
+		cmd.Command("list", "List bazooka projects", listProjectsCommand)
+		cmd.Command("create", "Create a new bazooka project", createProjectCommand)
+	})
 
-	app.Commands = []cli.Command{
-		{
-			Name:        "project",
-			Usage:       "Actions on projects",
-			Subcommands: []cli.Command{createProjectCommand(), listProjectsCommand()},
-		}, {
-			Name:        "job",
-			Usage:       "Actions on projects",
-			Subcommands: []cli.Command{startJobCommand(), listJobsCommand(), jobLogCommand()},
-		}, {
-			Name:        "key",
-			Usage:       "Actions on key",
-			Subcommands: []cli.Command{addKeyCommand(), listKeysCommand(), updateKeyCommand()},
-		}, {
-			Name:        "variant",
-			Usage:       "Actions on variants",
-			Subcommands: []cli.Command{listVariantsCommand(), variantLogCommand()},
-		}, {
-			Name:        "image",
-			Usage:       "Actions on images",
-			Subcommands: []cli.Command{listImagesCommand(), setImageCommand()},
-		}, {
-			Name:        "user",
-			Usage:       "Actions on users",
-			Subcommands: []cli.Command{listUsersCommand(), createUserCommand()},
-		}, {
-			Name:   "login",
-			Usage:  "Log in to a Bazooka server",
-			Action: login,
-			Flags: []cli.Flag{
-				cli.StringFlag{
-					Name:   "bazooka-uri",
-					Value:  "http://localhost:3000",
-					Usage:  "URI for the bazooka server",
-					EnvVar: "BZK_URI",
-				},
-				cli.StringFlag{
-					Name:   "email",
-					Usage:  "User email",
-					EnvVar: "BZK_USER_EMAIL",
-				},
-				cli.StringFlag{
-					Name:   "password",
-					Usage:  "User password",
-					EnvVar: "BZK_USER_PASSWORD",
-				},
-			},
-		}, {
-			Name:   "run",
-			Usage:  "Run bazooka",
-			Action: run,
-			Flags: []cli.Flag{
-				cli.BoolFlag{
-					Name:  "update",
-					Usage: "Update Bazooka to the latest version by pulling new images from the registry",
-				},
-				cli.BoolFlag{
-					Name:  "restart",
-					Usage: "Restart Bazooka if already running",
-				},
-				cli.StringFlag{
-					Name:   "registry",
-					Usage:  "Custom registry to get Bazooka Docker images",
-					EnvVar: "BZK_REGISTRY",
-				},
-				cli.StringFlag{
-					Name:   "home",
-					Usage:  "Home Folder for Bazooka to work",
-					EnvVar: "BZK_HOME",
-				},
-				cli.StringFlag{
-					Name:   "docker-sock",
-					Usage:  "Location of the Docker unix socket, usually /var/run/docker.sock",
-					Value:  "/var/run/docker.sock",
-					EnvVar: "BZK_DOCKERSOCK",
-				},
-				cli.StringFlag{
-					Name:   "scm-key",
-					Usage:  "Location of the private SSH Key Bazooka will use for SCM Fetch",
-					EnvVar: "BZK_SCM_KEYFILE",
-				},
-			},
-		},
-	}
+	app.Command("job", "Actions on jobs", func(cmd *cli.Cmd) {
+		cmd.Command("list", "List jobs associated with a project", listJobsCommand)
+		cmd.Command("start", "Start a new bazooka job on a project", startJobCommand)
+		cmd.Command("log", "View a job log", jobLogCommand)
+	})
+
+	app.Command("variant", "Actions on job variants", func(cmd *cli.Cmd) {
+		cmd.Command("list", "List variants associated with a job", listVariantsCommand)
+		cmd.Command("log", "View a variant log", variantLogCommand)
+	})
+
+	app.Command("key", "Actions on projects keys", func(cmd *cli.Cmd) {
+		cmd.Command("list", "list Keys for the bazooka project", listKeysCommand)
+		cmd.Command("add", "Add SSH Key for the bazooka project", addKeyCommand)
+		cmd.Command("update", "Update SSH Key for the bazooka project", updateKeyCommand)
+	})
+
+	app.Command("image", "Actions on images", func(cmd *cli.Cmd) {
+		cmd.Command("list", "List the registered docker images", listImagesCommand)
+		cmd.Command("register", "Register a docker image", setImageCommand)
+	})
+
+	app.Command("user", "Actions on users", func(cmd *cli.Cmd) {
+		cmd.Command("list", "List bazooka users", listUsersCommand)
+		cmd.Command("create", "Create a new bazooka user", createUserCommand)
+	})
+
+	app.Command("run", "Run bazooka", run)
+
+	app.Command("login", "Log in to the bazooka server", login)
+
 	app.Run(os.Args)
 }
 
