@@ -30,6 +30,12 @@ func createProjectCommand() cli.Command {
 			if err != nil {
 				log.Fatal(err)
 			}
+			if len(c.Args()) > 3 {
+				_, err = client.AddKey(res.ID, c.Args()[3])
+				if err != nil {
+					log.Fatal(err)
+				}
+			}
 			w := tabwriter.NewWriter(os.Stdout, 15, 1, 3, ' ', 0)
 			fmt.Fprint(w, "PROJECT ID\tNAME\tSCM TYPE\tSCM URI\n")
 			fmt.Fprintf(w, "%s\t%s\t%s\t%s\t\n", idExcerpt(res.ID), res.Name, res.ScmType, res.ScmURI)

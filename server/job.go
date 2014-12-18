@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
+	"os"
 	"time"
 
 	log "github.com/Sirupsen/logrus"
@@ -14,7 +16,6 @@ import (
 const (
 	buildFolderPattern = "%s/build/%s/%s"     // $bzk_home/build/$projectId/$buildId
 	logFolderPattern   = "%s/build/%s/%s/log" // $bzk_home/build/$projectId/$buildId/log
-	// keyFolderPattern   = "%s/key/%s"         // $bzk_home/key/$keyName
 )
 
 func (c *context) startBuild(params map[string]string, body bodyFunc) (*response, error) {
@@ -58,13 +59,33 @@ func (c *context) startBuild(params map[string]string, body bodyFunc) (*response
 		"BZK_SCM":           project.ScmType,
 		"BZK_SCM_URL":       project.ScmURI,
 		"BZK_SCM_REFERENCE": startJob.ScmReference,
-		"BZK_SCM_KEYFILE":   c.Env[BazookaEnvSCMKeyfile], //TODO use keyfile per project
 		"BZK_HOME":          buildFolder,
 		"BZK_PROJECT_ID":    project.ID,
-		"BZK_JOB_ID":        runningJob.ID, // TODO handle job number and tasks and save it
+		"BZK_JOB_ID":        runningJob.ID,
 		"BZK_DOCKERSOCK":    c.Env[BazookaEnvDockerSock],
 		BazookaEnvMongoAddr: c.Env[BazookaEnvMongoAddr],
 		BazookaEnvMongoPort: c.Env[BazookaEnvMongoPort],
+	}
+
+	buildFolderLocal := fmt.Sprintf(buildFolderPattern, "/bazooka", runningJob.ProjectID, runningJob.ID)
+
+	projectSSHKey, err := c.Connector.GetProjectKey(project.ID)
+	if err != nil {
+		_, keyNotFound := err.(*mongo.NotFoundError)
+		if !keyNotFound {
+			return nil, err
+		}
+		//Use Global Key if provided
+		if len(c.Env[BazookaEnvSCMKeyfile]) > 0 {
+			orchestrationEnv["BZK_SCM_KEYFILE"] = c.Env[BazookaEnvSCMKeyfile]
+		}
+	} else {
+		os.MkdirAll(buildFolderLocal, 0644)
+		err = ioutil.WriteFile(fmt.Sprintf("%s/key", buildFolderLocal), []byte(projectSSHKey.Content), 0600)
+		if err != nil {
+			return nil, err
+		}
+		orchestrationEnv["BZK_SCM_KEYFILE"] = fmt.Sprintf("%s/key", buildFolder)
 	}
 
 	container, err := client.Run(&docker.RunOptions{

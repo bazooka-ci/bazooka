@@ -204,3 +204,9 @@ func (t *YamlTime) UnmarshalYAML(unmarshal func(interface{}) error) error {
 
 	return fmt.Errorf("Unable to parse time %v", timeAsString)
 }
+
+type SSHKey struct {
+	ID        string `bson:"id" json:"id"`
+	Content   string `bson:"content" json:"content"`
+	ProjectID string `bson:"project_id" json:"project_id"`
+}

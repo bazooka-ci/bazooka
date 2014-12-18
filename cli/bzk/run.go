@@ -18,10 +18,6 @@ func run(c *cli.Context) {
 	if len(bzkHome) == 0 {
 		log.Fatal("$BZK_HOME environment variable is needed (or use --bzk-home option)")
 	}
-	scmKey := c.String("scm-key")
-	if len(scmKey) == 0 {
-		log.Fatal("$BZK_SCM_KEYFILE environment variable is needed (or use --scm-key option)")
-	}
 	forceRestart := c.Bool("restart")
 	forceUpdate := c.Bool("update")
 	registry = c.String("registry")
@@ -74,11 +70,7 @@ func run(c *cli.Context) {
 			fmt.Sprintf("%s:/var/run/docker.sock", c.String("docker-sock")),
 		},
 		Links: []string{"bzk_mongodb:mongo"},
-		Env: map[string]string{
-			"BZK_SCM_KEYFILE": c.String("scm-key"),
-			"BZK_HOME":        c.String("home"),
-			"BZK_DOCKERSOCK":  c.String("docker-sock"),
-		},
+		Env:   getServerEnv(c),
 		PortBindings: map[dockerclient.Port][]dockerclient.PortBinding{
 			"3000/tcp": []dockerclient.PortBinding{
 				dockerclient.PortBinding{HostPort: "3000"},
@@ -132,6 +124,17 @@ func ensureContainerIsRestarted(client *docker.Docker, options *docker.RunOption
 		ID: container.ID,
 	})
 
+}
+
+func getServerEnv(c *cli.Context) map[string]string {
+	envMap := map[string]string{
+		"BZK_HOME":       c.String("home"),
+		"BZK_DOCKERSOCK": c.String("docker-sock"),
+	}
+	if len(c.String("scm-key")) > 0 {
+		envMap["BZK_SCM_KEYFILE"] = c.String("scm-key")
+	}
+	return envMap
 }
 
 func getContainer(containers []dockerclient.APIContainers, name string) (dockerclient.APIContainers, error) {
