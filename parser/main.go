@@ -304,6 +304,7 @@ func resolveLanguageParser(language string) (string, error) {
 		"golang": "bazooka/parser-golang",
 		"go":     "bazooka/parser-golang",
 		"java":   "bazooka/parser-java",
+		"python": "bazooka/parser-python",
 	}
 	if val, ok := parserMap[language]; ok {
 		return val, nil
