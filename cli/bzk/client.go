@@ -54,6 +54,23 @@ func (c *Client) ListJobs(projectID string) ([]lib.Job, error) {
 	return j, err
 }
 
+func (c *Client) ListAllJobs() ([]lib.Job, error) {
+	var j []lib.Job
+
+	requestURL, err := c.getRequestURL("job")
+	if err != nil {
+		return nil, err
+	}
+
+	err = perigee.Get(requestURL, perigee.Options{
+		Results:    &j,
+		OkCodes:    []int{200},
+		SetHeaders: c.authenticateRequest,
+	})
+
+	return j, err
+}
+
 func (c *Client) ListVariants(jobID string) ([]lib.Variant, error) {
 	var v []lib.Variant
 

@@ -74,7 +74,7 @@ func startJobCommand(cmd *cli.Cmd) {
 }
 
 func listJobsCommand(cmd *cli.Cmd) {
-	cmd.Spec = "PROJECT_ID"
+	cmd.Spec = "[PROJECT_ID]"
 
 	pid := cmd.String(cli.StringArg{
 		Name: "PROJECT_ID",
@@ -86,7 +86,13 @@ func listJobsCommand(cmd *cli.Cmd) {
 		if err != nil {
 			log.Fatal(err)
 		}
-		res, err := client.ListJobs(*pid)
+		var res []lib.Job
+		if len(*pid) > 0 {
+			res, err = client.ListJobs(*pid)
+		} else {
+			res, err = client.ListAllJobs()
+		}
+
 		if err != nil {
 			log.Fatal(err)
 		}
