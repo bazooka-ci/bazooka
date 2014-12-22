@@ -1,0 +1,30 @@
+<div id="job" ng-controller="VariantsController">
+	<div ng-include="'breadcrumb.html'"></div>
+	<div ng-include="'jobdetail.html'"></div>
+	<table class="pure-table pure-table-horizontal" ng-if="variants.length > 0">
+		<thead>
+			<tr>
+				<th>Status</th>
+				<th>Variant</th>
+				<th>Duration</th>
+				<th>Finished</th>
+				<th ng-repeat="label in metaLabels" class="meta">{{label}}</th>
+			</tr>
+		</thead>
+
+		<tbody ng-repeat="variant in variants | orderBy:'number'">
+			<tr ng-show="variant" class="{{variant.status | lowercase}}">
+				<td><span class="{{variant.status | lowercase}}">{{variant.status | titleCase}}</span></td>
+				<td><a ng-href="#/p/{{project | bzkId}}/{{job | bzkId}}/{{variant | bzkId}}">{{job.number}}.{{variant.number}}</a></td>
+				<td>{{variant | bzkDuration}}</td>
+				<td>{{variant | bzkFinished}}</td>
+				<td ng-repeat="vmeta in variant.metas" class="meta" ng-style="{'color': metaColor(vmeta)}">{{vmeta.value}}</td>
+			</tr>
+		</tbody>
+	</table>
+
+	<div ng-controller="JobLogsController">
+		<div class="logs" bzk-log="logger.job">
+		</div>
+	</div>
+</div>

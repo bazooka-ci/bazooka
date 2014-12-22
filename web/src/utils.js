@@ -27,25 +27,31 @@ angular.module('bzk.utils').factory('DateUtils', function(){
 
 angular.module('bzk.utils').filter('bzkFinished', function(){
 	return function(job) {
-		var m = moment(job.completed);
-		return m.year()==1? '-':m.format('HH:mm:ss - DD MMM YYYY');
+		if(job) {
+			var m = moment(job.completed);
+			return m.year()==1? '-':m.format('HH:mm:ss - DD MMM YYYY');
+		}
 	};
 });
 
 angular.module('bzk.utils').filter('bzkDate', function(){
 	return function(d) {
-		var m = moment(d);
-		return m.year()==1? '-':m.format('HH:mm:ss - DD MMM YYYY');
+		if(d) {
+			var m = moment(d);
+			return m.year()==1? '-':m.format('HH:mm:ss - DD MMM YYYY');
+		}
 	};
 });
 
 angular.module('bzk.utils').filter('bzkDuration', function(){
 	return function(job) {
-		var m = moment(job.completed);
-		if (m.year()===1) {
-			return moment().from(moment(job.started), true);
-		} else {
-			return m.from(job.started, true);
+		if (job) {
+			var m = moment(job.completed);
+			if (m.year()===1) {
+				return moment().from(moment(job.started), true);
+			} else {
+				return m.from(job.started, true);
+			}
 		}
 	};
 });
@@ -61,7 +67,17 @@ angular.module('bzk.utils').filter('bzkExcerpt', function(){
 
 angular.module('bzk.utils').filter('bzkId', function($filter){
 	return function(obj) {
-		return $filter('bzkExcerpt')(obj.id, 7);
+		if(obj) {
+			return $filter('bzkExcerpt')(obj.id, 7);
+		}
+	};
+});
+
+angular.module('bzk.utils').filter('titleCase', function() {
+	return function(str) {
+		return (str === undefined || str === null) ? '' : str.replace(/_|-/, ' ').replace(/\w\S*/g, function(txt){
+			return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
+		});
 	};
 });
 
@@ -71,6 +87,44 @@ angular.module('bzk.utils').factory('Scroll', function($window){
 			$('html, body').animate({
 				scrollLeft: 1000
 			}, 500);
+		}
+	};
+});
+
+angular.module('bzk.utils').directive('bzkLog', function(){
+	return {
+		restrict: 'A',
+		scope: {
+			sink: '=bzkLog'
+		},
+		template: '<img class="loading" src="/images/loading.gif" ng-if="loading"></img>',
+		link: function($scope, elem, attrs) {
+			var row = 1;
+			$(elem).append('<pre></pre>');
+			var into = $(elem).find('pre');
+			$scope.sink = {
+				prepare: function() {
+					this.clear();
+					$scope.loading = true;
+				},
+				finish: function(lines) {
+					this.append(lines);
+					$scope.loading=false;
+				},
+				append: function(lines) {
+					var data = '';
+					_.each(lines, function(line){
+						data += '<p><span>'+row+'</span>'+line.msg+'</p>';
+						row++;
+					});
+					into.append(data);
+				},
+				clear: function(){
+					row = 1;
+					into.empty();
+					into.scrollTop(0);
+				}
+			};
 		}
 	};
 });

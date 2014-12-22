@@ -24,7 +24,7 @@ var paths = {
   },
   deps: {
     js: ['vendor/jquery/dist/jquery.js', 'vendor/angular/angular.js', 'vendor/angular-route/angular-route.js', 'vendor/moment/moment.js', 'vendor/lodash/dist/lodash.js'],
-    css: ['vendor/pure/pure.css', 'vendor/fontawesome/css/font-awesome.css'],
+    css: ['vendor/pure/pure.css', 'vendor/pure/grids-responsive.css', 'vendor/fontawesome/css/font-awesome.css'],
     fonts: 'vendor/fontawesome/fonts/*'
   },
   dest: {
@@ -136,5 +136,5 @@ gulp.task('default', ['css:sass'], function() {
   // Watch files and run tasks if they change
 
   gulp.watch([paths.src.scss], ['css:sass']);
-  
+
 });

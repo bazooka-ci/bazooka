@@ -1,0 +1,46 @@
+<h2>Add new Project</h2>
+
+<div ng-controller="NewProjectController">
+  <form novalidate class="pure-form pure-form-aligned">
+    <fieldset>
+      <div class="pure-control-group">
+        <label for="name">Project Name</label>
+        <input id="name" type="text" placeholder="Name" ng-model="addProject.name" required>
+      </div>
+
+      <div class="pure-control-group">
+        <label for="scm_type">SCM Type</label>
+        <input id="scm_type" type="text" placeholder="SCM Type" ng-model="addProject.scm_type" required>
+      </div>
+
+      <div class="pure-control-group">
+        <label for="scm_uri">SCM Uri</label>
+        <input id="scm_uri" type="text" placeholder="SCM Uri" ng-model="addProject.scm_uri" required>
+      </div>
+      <div class="pure-controls">
+        <button type="submit" class="pure-button pure-button-primary" ng-click="createProject(addProject)" value="Add">Add</button>
+      </div>
+    </fieldset>
+  </form>
+</div>
+
+<div class="projectList">
+  <table class="pure-table pure-table-horizontal">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>SCM Type</th>
+        <th>SCM Uri</th>
+      </tr>
+    </thead>
+
+    <tbody ng-repeat="project in projectList | orderBy:'name':true">
+      <tr>
+        <td>{{project.name}}</td>
+        <td>{{project.scm_type}}</td>
+        <td>{{project.scm_uri}}</td>
+      </tr>
+    </tbody>
+  </table>
+
+</div>
