@@ -5,93 +5,128 @@ import (
 	"log"
 	"strings"
 
+	"github.com/jawher/mow.cli"
+
 	docker "github.com/bywan/go-dockercommand"
-	"github.com/codegangsta/cli"
+
 	dockerclient "github.com/fsouza/go-dockerclient"
 )
 
 var allContainers []dockerclient.APIContainers
-var registry string
 
-func run(c *cli.Context) {
-	bzkHome := c.String("home")
-	if len(bzkHome) == 0 {
-		log.Fatal("$BZK_HOME environment variable is needed (or use --bzk-home option)")
-	}
-	forceRestart := c.Bool("restart")
-	forceUpdate := c.Bool("update")
-	registry = c.String("registry")
+func run(cmd *cli.Cmd) {
+	cmd.Spec = "[--home|--scm-key|--registry]... [--restart|--update]"
 
-	client, err := docker.NewDocker("")
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	allContainers, err = client.Ps(&docker.PsOptions{
-		All: true,
+	bzkHome := cmd.String(cli.StringOpt{
+		Name:   "home",
+		Desc:   "Bazooka's work directory",
+		EnvVar: "BZK_HOME",
 	})
-	if err != nil {
-		log.Fatal(err)
-	}
+	scmKey := cmd.String(cli.StringOpt{
+		Name:   "scm-key",
+		Desc:   "Location of the private SSH Key Bazooka will use for SCM Fetch",
+		EnvVar: "BZK_SCM_KEYFILE",
+	})
+	registry := cmd.String(cli.StringOpt{
+		Name:   "registry",
+		EnvVar: "BZK_REGISTRY",
+	})
+	dockerSock := cmd.String(cli.StringOpt{
+		Name:   "docker-sock",
+		Value:  "/var/run/docker.sock",
+		Desc:   "Location of the Docker unix socket, usually /var/run/docker.sock",
+		EnvVar: "BZK_DOCKERSOCK",
+	})
 
-	if forceUpdate {
-		log.Printf("Pulling Bazooka images to check for new versions\n")
-		mandatoryImages := []string{"server", "web", "orchestration", "parser"}
-		optionalImages := []string{"parser-java", "parser-golang", "scm-git",
-			"runner-java", "runner-java:oraclejdk8", "runner-java:oraclejdk7", "runner-java:oraclejdk6", "runner-java:openjdk8", "runner-java:openjdk7", "runner-java:openjdk6",
-			"runner-golang", "runner-golang:1.2.2", "runner-golang:1.3", "runner-golang:1.3.1", "runner-golang:1.3.2", "runner-golang:1.3.3", "runner-golang:1.4"}
-		for _, image := range mandatoryImages {
-			err = client.Pull(&docker.PullOptions{Image: getImageLocation(fmt.Sprintf("bazooka/%s", image))})
-			if err != nil {
-				log.Fatal(fmt.Errorf("Unable to pull required image for Bazooka, reason is: %v\n", err))
+	forceRestart := cmd.Bool(cli.BoolOpt{
+		Name: "r restart",
+		Desc: "Restart Bazooka if already running",
+	})
+	forceUpdate := cmd.Bool(cli.BoolOpt{
+		Name: "u update",
+		Desc: "Update Bazooka to the latest version by pulling new images from the registry",
+	})
+
+	cmd.Action = func() {
+		if len(*bzkHome) == 0 {
+			log.Fatal("$BZK_HOME environment variable is needed (or use --home option)")
+		}
+
+		if len(*scmKey) == 0 {
+			log.Fatal("$BZK_SCM_KEYFILE environment variable is needed (or use --scm-key option)")
+		}
+
+		client, err := docker.NewDocker("")
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		allContainers, err = client.Ps(&docker.PsOptions{
+			All: true,
+		})
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		if *forceUpdate {
+			log.Printf("Pulling Bazooka images to check for new versions\n")
+			mandatoryImages := []string{"server", "web", "orchestration", "parser"}
+			optionalImages := []string{"parser-java", "parser-golang", "scm-git",
+				"runner-java", "runner-java:oraclejdk8", "runner-java:oraclejdk7", "runner-java:oraclejdk6", "runner-java:openjdk8", "runner-java:openjdk7", "runner-java:openjdk6",
+				"runner-golang", "runner-golang:1.2.2", "runner-golang:1.3", "runner-golang:1.3.1", "runner-golang:1.3.2", "runner-golang:1.3.3", "runner-golang:1.4"}
+			for _, image := range mandatoryImages {
+				err = client.Pull(&docker.PullOptions{Image: getImageLocation(*registry, fmt.Sprintf("bazooka/%s", image))})
+				if err != nil {
+					log.Fatal(fmt.Errorf("Unable to pull required image for Bazooka, reason is: %v\n", err))
+				}
+			}
+			for _, image := range optionalImages {
+				err = client.Pull(&docker.PullOptions{Image: getImageLocation(*registry, fmt.Sprintf("bazooka/%s", image))})
+				if err != nil {
+					log.Printf("Unable to pull image for Bazooka, as it is an optional one, let's move on. Reason is: %v\n", err)
+				}
 			}
 		}
-		for _, image := range optionalImages {
-			err = client.Pull(&docker.PullOptions{Image: getImageLocation(fmt.Sprintf("bazooka/%s", image))})
-			if err != nil {
-				log.Printf("Unable to pull image for Bazooka, as it is an optional one, let's move on. Reason is: %v\n", err)
-			}
+
+		mongoRestarted, err := ensureContainerIsRestarted(client, &docker.RunOptions{
+			Name: "bzk_mongodb",
+			// Using the official mongo image from dockerhub, this may need a change later
+			Image:  "mongo",
+			Detach: true,
+		}, false)
+
+		serverRestarted, err := ensureContainerIsRestarted(client, &docker.RunOptions{
+			Name:   "bzk_server",
+			Image:  getImageLocation(*registry, "bazooka/server"),
+			Detach: true,
+			VolumeBinds: []string{
+				fmt.Sprintf("%s:/bazooka", *bzkHome),
+				fmt.Sprintf("%s:/var/run/docker.sock", *dockerSock),
+			},
+			Links: []string{"bzk_mongodb:mongo"},
+			Env:   getServerEnv(*bzkHome, *dockerSock, *scmKey),
+			PortBindings: map[dockerclient.Port][]dockerclient.PortBinding{
+				"3000/tcp": []dockerclient.PortBinding{
+					dockerclient.PortBinding{HostPort: "3000"},
+				},
+			},
+		}, mongoRestarted || *forceRestart || *forceUpdate)
+
+		_, err = ensureContainerIsRestarted(client, &docker.RunOptions{
+			Name:   "bzk_web",
+			Image:  getImageLocation(*registry, "bazooka/web"),
+			Detach: true,
+			Links:  []string{"bzk_server:server"},
+			PortBindings: map[dockerclient.Port][]dockerclient.PortBinding{
+				"80/tcp": []dockerclient.PortBinding{
+					dockerclient.PortBinding{HostPort: "8000"},
+				},
+			},
+		}, serverRestarted || *forceRestart || *forceUpdate)
+
+		if err != nil {
+			log.Fatal(err)
 		}
-	}
-
-	mongoRestarted, err := ensureContainerIsRestarted(client, &docker.RunOptions{
-		Name: "bzk_mongodb",
-		// Using the official mongo image from dockerhub, this may need a change later
-		Image:  "mongo",
-		Detach: true,
-	}, false)
-
-	serverRestarted, err := ensureContainerIsRestarted(client, &docker.RunOptions{
-		Name:   "bzk_server",
-		Image:  getImageLocation("bazooka/server"),
-		Detach: true,
-		VolumeBinds: []string{
-			fmt.Sprintf("%s:/bazooka", c.String("home")),
-			fmt.Sprintf("%s:/var/run/docker.sock", c.String("docker-sock")),
-		},
-		Links: []string{"bzk_mongodb:mongo"},
-		Env:   getServerEnv(c),
-		PortBindings: map[dockerclient.Port][]dockerclient.PortBinding{
-			"3000/tcp": []dockerclient.PortBinding{
-				dockerclient.PortBinding{HostPort: "3000"},
-			},
-		},
-	}, mongoRestarted || forceRestart || forceUpdate)
-
-	_, err = ensureContainerIsRestarted(client, &docker.RunOptions{
-		Name:   "bzk_web",
-		Image:  getImageLocation("bazooka/web"),
-		Detach: true,
-		Links:  []string{"bzk_server:server"},
-		PortBindings: map[dockerclient.Port][]dockerclient.PortBinding{
-			"80/tcp": []dockerclient.PortBinding{
-				dockerclient.PortBinding{HostPort: "8000"},
-			},
-		},
-	}, serverRestarted || forceRestart || forceUpdate)
-
-	if err != nil {
-		log.Fatal(err)
 	}
 
 }
@@ -126,13 +161,13 @@ func ensureContainerIsRestarted(client *docker.Docker, options *docker.RunOption
 
 }
 
-func getServerEnv(c *cli.Context) map[string]string {
+func getServerEnv(home, dockerSock, scmKey string) map[string]string {
 	envMap := map[string]string{
-		"BZK_HOME":       c.String("home"),
-		"BZK_DOCKERSOCK": c.String("docker-sock"),
+		"BZK_HOME":       home,
+		"BZK_DOCKERSOCK": dockerSock,
 	}
-	if len(c.String("scm-key")) > 0 {
-		envMap["BZK_SCM_KEYFILE"] = c.String("scm-key")
+	if len(scmKey) > 0 {
+		envMap["BZK_SCM_KEYFILE"] = scmKey
 	}
 	return envMap
 }
@@ -146,7 +181,7 @@ func getContainer(containers []dockerclient.APIContainers, name string) (dockerc
 	return dockerclient.APIContainers{}, fmt.Errorf("Container not found")
 }
 
-func getImageLocation(image string) string {
+func getImageLocation(registry, image string) string {
 	if len(registry) > 0 {
 		return fmt.Sprintf("%s/%s", registry, image)
 	}

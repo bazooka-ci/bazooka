@@ -6,37 +6,47 @@ import (
 	"log"
 	"os"
 
-	"github.com/codegangsta/cli"
+	"github.com/jawher/mow.cli"
+
 	"github.com/howeyc/gopass"
 )
 
-func login(c *cli.Context) {
-	email := c.String("email")
-	password := c.String("password")
-	host := c.String("bazooka-uri")
+func login(cmd *cli.Cmd) {
 
-	if len(email) == 0 {
-		email = interactiveInput("Email")
+	email := cmd.String(cli.StringOpt{
+		Name:   "email",
+		Desc:   "User email",
+		EnvVar: "BZK_USER_EMAIL"})
+	password := cmd.String(cli.StringOpt{
+		Name:   "password",
+		Desc:   "User password",
+		EnvVar: "BZK_USER_PASSWORD"})
+
+	cmd.Action = func() {
+		if len(*email) == 0 {
+			*email = interactiveInput("Email")
+		}
+
+		if len(*password) == 0 {
+			fmt.Printf("Password: ")
+			*password = string(gopass.GetPasswd())
+		}
+
+		_, err := NewClient(*bzkUri)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		// TODO check credential. Create a /auth ressource ?
+
+		authConfig := &AuthConfig{
+			Username: *email,
+			Password: *password,
+		}
+
+		saveConfig(authConfig)
 	}
 
-	if len(password) == 0 {
-		fmt.Printf("Password: ")
-		password = string(gopass.GetPasswd())
-	}
-
-	_, err := NewClient(host)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	// TODO check credential. Create a /auth ressource ?
-
-	authConfig := &AuthConfig{
-		Username: email,
-		Password: password,
-	}
-
-	saveConfig(authConfig)
 }
 
 func interactiveInput(name string) string {

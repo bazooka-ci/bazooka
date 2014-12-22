@@ -7,9 +7,9 @@ import (
 	"text/tabwriter"
 	"time"
 
-	lib "github.com/haklop/bazooka/commons"
+	"github.com/jawher/mow.cli"
 
-	"github.com/codegangsta/cli"
+	lib "github.com/haklop/bazooka/commons"
 )
 
 func jobStatus(j lib.JobStatus) string {
@@ -44,101 +44,90 @@ func fmtAuthor(author lib.Person) string {
 	return author.Name
 }
 
-func startJobCommand() cli.Command {
-	return cli.Command{
-		Name:  "start",
-		Usage: "Start Job for the bazooka project",
-		Flags: []cli.Flag{
-			cli.StringFlag{
-				Name:   "bazooka-uri",
-				Value:  "http://localhost:3000",
-				Usage:  "URI for the bazooka server",
-				EnvVar: "BZK_URI",
-			},
-		},
-		Action: func(c *cli.Context) {
-			client, err := NewClient(c.String("bazooka-uri"))
-			if err != nil {
-				log.Fatal(err)
-			}
-			res, err := client.StartJob(c.Args()[0], c.Args()[1])
-			if err != nil {
-				log.Fatal(err)
-			}
-			w := tabwriter.NewWriter(os.Stdout, 15, 1, 3, ' ', 0)
-			fmt.Fprint(w, "JOB ID\tPROJECT ID\tORCHESTRATION ID\n")
-			fmt.Fprintf(w, "%s\t%s\t%s\t\n", idExcerpt(res.ID), idExcerpt(res.ProjectID), idExcerpt(res.OrchestrationID))
-			w.Flush()
-		},
+func startJobCommand(cmd *cli.Cmd) {
+	cmd.Spec = "PROJECT_ID [SCM_REF]"
+
+	pid := cmd.String(cli.StringArg{
+		Name: "PROJECT_ID",
+		Desc: "the project id",
+	})
+	scmRef := cmd.String(cli.StringArg{
+		Name: "SCM_REF",
+		Desc: "the scm ref to build", Value: "master",
+	})
+
+	cmd.Action = func() {
+		client, err := NewClient(*bzkUri)
+		if err != nil {
+			log.Fatal(err)
+		}
+		res, err := client.StartJob(*pid, *scmRef)
+		if err != nil {
+			log.Fatal(err)
+		}
+		w := tabwriter.NewWriter(os.Stdout, 15, 1, 3, ' ', 0)
+		fmt.Fprint(w, "JOB ID\tPROJECT ID\tORCHESTRATION ID\n")
+		fmt.Fprintf(w, "%s\t%s\t%s\t\n", idExcerpt(res.ID), idExcerpt(res.ProjectID), idExcerpt(res.OrchestrationID))
+		w.Flush()
+	}
+
+}
+
+func listJobsCommand(cmd *cli.Cmd) {
+	cmd.Spec = "PROJECT_ID"
+
+	pid := cmd.String(cli.StringArg{
+		Name: "PROJECT_ID",
+		Desc: "the project id",
+	})
+
+	cmd.Action = func() {
+		client, err := NewClient(*bzkUri)
+		if err != nil {
+			log.Fatal(err)
+		}
+		res, err := client.ListJobs(*pid)
+		if err != nil {
+			log.Fatal(err)
+		}
+		w := tabwriter.NewWriter(os.Stdout, 15, 1, 3, ' ', 0)
+		fmt.Fprint(w, "JOB ID\tSTARTED\tCOMPLETED\tSTATUS\tPROJECT ID\tORCHESTRATION ID\tREFERENCE\tCOMMIT ID\tAUTHOR\tDATE\tMESSAGE\n")
+		for _, item := range res {
+			fmt.Fprintf(w, "%s\t%s\t%v\t%v\t%v\t%s\t%s\t%s\t%s\t%s\t%s\t\n",
+				idExcerpt(item.ID),
+				fmtTime(item.Started),
+				fmtTime(item.Completed),
+				jobStatus(item.Status),
+				idExcerpt(item.ProjectID),
+				idExcerpt(item.OrchestrationID),
+				item.SCMMetadata.Reference,
+				idExcerpt(item.SCMMetadata.CommitID),
+				fmtAuthor(item.SCMMetadata.Author),
+				fmtTime(item.SCMMetadata.Date.Time),
+				item.SCMMetadata.Message)
+		}
+		w.Flush()
 	}
 }
 
-func listJobsCommand() cli.Command {
-	return cli.Command{
-		Name:  "list",
-		Usage: "list Jobs for the bazooka project",
-		Flags: []cli.Flag{
-			cli.StringFlag{
-				Name:   "bazooka-uri",
-				Value:  "http://localhost:3000",
-				Usage:  "URI for the bazooka server",
-				EnvVar: "BZK_URI",
-			},
-		},
-		Action: func(c *cli.Context) {
-			client, err := NewClient(c.String("bazooka-uri"))
-			if err != nil {
-				log.Fatal(err)
-			}
-			res, err := client.ListJobs(c.Args()[0])
-			if err != nil {
-				log.Fatal(err)
-			}
-			w := tabwriter.NewWriter(os.Stdout, 15, 1, 3, ' ', 0)
-			fmt.Fprint(w, "JOB ID\tSTARTED\tCOMPLETED\tSTATUS\tPROJECT ID\tORCHESTRATION ID\tREFERENCE\tCOMMIT ID\tAUTHOR\tDATE\tMESSAGE\n")
-			for _, item := range res {
-				fmt.Fprintf(w, "%s\t%s\t%v\t%v\t%v\t%s\t%s\t%s\t%s\t%s\t%s\t\n",
-					idExcerpt(item.ID),
-					fmtTime(item.Started),
-					fmtTime(item.Completed),
-					jobStatus(item.Status),
-					idExcerpt(item.ProjectID),
-					idExcerpt(item.OrchestrationID),
-					item.SCMMetadata.Reference,
-					idExcerpt(item.SCMMetadata.CommitID),
-					fmtAuthor(item.SCMMetadata.Author),
-					fmtTime(item.SCMMetadata.Date.Time),
-					item.SCMMetadata.Message)
-			}
-			w.Flush()
-		},
-	}
-}
+func jobLogCommand(cmd *cli.Cmd) {
+	cmd.Spec = "JOB_ID"
+	jid := cmd.String(cli.StringArg{
+		Name: "JOB_ID",
+		Desc: "the job id",
+	})
 
-func jobLogCommand() cli.Command {
-	return cli.Command{
-		Name:  "log",
-		Usage: "print the Job's log",
-		Flags: []cli.Flag{
-			cli.StringFlag{
-				Name:   "bazooka-uri",
-				Value:  "http://localhost:3000",
-				Usage:  "URI for the bazooka server",
-				EnvVar: "BZK_URI",
-			},
-		},
-		Action: func(c *cli.Context) {
-			client, err := NewClient(c.String("bazooka-uri"))
-			if err != nil {
-				log.Fatal(err)
-			}
-			res, err := client.JobLog(c.Args()[0])
-			if err != nil {
-				log.Fatal(err)
-			}
-			for _, l := range res {
-				fmt.Printf("%s [%s] %s\n", l.Time.Format("2006/01/02 15:04:05"), l.Image, l.Message)
-			}
-		},
+	cmd.Action = func() {
+		client, err := NewClient(*bzkUri)
+		if err != nil {
+			log.Fatal(err)
+		}
+		res, err := client.JobLog(*jid)
+		if err != nil {
+			log.Fatal(err)
+		}
+		for _, l := range res {
+			fmt.Printf("%s [%s] %s\n", l.Time.Format("2006/01/02 15:04:05"), l.Image, l.Message)
+		}
 	}
 }
