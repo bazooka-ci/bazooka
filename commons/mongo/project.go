@@ -2,9 +2,12 @@ package mongo
 
 import (
 	"bufio"
+	"fmt"
 	"io"
 	"log"
 	"time"
+
+	"gopkg.in/mgo.v2"
 
 	lib "github.com/haklop/bazooka/commons"
 	"gopkg.in/mgo.v2/bson"
@@ -60,6 +63,19 @@ func (c *MongoConnector) AddJob(job *lib.Job) error {
 	if len(job.Status) == 0 {
 		job.Status = lib.JOB_RUNNING
 	}
+
+	query := bson.M{"id": job.ProjectID}
+	change := mgo.Change{
+		Update:    bson.M{"$inc": bson.M{"job_counter": 1}},
+		ReturnNew: true,
+	}
+	var proj lib.Project
+	_, err = c.database.C("projects").Find(query).Apply(change, &proj)
+	if err != nil {
+		return fmt.Errorf("Error generating the job number: %v", err)
+	}
+	job.Number = proj.JobCounter
+
 	return c.database.C("jobs").Insert(job)
 }
 
