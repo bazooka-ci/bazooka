@@ -8,7 +8,7 @@ git_log () {
 extract_meta () {
   origin=$(git config --get remote.origin.url)
   sha1=$(git rev-parse HEAD)
-  message=$(git_log %B | head -n 1)
+  message=$(git_log %B | sed 's/^/  /')
 
   echo "origin: $origin"                > /meta/scm
   echo "reference: $BZK_SCM_REFERENCE"  >> /meta/scm
@@ -20,7 +20,8 @@ extract_meta () {
   echo "  name: $(git_log %cn)"         >> /meta/scm
   echo "  email: $(git_log %ce)"        >> /meta/scm
   echo "date: $(git_log %cd)"           >> /meta/scm
-  echo "message: $message"              >> /meta/scm
+  echo "message: |"                     >> /meta/scm
+  echo "$message"                       >> /meta/scm
 }
 
 # Ensure permissions are right on the key file
