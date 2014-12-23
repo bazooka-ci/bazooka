@@ -52,8 +52,9 @@ func startJobCommand(cmd *cli.Cmd) {
 		Desc: "the project id",
 	})
 	scmRef := cmd.String(cli.StringArg{
-		Name: "SCM_REF",
-		Desc: "the scm ref to build", Value: "master",
+		Name:  "SCM_REF",
+		Desc:  "the scm ref to build",
+		Value: "master",
 	})
 
 	cmd.Action = func() {
@@ -66,8 +67,8 @@ func startJobCommand(cmd *cli.Cmd) {
 			log.Fatal(err)
 		}
 		w := tabwriter.NewWriter(os.Stdout, 15, 1, 3, ' ', 0)
-		fmt.Fprint(w, "JOB ID\tPROJECT ID\tORCHESTRATION ID\n")
-		fmt.Fprintf(w, "%s\t%s\t%s\t\n", idExcerpt(res.ID), idExcerpt(res.ProjectID), idExcerpt(res.OrchestrationID))
+		fmt.Fprint(w, "#\tJOB ID\tPROJECT ID\tORCHESTRATION ID\n")
+		fmt.Fprintf(w, "%d\t%s\t%s\t%s\t\n", res.Number, idExcerpt(res.ID), idExcerpt(res.ProjectID), idExcerpt(res.OrchestrationID))
 		w.Flush()
 	}
 
@@ -91,9 +92,10 @@ func listJobsCommand(cmd *cli.Cmd) {
 			log.Fatal(err)
 		}
 		w := tabwriter.NewWriter(os.Stdout, 15, 1, 3, ' ', 0)
-		fmt.Fprint(w, "JOB ID\tSTARTED\tCOMPLETED\tSTATUS\tPROJECT ID\tORCHESTRATION ID\tREFERENCE\tCOMMIT ID\tAUTHOR\tDATE\tMESSAGE\n")
+		fmt.Fprint(w, "#\tJOB ID\tSTARTED\tCOMPLETED\tSTATUS\tPROJECT ID\tORCHESTRATION ID\tREFERENCE\tCOMMIT ID\tAUTHOR\tDATE\tMESSAGE\n")
 		for _, item := range res {
-			fmt.Fprintf(w, "%s\t%s\t%v\t%v\t%v\t%s\t%s\t%s\t%s\t%s\t%s\t\n",
+			fmt.Fprintf(w, "%d\t%s\t%s\t%v\t%v\t%v\t%s\t%s\t%s\t%s\t%s\t%s\t\n",
+				item.Number,
 				idExcerpt(item.ID),
 				fmtTime(item.Started),
 				fmtTime(item.Completed),

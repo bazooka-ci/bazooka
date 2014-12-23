@@ -6,10 +6,11 @@ import (
 )
 
 type Project struct {
-	ScmType string `bson:"scm_type" json:"scm_type"`
-	ScmURI  string `bson:"scm_uri" json:"scm_uri"`
-	Name    string `bson:"name" json:"name"`
-	ID      string `bson:"id" json:"id"`
+	ScmType    string `bson:"scm_type" json:"scm_type"`
+	ScmURI     string `bson:"scm_uri" json:"scm_uri"`
+	Name       string `bson:"name" json:"name"`
+	ID         string `bson:"id" json:"id"`
+	JobCounter int    `bson:"job_counter" json:"job_counter"`
 }
 
 type Variant struct {
@@ -66,6 +67,7 @@ const (
 
 type Job struct {
 	ID              string      `bson:"id" json:"id"`
+	Number          int         `bson:"number" json:"number"`
 	ProjectID       string      `bson:"project_id" json:"project_id"`
 	OrchestrationID string      `bson:"orchestration_id" json:"orchestration_id"`
 	Started         time.Time   `bson:"started" json:"started"`
