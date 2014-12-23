@@ -9,7 +9,7 @@ fi
 
 export PREFIX=$s
 
-go_projects=( "scm/git" )
+go_projects=( "scm/git" "scm/hg")
 
 for project in "${go_projects[@]}"
 do
