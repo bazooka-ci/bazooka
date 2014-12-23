@@ -233,6 +233,12 @@ func (c *MongoConnector) GetJobs(projectID string) ([]*lib.Job, error) {
 	return result, err
 }
 
+func (c *MongoConnector) GetAllJobs() ([]*lib.Job, error) {
+	result := []*lib.Job{}
+	err := c.database.C("jobs").Find(bson.M{}).All(&result)
+	return result, err
+}
+
 func (c *MongoConnector) GetVariants(jobID string) ([]*lib.Variant, error) {
 	job, err := c.GetJobByID(jobID)
 	if err != nil {

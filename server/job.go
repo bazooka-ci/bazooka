@@ -134,6 +134,16 @@ func (c *context) getJobs(params map[string]string, body bodyFunc) (*response, e
 	return ok(&jobs)
 }
 
+func (c *context) getAllJobs(params map[string]string, body bodyFunc) (*response, error) {
+
+	jobs, err := c.Connector.GetAllJobs()
+	if err != nil {
+		return nil, err
+	}
+
+	return ok(&jobs)
+}
+
 func (c *context) getJobLog(params map[string]string, body bodyFunc) (*response, error) {
 
 	log, err := c.Connector.GetLog(&mongo.LogExample{
