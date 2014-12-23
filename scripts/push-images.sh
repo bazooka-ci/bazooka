@@ -15,7 +15,7 @@ export PREFIX=$s
 
 $s docker login --email="$BZK_REGISTRY_EMAIL" --password="$BZK_REGISTRY_PASSWORD" --username="$BZK_REGISTRY_USER" https://$BZK_REGISTRY_HOST
 
-docker_projects=( "parser" "parserlang/golang" "parserlang/java" "orchestration" \
+docker_projects=( "parser" "parserlang/golang" "parserlang/java" "parserlang/nodejs" "orchestration" \
 "server" "runner/golang" "runner/java" "scm/git" )
 
 for project in "${docker_projects[@]}"

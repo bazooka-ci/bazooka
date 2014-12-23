@@ -301,10 +301,12 @@ func extractPrefixedKeysMap(m map[string]string, prefix string) map[string]strin
 
 func resolveLanguageParser(language string) (string, error) {
 	parserMap := map[string]string{
-		"golang": "bazooka/parser-golang",
-		"go":     "bazooka/parser-golang",
-		"java":   "bazooka/parser-java",
-		"python": "bazooka/parser-python",
+		"golang":  "bazooka/parser-golang",
+		"go":      "bazooka/parser-golang",
+		"java":    "bazooka/parser-java",
+		"python":  "bazooka/parser-python",
+		"node_js": "bazooka/parser-nodejs",
+		"nodejs":  "bazooka/parser-nodejs",
 	}
 	if val, ok := parserMap[language]; ok {
 		return val, nil

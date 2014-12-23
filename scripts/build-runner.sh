@@ -9,7 +9,7 @@ fi
 
 export PREFIX=$s
 
-go_projects=( "runner/golang" "runner/java" )
+go_projects=( "runner/golang" "runner/java" "runner/nodejs")
 
 for project in "${go_projects[@]}"
 do
