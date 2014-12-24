@@ -7,4 +7,4 @@ for d in */ ; do
     popd
 done
 
-docker tag bazooka/runner-java:oraclejdk8 bazooka/runner-java:latest
+docker tag -f bazooka/runner-java:oraclejdk8 bazooka/runner-java:latest
