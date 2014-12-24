@@ -44,7 +44,7 @@ func (c *MongoConnector) AddUser(user *lib.User) error {
 		return err
 	}
 
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), 10)
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), 2) // TODO define a smart value
 	if err != nil {
 		return err
 	}
