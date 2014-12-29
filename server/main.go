@@ -85,6 +85,7 @@ var (
 		"orchestration": "bazooka/orchestration",
 		"parser":        "bazooka/parser",
 		"scm/fetch/git": "bazooka/scm-git",
+		"scm/fetch/hg":  "bazooka/scm-hg",
 	}
 )
 
