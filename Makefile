@@ -1,6 +1,6 @@
 default: images
 
-.PHONY: scm runner docs
+.PHONY: scm runner docs web
 
 devimages:
 	./scripts/build-devimages.sh
@@ -23,10 +23,13 @@ runner:
 scm:
 	./scripts/build-scm.sh
 
+web:
+	cd web && make
+
 push:
 	./scripts/push-images.sh
 
-deploy: setup devimages runner scm push
+deploy: setup devimages runner scm web push
 
 updatedeps:
 	go get -u -v ./...

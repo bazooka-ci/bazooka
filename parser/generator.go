@@ -89,34 +89,37 @@ func (g *Generator) GenerateDockerfile() error {
 		&buildPhase{
 			name:      "script",
 			commands:  g.Config.Script,
-			beforeCmd: []string{"set -v"},
+			beforeCmd: []string{"set -ev"},
 			runCmd:    g.getScriptRunCmd(),
 		},
 		&buildPhase{
 			name:      "after_success",
 			commands:  g.Config.AfterSuccess,
-			beforeCmd: []string{"set -v"},
+			beforeCmd: []string{"set -ev"},
 			runCmd:    []string{},
 		},
 		&buildPhase{
 			name:      "after_failure",
 			commands:  g.Config.AfterFailure,
-			beforeCmd: []string{"set -v"},
+			beforeCmd: []string{"set -ev"},
 			runCmd:    []string{},
 		},
 		&buildPhase{
 			name:      "after_script",
 			commands:  g.Config.AfterScript,
-			beforeCmd: []string{"set -v"},
+			beforeCmd: []string{"set -ev"},
+			runCmd:    []string{},
 		},
 	}
 
 	var bufferRun bytes.Buffer
 	bufferRun.WriteString("#!/bin/bash\n")
+
 	for _, phase := range phases {
 		if len(phase.commands) != 0 {
 			var buffer bytes.Buffer
 			buffer.WriteString("#!/bin/bash\n\n")
+
 			for _, action := range phase.beforeCmd {
 				buffer.WriteString(fmt.Sprintf("%s\n", action))
 			}
@@ -176,33 +179,33 @@ func (g *Generator) GenerateDockerfile() error {
 }
 
 func (g *Generator) getScriptRunCmd() []string {
-	switch {
-	case len(g.Config.AfterSuccess) != 0 && len(g.Config.AfterFailure) != 0:
-		return []string{
-			"./bazooka_script.sh",
-			"if [[ $? != 0 ]] ; then",
-			"  ./bazooka_after_failure.sh",
-			"else",
-			"  ./bazooka_after_success.sh",
-			"fi",
-		}
-	case len(g.Config.AfterSuccess) != 0 && len(g.Config.AfterFailure) == 0:
-		return []string{
-			"./bazooka_script.sh",
-			"if [[ $? == 0 ]] ; then",
-			"  ./bazooka_after_success.sh",
-			"fi",
-		}
-	case len(g.Config.AfterSuccess) == 0 && len(g.Config.AfterFailure) == 0:
-		return nil
-	case len(g.Config.AfterSuccess) == 0 && len(g.Config.AfterFailure) != 0:
-		return []string{
-			"./bazooka_script.sh",
-			"if [[ $? != 0 ]] ; then",
-			"  ./bazooka_after_failure.sh",
-			"fi",
-		}
-	default:
-		return nil
+	var commands = []string{
+		"./bazooka_script.sh",
+		"exitCode=$?",
 	}
+
+	if len(g.Config.AfterFailure) != 0 {
+		commands = append(commands,
+			"if [[ $exitCode != 0 ]] ; then",
+			"  ./bazooka_after_failure.sh",
+			"fi",
+		)
+	}
+
+	if len(g.Config.AfterSuccess) != 0 {
+		commands = append(commands,
+			"if [[ $exitCode == 0 ]] ; then",
+			"  ./bazooka_after_success.sh",
+			"fi",
+		)
+	}
+
+	if len(g.Config.AfterScript) != 0 {
+		commands = append(commands,
+			"./bazooka_after_script.sh",
+		)
+	}
+
+	commands = append(commands, "exit $exitCode")
+	return commands
 }

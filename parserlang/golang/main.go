@@ -101,7 +101,10 @@ func setGodir(conf *ConfigGolang) {
 	} else {
 		scmMetadata := &bazooka.SCMMetadata{}
 		scmMetadataFile := fmt.Sprintf("%s/scm", MetaFolder)
-		bazooka.Parse(scmMetadataFile, scmMetadata)
+		err = bazooka.Parse(scmMetadataFile, scmMetadata)
+		if err != nil {
+			log.Fatal(err)
+		}
 
 		if len(scmMetadata.Origin) > 0 {
 			r, err := regexp.Compile("^(?:https://(?:\\w+@){0,1}|git@)(github.com|bitbucket.org)[:/]{0,1}([\\w-_]+/[\\w-_]+).git$")

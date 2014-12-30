@@ -1,8 +1,14 @@
 language: golang
 install:
+  - curl -sL https://deb.nodesource.com/setup | bash -
+  - apt-get install -y nodejs
+  - apt-get install docker.io -y
+  - npm install -g gulp
+  - npm install -g bower
   - make setup
-  - curl -sSL https://get.docker.com/ubuntu/ | sudo sh
+  - go build -v ./...
 script:
-  - make devimages
+  - go test -v ./...
+  - make errcheck
 after_success:
-  - make push
+  - make devimages web push

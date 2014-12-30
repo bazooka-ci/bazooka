@@ -4,14 +4,8 @@ set -e
 
 : ${GOPATH:?"GOPATH has to be set. See https://golang.org/doc/code.html#GOPATH for more information."}
 
-if [ "$(uname)" != "Darwin" ]; then
-  s=sudo
-fi
-
-export PREFIX=$s
-
-docker_projects=( "parser" "parserlang/golang" "parserlang/java" "orchestration" \
-"server" "runner/golang" "runner/java" "scm/git" )
+docker_projects=( "parser" "parserlang/golang" "parserlang/java" "parserlang/nodejs" "parserlang/python" "orchestration" \
+"server" "runner/golang" "runner/java" "runner/python" "runner/nodejs" "scm/git" )
 
 for project in "${docker_projects[@]}"
 do

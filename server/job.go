@@ -80,7 +80,11 @@ func (c *context) startBuild(params map[string]string, body bodyFunc) (*response
 			orchestrationEnv["BZK_SCM_KEYFILE"] = c.Env[BazookaEnvSCMKeyfile]
 		}
 	} else {
-		os.MkdirAll(buildFolderLocal, 0644)
+		err = os.MkdirAll(buildFolderLocal, 0644)
+		if err != nil {
+			return nil, err
+		}
+
 		err = ioutil.WriteFile(fmt.Sprintf("%s/key", buildFolderLocal), []byte(projectSSHKey.Content), 0600)
 		if err != nil {
 			return nil, err
