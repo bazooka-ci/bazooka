@@ -7,6 +7,7 @@ import (
 	"github.com/haklop/bazooka/commons/matrix"
 
 	bazooka "github.com/haklop/bazooka/commons"
+	bzklog "github.com/haklop/bazooka/commons/logs"
 )
 
 const (
@@ -15,6 +16,10 @@ const (
 	MetaFolder   = "/meta"
 	PyLang       = "python"
 )
+
+func init() {
+	log.SetFormatter(&bzklog.BzkFormatter{})
+}
 
 type ConfigPython struct {
 	Base       bazooka.Config `yaml:",inline"`

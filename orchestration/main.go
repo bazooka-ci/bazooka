@@ -9,6 +9,7 @@ import (
 	log "github.com/Sirupsen/logrus"
 	docker "github.com/bywan/go-dockercommand"
 	lib "github.com/haklop/bazooka/commons"
+	bzklog "github.com/haklop/bazooka/commons/logs"
 	"github.com/haklop/bazooka/commons/mongo"
 )
 
@@ -32,6 +33,10 @@ const (
 	BazookaEnvMongoAddr    = "MONGO_PORT_27017_TCP_ADDR"
 	BazookaEnvMongoPort    = "MONGO_PORT_27017_TCP_PORT"
 )
+
+func init() {
+	log.SetFormatter(&bzklog.BzkFormatter{})
+}
 
 type Logger func(image string, variant string, container *docker.Container)
 

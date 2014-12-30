@@ -8,6 +8,7 @@ import (
 	"regexp"
 
 	log "github.com/Sirupsen/logrus"
+	bzklog "github.com/haklop/bazooka/commons/logs"
 	"github.com/haklop/bazooka/commons/matrix"
 
 	bazooka "github.com/haklop/bazooka/commons"
@@ -19,6 +20,10 @@ const (
 	MetaFolder   = "/meta"
 	Golang       = "go"
 )
+
+func init() {
+	log.SetFormatter(&bzklog.BzkFormatter{})
+}
 
 func main() {
 	file, err := bazooka.ResolveConfigFile(SourceFolder)

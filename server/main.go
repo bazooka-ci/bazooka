@@ -7,8 +7,13 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/gorilla/mux"
+	bzklog "github.com/haklop/bazooka/commons/logs"
 	"github.com/haklop/bazooka/commons/mongo"
 )
+
+func init() {
+	log.SetFormatter(&bzklog.BzkFormatter{})
+}
 
 func main() {
 	// Configure Bazooka
