@@ -6,7 +6,7 @@ set -e
 go get -u github.com/mitchellh/gox
 go get -u github.com/kisielk/errcheck
 
-go_projects=( "parser" "parserlang/golang" "parserlang/java" "parserlang/nodejs" "orchestration" "server" "cli" )
+go_projects=( "parser" "parserlang/golang" "parserlang/java" "parserlang/python" "parserlang/nodejs" "orchestration" "server" "cli" )
 
 for project in "${go_projects[@]}"
 do
