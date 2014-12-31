@@ -120,7 +120,7 @@ func (g *Generator) GenerateDockerfile() error {
 		if len(phase.commands) != 0 {
 			var buffer bytes.Buffer
 			buffer.WriteString("#!/bin/bash\n\n")
-
+			buffer.WriteString(fmt.Sprintf("echo %s\n", strconv.Quote(fmt.Sprintf("<PHASE:%s>", phase.name))))
 			for _, action := range phase.beforeCmd {
 				buffer.WriteString(fmt.Sprintf("%s\n", action))
 			}

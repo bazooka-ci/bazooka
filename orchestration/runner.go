@@ -46,7 +46,9 @@ func (r *Runner) Run(logger Logger) error {
 			log.Errorf("Run error %v for variant %v\n", err, v)
 			v.variant.Status = commons.JOB_ERRORED
 		} else {
-			log.Infof("Run completed for variant %v\n", v)
+			log.WithFields(log.Fields{
+				"variant": v.counter,
+			}).Info("Variant Completed")
 		}
 		v.variant.Completed = time.Now()
 	})

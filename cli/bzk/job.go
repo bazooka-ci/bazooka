@@ -136,10 +136,16 @@ func jobLogCommand(cmd *cli.Cmd) {
 		}
 		for _, l := range res {
 			fmt.Printf("%s [%s] ", l.Time.Format("2006/01/02 15:04:05"), l.Image)
-			if len(l.Level) > 0 {
-				fmt.Printf("[%s] ", l.Level)
+			switch {
+			case len(l.Command) > 0:
+				fmt.Printf("[Executing Command] %s\n", l.Command)
+			case len(l.Phase) > 0:
+				fmt.Printf("[Starting Phase] %s\n", l.Phase)
+			case len(l.Level) > 0:
+				fmt.Printf("[%s] %s\n", l.Level, l.Message)
+			default:
+				fmt.Printf("%s\n", l.Message)
 			}
-			fmt.Printf("%s\n", l.Message)
 		}
 	}
 }

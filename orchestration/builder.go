@@ -46,13 +46,18 @@ func (b *Builder) Build() error {
 			v.variant.Completed = time.Now()
 			return
 		}
-		log.Infof("Build success for variant %v\n", v)
+		log.WithFields(log.Fields{
+			"variant": v.counter,
+		}).Info("Build success for variant")
+
 	})
 	return nil
 }
 
 func (b *Builder) buildContainer(client *docker.Docker, vd *variantData) error {
-	log.Infof("build container for variant %#v\n", vd)
+	log.WithFields(log.Fields{
+		"variant": vd.counter,
+	}).Info("Building container for variant")
 
 	for _, script := range vd.scripts {
 

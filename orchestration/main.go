@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strconv"
 	"time"
 
 	log "github.com/Sirupsen/logrus"
@@ -216,7 +217,11 @@ func main() {
 		}
 	}
 
-	log.Infof("Job completed: ERRORED=%d, SUCCEEDED=%d, FAILED=%d\n", errorCount, successCount, failCount)
+	log.WithFields(log.Fields{
+		"ERRORED":   strconv.Itoa(errorCount),
+		"SUCCEEDED": strconv.Itoa(successCount),
+		"FAILED":    strconv.Itoa(failCount),
+	}).Info("Job Completed")
 
 	var jobStatus lib.JobStatus
 	switch {
