@@ -80,6 +80,7 @@ type LogEntry struct {
 	ID        string    `bson:"id" json:"id"`
 	Message   string    `bson:"msg" json:"msg"`
 	Time      time.Time `bson:"time" json:"time"`
+	Level     string    `bson:"level" json:"level"`
 	ProjectID string    `bson:"project_id" json:"project_id"`
 	JobID     string    `bson:"job_id" json:"job_id"`
 	VariantID string    `bson:"variant_id" json:"variant_id"`

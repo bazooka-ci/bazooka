@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"regexp"
+	"strings"
 	"time"
 
 	"gopkg.in/mgo.v2"
@@ -144,7 +146,16 @@ func (c *MongoConnector) FeedLog(r io.Reader, template lib.LogEntry) {
 	go func(reader io.Reader) {
 		scanner := bufio.NewScanner(reader)
 		for scanner.Scan() {
-			template.Message = scanner.Text()
+			message := scanner.Text()
+			r, _ := regexp.Compile(`^\[(\S+)\].*$`)
+			if r.MatchString(message) {
+				submatchs := r.FindStringSubmatch(message)
+				logLevel := submatchs[len(submatchs)-1]
+				template.Level = logLevel
+				template.Message = strings.TrimSpace(message[len(logLevel)+2:])
+			} else {
+				template.Message = strings.TrimSpace(message)
+			}
 			template.Time = time.Now()
 			c.AddLog(&template)
 		}

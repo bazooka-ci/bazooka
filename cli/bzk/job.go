@@ -135,7 +135,11 @@ func jobLogCommand(cmd *cli.Cmd) {
 			log.Fatal(err)
 		}
 		for _, l := range res {
-			fmt.Printf("%s [%s] %s\n", l.Time.Format("2006/01/02 15:04:05"), l.Image, l.Message)
+			fmt.Printf("%s [%s] ", l.Time.Format("2006/01/02 15:04:05"), l.Image)
+			if len(l.Level) > 0 {
+				fmt.Printf("[%s] ", l.Level)
+			}
+			fmt.Printf("%s\n", l.Message)
 		}
 	}
 }
