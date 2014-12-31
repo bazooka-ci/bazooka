@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"strconv"
 	"strings"
 
 	lib "github.com/haklop/bazooka/commons"
@@ -41,7 +42,7 @@ func (g *Generator) GenerateDockerfile() error {
 		&buildPhase{
 			name:      "setup",
 			commands:  g.Config.Setup,
-			beforeCmd: []string{"set -ev"},
+			beforeCmd: []string{"set -e"},
 			runCmd: []string{
 				"./bazooka_setup.sh",
 				"rc=$?",
@@ -53,7 +54,7 @@ func (g *Generator) GenerateDockerfile() error {
 		&buildPhase{
 			name:      "before_install",
 			commands:  g.Config.BeforeInstall,
-			beforeCmd: []string{"set -ev"},
+			beforeCmd: []string{"set -e"},
 			runCmd: []string{
 				"./bazooka_before_install.sh",
 				"rc=$?",
@@ -65,7 +66,7 @@ func (g *Generator) GenerateDockerfile() error {
 		&buildPhase{
 			name:      "install",
 			commands:  g.Config.Install,
-			beforeCmd: []string{"set -ev"},
+			beforeCmd: []string{"set -e"},
 			runCmd: []string{
 				"./bazooka_install.sh",
 				"rc=$?",
@@ -77,7 +78,7 @@ func (g *Generator) GenerateDockerfile() error {
 		&buildPhase{
 			name:      "before_script",
 			commands:  g.Config.BeforeScript,
-			beforeCmd: []string{"set -ev"},
+			beforeCmd: []string{"set -e"},
 			runCmd: []string{
 				"./bazooka_before_script.sh",
 				"rc=$?",
@@ -89,25 +90,25 @@ func (g *Generator) GenerateDockerfile() error {
 		&buildPhase{
 			name:      "script",
 			commands:  g.Config.Script,
-			beforeCmd: []string{"set -ev"},
+			beforeCmd: []string{"set -e"},
 			runCmd:    g.getScriptRunCmd(),
 		},
 		&buildPhase{
 			name:      "after_success",
 			commands:  g.Config.AfterSuccess,
-			beforeCmd: []string{"set -ev"},
+			beforeCmd: []string{"set -e"},
 			runCmd:    []string{},
 		},
 		&buildPhase{
 			name:      "after_failure",
 			commands:  g.Config.AfterFailure,
-			beforeCmd: []string{"set -ev"},
+			beforeCmd: []string{"set -e"},
 			runCmd:    []string{},
 		},
 		&buildPhase{
 			name:      "after_script",
 			commands:  g.Config.AfterScript,
-			beforeCmd: []string{"set -ev"},
+			beforeCmd: []string{"set -e"},
 			runCmd:    []string{},
 		},
 	}
@@ -124,6 +125,7 @@ func (g *Generator) GenerateDockerfile() error {
 				buffer.WriteString(fmt.Sprintf("%s\n", action))
 			}
 			for _, action := range phase.commands {
+				buffer.WriteString(fmt.Sprintf("echo %s\n", strconv.Quote(fmt.Sprintf("<CMD:%s>", action))))
 				buffer.WriteString(fmt.Sprintf("%s\n", action))
 			}
 			err = ioutil.WriteFile(fmt.Sprintf("%s/%s/bazooka_%s.sh", g.OutputFolder, g.Index, phase.name), buffer.Bytes(), 0644)
