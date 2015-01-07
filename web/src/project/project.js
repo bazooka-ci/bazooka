@@ -3,7 +3,7 @@
 angular.module('bzk.project', ['bzk.utils', 'ngRoute']);
 
 angular.module('bzk.project').config(function($routeProvider){
-	$routeProvider.when('/:pid', {
+	$routeProvider.when('/p/:pid', {
 			templateUrl: 'project/project.html',
 			controller: 'ProjectController',
 			reloadOnSearch: false
@@ -18,22 +18,10 @@ angular.module('bzk.project').factory('ProjectResource', function($http){
 		jobs: function (id) {
 			return $http.get('/api/project/'+id+'/job');
 		},
-		job: function (id) {
-			return $http.get('/api/job/'+id);
-		},
-		variants: function (jid) {
-			return $http.get('/api/job/'+jid+'/variant');
-		},
 		build: function (id, reference) {
 			return $http.post('/api/project/'+id+'/job', {
 				reference: reference
 			});
-		},
-		jobLog: function (jid) {
-			return $http.get('/api/job/'+jid+'/log');
-		},
-		variantLog: function (vid) {
-			return $http.get('/api/variant/'+vid+'/log');
 		}
 	};
 });
@@ -51,6 +39,7 @@ angular.module('bzk.project').controller('JobsController', function($scope, Proj
 	$scope.refreshJobs = function() {
 		ProjectResource.jobs(pId).success(function(jobs){
 			$scope.jobs = jobs;
+			console.log(jobs);
 		});
 	};
 
@@ -117,7 +106,7 @@ angular.module('bzk.project').controller('JobController', function($scope, Proje
 			return 'none';
 		}
 	};
-	
+
 });
 
 angular.module('bzk.project').controller('JobLogsController', function($scope, ProjectResource, DateUtils, $location, $timeout){
@@ -135,7 +124,7 @@ angular.module('bzk.project').controller('JobLogsController', function($scope, P
   		$scope.logger.job.prepare();
 		ProjectResource.jobLog(jId).success(function(logs){
 			$scope.logger.job.finish(logs);
-		});	
+		});
 	}
 
 	$scope.$on('$routeUpdate', function(){
@@ -145,7 +134,7 @@ angular.module('bzk.project').controller('JobLogsController', function($scope, P
 			$scope.logger={};
 		}
 	});
-	
+
 });
 
 angular.module('bzk.project').controller('VariantsController', function($scope, ProjectResource, $location, $timeout){
@@ -187,7 +176,7 @@ angular.module('bzk.project').controller('VariantsController', function($scope, 
 
 	$scope.$on('$routeUpdate', function(){
 		refreshVariants();
-		
+
 	});
 
 	function setupMeta(variants) {
@@ -235,7 +224,7 @@ angular.module('bzk.project').controller('VariantsController', function($scope, 
 			});
 
 		}
-		
+
 		$scope.metaLabels=metaLabels;
 		$scope.metaColors=colors;
 	}
@@ -259,44 +248,5 @@ angular.module('bzk.project').controller('VariantLogsController', function($scop
 	}
 
 	$timeout(loadLogs);
-	
-});
 
-angular.module('bzk.project').directive('bzkLog', function(){
-	return {
-		restrict: 'A',
-		scope: {
-			sink: '=bzkLog'
-		},
-		template: '<img class="loading" src="/images/loading.gif" ng-if="loading"></img>',
-		link: function($scope, elem, attrs) {
-			var row = 1;
-			$(elem).append('<pre></pre>');
-			var into = $(elem).find('pre');
-			$scope.sink = {
-				prepare: function() {
-					this.clear();
-					$scope.loading = true;
-				},
-				finish: function(lines) {
-					this.append(lines);
-					$scope.loading=false;
-				},
-				append: function(lines) {
-					var data = '';
-					_.each(lines, function(line){
-						data += '<p><span>'+row+'</span>'+line.msg+'</p>';
-						row++;
-					});
-					into.append(data);
-				},
-				clear: function(){
-					row = 1;
-					into.empty();
-					into.scrollTop(0);
-				}
-			};
-		}
-	};
 });
-

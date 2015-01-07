@@ -1,0 +1,20 @@
+#breadcrumb {
+  border-bottom: 1px solid $breadcrumb-color-border;
+  color: $breadcrumb-color;
+  margin-bottom: 10px;
+  padding: 15px;
+
+  .home {
+    opacity: .4;
+    width: 14px;
+  }
+
+  a {
+    color: $breadcrumb-color;
+    text-decoration: none;
+  }
+
+  a:hover {
+    color: $breadcrumb-color-link;
+  }
+}

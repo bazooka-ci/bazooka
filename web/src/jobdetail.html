@@ -1,0 +1,22 @@
+<table class="details">
+	<tbody>
+		<tr>
+			<th>Author</th>
+			<td>{{job.scm_metadata.author.name}}</td>
+			<th>Reference</th>
+			<td>{{job.scm_metadata.reference}}</td>
+		</tr>
+		<tr>
+			<th>Duration</th>
+			<td>{{job | bzkDuration}}</td>
+			<th>Revision</th>
+			<td>{{job.scm_metadata.commit_id | bzkExcerpt}}</td>
+		</tr>
+		<tr>
+			<th>Finished</th>
+			<td>{{job | bzkFinished}}</td>
+			<th>Message</th>
+			<td>{{job.scm_metadata.message}}</td>
+		</tr>
+	</tbody>
+</table>

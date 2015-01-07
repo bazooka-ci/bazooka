@@ -1,0 +1,71 @@
+.pure-table {
+  font-size: 14px;
+  width: 100%;
+
+  thead {
+    background: $table-thead-bg;
+    color: $table-thead-color;
+  }
+
+  img {
+    padding-right: 5px;
+  }
+
+  tr {
+    border-bottom: 2px solid #fff;
+    border-top: 2px solid #fff;
+
+    &.success {
+      background: $success-row;
+    }
+
+    &.success:hover {
+      background: $success-row-hover;
+    }
+
+    &.failed {
+      background: $failed-row;
+    }
+
+    &.failed:hover {
+      background: $failed-row-hover;
+    }
+
+    &.errored {
+      background: $errored-row;
+    }
+
+    &.errored:hover {
+      background: $errored-row-hover;
+    }
+
+  }
+
+  td,
+  th {
+    padding: .5em;
+  }
+
+
+  td .success,
+  td .failed,
+  td .errored {
+    border-radius: 20px;
+    color: #fff;
+    padding: 2px 5px;
+  }
+
+  td .success {
+    background: $success-bg;
+  }
+
+  td .failed {
+    background: $failed-bg;
+  }
+
+  td .errored {
+    background: $errored-bg;
+  }
+
+
+}

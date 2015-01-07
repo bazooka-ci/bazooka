@@ -1,35 +1,23 @@
-<div class="col projects" ng-class="{wide: showNewProject}" ng-controller="ProjectsController">
-	<h1>
-		projects
-		<a href="" ng-click="newProjectVisible(true)" ng-if="!showNewProject">
-			<i class="fa fa-plus"></i>
-		</a>
-		<a href="" ng-click="newProjectVisible(false)" ng-if="showNewProject">
-			<i class="fa fa-times"></i>
-		</a>
-	</h1>
+<div ng-controller="ProjectsController">
+<nav class="nav">
+	<ul class="nav-list">
+		<li class="nav-item">
+			<a class="pure-button" href="#/p">Manage Projects</a>
+		</li>
+	</ul>
+</nav>
 
-	<form class="new" ng-if="showNewProject" name="form">
-		<label for="project-name">Project name</label>
-		<input type="text" name="name" id="project-name" ng-model="newProj.name" required/>
-
-		<label for="scm-type">SCM type</label>
-		<input type="text" name="scm_type" id="scm-type"  ng-model="newProj.scm_type" required/>
-
-		<label for="scm-uri">SCM uri</label>
-		<input type="text" name="scm_uri" id="scm-uri"  ng-model="newProj.scm_uri" required/>
-
-		<button ng-click="createProject()" ng-disabled="form.$invalid">Create project</button>
-	</form>
-	<!-- <div class="search">
-		<input type="text" ng-model="filter"/>
-	</div> -->
-	<div class="scroll">
-		<ul>
-		    <li ng-repeat="project in projects | filter:filter"  ng-class="{selected: isSelected(project)}">
-		    	<a ng-href="#/{{project | bzkId}}">{{project.name}}</a>
-		    </li>
-		    
-		</ul>
-	</div>
+<div id="projects">
+	<ul>
+		<li ng-repeat="project in projects | filter:filter"  ng-class="{selected: isSelected(project)}">
+			<a ng-href="#/p/{{project | bzkId}}">
+				<div class="pure-g">
+					<div class="pure-u-7-8"><p class="success">{{project.name}}</p></div>
+					<div class="pure-u-1-8 projectnumber"><p class="success">41</p></div>
+				</div>
+				<p class="scm">{{project.scm_uri}}</p>
+			</a>
+		</li>
+	</ul>
+</div>
 </div>

@@ -1,0 +1,25 @@
+<table class="pure-table pure-table-horizontal">
+	<thead>
+		<tr>
+			<th>Status</th>
+			<th>Job</th>
+			<th>Revision</th>
+			<th>Author</th>
+			<th>Log</th>
+			<th>Duration</th>
+			<th>Finished</th>
+		</tr>
+	</thead>
+
+	<tbody ng-repeat="job in jobs | orderBy:'completed':true">
+		<tr class="{{job.status | lowercase}}">
+			<td><span class="{{job.status | lowercase}}">{{job.status | titleCase}}</span></td>
+			<td><a ng-href="#/p/{{job.project_id | bzkExcerpt}}/{{job | bzkId}}">{{getProjectName(job.project_id)}}/{{job.number}}</a></td>
+			<td>{{job.scm_metadata.commit_id | bzkExcerpt}} ({{job.scm_metadata.reference}})</td>
+			<td>{{job.scm_metadata.author.name}}</td>
+			<td>{{job.scm_metadata.message}}</td>
+			<td>{{job | bzkDuration}}</td>
+			<td>{{job | bzkFinished}}</td>
+		</tr>
+	</tbody>
+</table>
