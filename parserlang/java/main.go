@@ -7,6 +7,7 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 	bazooka "github.com/haklop/bazooka/commons"
+	bzklog "github.com/haklop/bazooka/commons/logs"
 )
 
 const (
@@ -15,6 +16,10 @@ const (
 	MetaFolder   = "/meta"
 	Jdk          = "jdk"
 )
+
+func init() {
+	log.SetFormatter(&bzklog.BzkFormatter{})
+}
 
 func main() {
 	file, err := bazooka.ResolveConfigFile(SourceFolder)

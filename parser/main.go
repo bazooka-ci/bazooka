@@ -10,6 +10,7 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 	lib "github.com/haklop/bazooka/commons"
+	bzklog "github.com/haklop/bazooka/commons/logs"
 )
 
 const (
@@ -20,6 +21,10 @@ const (
 	TravisConfigFile  = ".travis.yml"
 	MX_ENV_PREFIX     = "env::"
 )
+
+func init() {
+	log.SetFormatter(&bzklog.BzkFormatter{})
+}
 
 func main() {
 	log.Info("Starting Parsing Phase")

@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"regexp"
+	"strings"
 	"time"
 
 	"gopkg.in/mgo.v2"
@@ -144,9 +146,36 @@ func (c *MongoConnector) FeedLog(r io.Reader, template lib.LogEntry) {
 	go func(reader io.Reader) {
 		scanner := bufio.NewScanner(reader)
 		for scanner.Scan() {
-			template.Message = scanner.Text()
-			template.Time = time.Now()
-			c.AddLog(&template)
+			message := scanner.Text()
+			thisTemplate := template
+
+			regLogLevel, _ := regexp.Compile(`^\s*\[(\S+)\].*$`)  // Eg. [INFO] My message
+			regMeta, _ := regexp.Compile(`^\s*\<(\S+):(.*)>\s*$`) // Eg. <CMD:go test -v ./...>
+
+			switch {
+			case regLogLevel.MatchString(message):
+				submatchs := regLogLevel.FindStringSubmatch(message)
+				logLevel := submatchs[len(submatchs)-1]
+				thisTemplate.Level = logLevel
+				thisTemplate.Message = strings.TrimSpace(message[len(logLevel)+2:])
+			case regMeta.MatchString(message):
+				submatchs := regMeta.FindStringSubmatch(message)
+				instructionType := submatchs[1]
+				instructionValue := submatchs[2]
+				switch instructionType {
+				case "CMD":
+					thisTemplate.Command = instructionValue
+				case "PHASE":
+					thisTemplate.Phase = instructionValue
+				default:
+					thisTemplate.Message = strings.TrimSpace(message)
+				}
+			default:
+				thisTemplate.Message = strings.TrimSpace(message)
+			}
+
+			thisTemplate.Time = time.Now()
+			c.AddLog(&thisTemplate)
 		}
 		if err := scanner.Err(); err != nil {
 			log.Println("There was an error with the scanner", err)
