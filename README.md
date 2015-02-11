@@ -10,6 +10,12 @@ But most of this tools are hosted services, and the "install yourself" alternati
 
 This his How Bazooka was created.
 
+## Architecture & Design
+
+Bazooka relies heavily on Docker and its ecosystem and has been designed around it, to take advantage of everything Docker is capable, and then focus on the CI/CD part.
+
+In Bazooka, everything is a plugin, and each plugin is a Docker container. You can read more about our [plugin architecture here](docs/internals/plugin.md)
+
 ## [Development Instructions](docs/home/developping.md)
 
 ## [Installation Instructions](docs/home/installation.md)
