@@ -19,5 +19,5 @@ git clone git@github.com:haklop/bazooka.git $GOPATH/src/github.com/haklop/
 ## Already installed Bazooka once ?
 
 * Run `make devimages` to build docker images for go projects
-* You made any changes to `runner/` or `scm/` ? Run `make scm runner` to updates those images as well
-* Run `make run` to start bazooka (only need is bazooka was not already running or if you changed some code in the server)
+* You made any changes to `runner/` or `scm/` ? Run `make scm` or `make runner` to updates those images as well
+* Run `bzk run` to start bazooka (only needed is bazooka was not already running or if you changed some code in the server)
