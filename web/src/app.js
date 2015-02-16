@@ -50,9 +50,9 @@ angular.module('bzk').controller('RootController', function($scope, $routeParams
 	};
 
 	$scope.getProjectName = function(projectID) {
-		var project = $.grep($scope.all_projects, function(e){ return e.id.indexOf(projectID) === 0; });
+		var project = _.findWhere($scope.all_projects, {id: projectID});
 		if(project) {
-			return project[0].name;
+			return project.name;
 		}
 		return projectID;
 	};
