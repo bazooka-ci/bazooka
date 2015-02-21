@@ -4,10 +4,10 @@ docker:
 	docker build -t bazooka/parser .
 
 devimage: gox
-	docker build -t bazooka/parser dev/
+	docker build -t bazooka/parser -f Dockerfile.dev .
 
 gox:
-	gox -osarch="linux/amd64" -output="dev/main"
+	gox -osarch="linux/amd64" -output="main"
 
 push:
 	docker push bazooka/parser

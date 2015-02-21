@@ -19,5 +19,5 @@ _testmain.go
 *.test
 *.prof
 
-**/dev/main
+**/main
 site

@@ -4,10 +4,10 @@ docker:
 	docker build -t bazooka/parser-python .
 
 devimage: gox
-	docker build -t bazooka/parser-python dev/
+	docker build -t bazooka/parser-python -f Dockerfile.dev .
 
 gox:
-	gox -osarch="linux/amd64" -output="dev/main"
+	gox -osarch="linux/amd64" -output="main"
 
 push:
 	docker tag bazooka/parser-python bazooka/parser-python

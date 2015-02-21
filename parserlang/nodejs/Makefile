@@ -4,10 +4,10 @@ docker:
 	$(PREFIX) docker build -t bazooka/parser-nodejs .
 
 devimage: gox
-	$(PREFIX) docker build -t bazooka/parser-nodejs dev/
+	$(PREFIX) docker build -t bazooka/parser-nodejs -f Dockerfile.dev .
 
 gox:
-	gox -osarch="linux/amd64" -output="dev/main"
+	gox -osarch="linux/amd64" -output="main"
 
 push:
 	$(PREFIX) docker tag bazooka/parser-nodejs $(BZK_REGISTRY_HOST)/bazooka/parser-nodejs
