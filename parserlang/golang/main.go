@@ -166,6 +166,8 @@ func resolveGoImage(version string) (string, error) {
 		"1.3.2":  "bazooka/runner-golang:1.3.2",
 		"1.3.3":  "bazooka/runner-golang:1.3.3",
 		"1.4":    "bazooka/runner-golang:1.4",
+		"1.4.1":  "bazooka/runner-golang:1.4.1",
+		"1.4.2":  "bazooka/runner-golang:1.4.2",
 		"tip":    "bazooka/runner-golang:latest",
 		"latest": "bazooka/runner-golang:latest",
 	}
