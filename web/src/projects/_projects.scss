@@ -1,0 +1,13 @@
+.projectlist {
+
+  h2 {
+    padding-left: 160px;
+  }
+
+  .empty {
+    color: $low-importance;
+    font-style: italic;
+    padding-left: 10px;
+    padding-top: 30px;
+  }
+}

@@ -1,3 +1,4 @@
+<div class="projectlist">
 <h2>Add new Project</h2>
 
 <div ng-controller="NewProjectController">
@@ -18,13 +19,13 @@
         <input id="scm_uri" type="text" placeholder="SCM Uri" ng-model="addProject.scm_uri" required>
       </div>
       <div class="pure-controls">
-        <button type="submit" class="pure-button pure-button-primary" ng-click="createProject(addProject)" value="Add">Add</button>
+        <button type="submit" class="pure-button pure-button-primary" ng-click="createProject(addProject)" value="Add">Create New Project</button>
       </div>
     </fieldset>
   </form>
 </div>
 
-<div class="projectList">
+<div ng-show="projectList.length > 0">
   <table class="pure-table pure-table-horizontal">
     <thead>
       <tr>
@@ -42,5 +43,9 @@
       </tr>
     </tbody>
   </table>
+</div>
 
+<div class="empty" ng-show="projectList.length == 0">
+  Bazooka does not know of any projects right now. You can add one with the previous form.
+</div>
 </div>
