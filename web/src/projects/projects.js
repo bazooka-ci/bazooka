@@ -27,13 +27,16 @@ angular.module('bzk.projects').controller('ProjectListController', function($sco
 	ProjectListResource.list().success(function(projectList){
 		$scope.projectList = projectList;
 	});
+
+	$scope.createProject = function(project) {
+		ProjectListResource.create(project).success(function(){
+			ProjectListResource.list().success(function(projectList){
+				$scope.projectList = projectList;
+			});
+		});
+	};
 });
 
 angular.module('bzk.projects').controller('NewProjectController', function($scope, $routeParams, ProjectListResource){
-	$scope.createProject = function(project) {
-		ProjectListResource.create(project).success(function(jobs){
-			$scope.jobs = jobs;
-			console.log(jobs);
-		});
-	};
+
 });

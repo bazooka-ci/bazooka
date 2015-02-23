@@ -1,22 +1,22 @@
 <div class="projectlist">
 <h2>Add new Project</h2>
 
-<div ng-controller="NewProjectController">
+<div>
   <form novalidate class="pure-form pure-form-aligned">
     <fieldset>
       <div class="pure-control-group">
         <label for="name">Project Name</label>
-        <input id="name" type="text" placeholder="Name" ng-model="addProject.name" required>
+        <input id="name" type="text" placeholder="Name" ng-model="addProject.name" class="pure-input-rounded" required>
       </div>
 
       <div class="pure-control-group">
         <label for="scm_type">SCM Type</label>
-        <input id="scm_type" type="text" placeholder="SCM Type" ng-model="addProject.scm_type" required>
+        <input id="scm_type" type="text" placeholder="SCM Type" ng-model="addProject.scm_type" class="pure-input-rounded" required>
       </div>
 
       <div class="pure-control-group">
         <label for="scm_uri">SCM Uri</label>
-        <input id="scm_uri" type="text" placeholder="SCM Uri" ng-model="addProject.scm_uri" required>
+        <input id="scm_uri" type="text" placeholder="SCM Uri" ng-model="addProject.scm_uri" class="pure-input-rounded" required>
       </div>
       <div class="pure-controls">
         <button type="submit" class="pure-button pure-button-primary" ng-click="createProject(addProject)" value="Add">Create New Project</button>
