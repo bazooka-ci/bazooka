@@ -1,4 +1,4 @@
-# Bazooka, a new Generation Continuous Integration and Continuous Deployment server
+# Bazooka
 
 Bazooka is an **Open Source Continuous Integration and Continuous Deployment Server** designed to let you install it wherever you want; On your local computer, on dedicated servers within your enterprise network, or on virtualized Cloud instances.
 
