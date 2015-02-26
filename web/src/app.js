@@ -85,25 +85,11 @@ angular.module('bzk').controller('ProjectsController', function($scope, Projects
 		});
 	}
 
+	$scope.$on('project.new', function (event) {
+    refresh()
+  })
+
 	refresh();
-
-	$scope.newProj = {
-		scm_type: 'git'
-	};
-
-	$scope.newProjectVisible = function(s) {
-		$scope.showNewProject = s;
-	};
-
-	$scope.createProject = function() {
-		ProjectsResource.create($scope.newProj).success(function(){
-			$scope.showNewProject = false;
-			$scope.newProj = {
-				scm_type: 'git'
-			};
-			refresh();
-		});
-	};
 
 	$scope.isSelected = function(p) {
 		return p.id.indexOf($routeParams.pid)===0;

@@ -21,7 +21,7 @@ angular.module('bzk.projects').factory('ProjectListResource', function($http){
 	};
 });
 
-angular.module('bzk.projects').controller('ProjectListController', function($scope, $routeParams, ProjectListResource){
+angular.module('bzk.projects').controller('ProjectListController', function($scope, $rootScope, $routeParams, ProjectListResource){
 	var pId = $routeParams.pid;
 
 	ProjectListResource.list().success(function(projectList){
@@ -32,6 +32,7 @@ angular.module('bzk.projects').controller('ProjectListController', function($sco
 		ProjectListResource.create(project).success(function(){
 			ProjectListResource.list().success(function(projectList){
 				$scope.projectList = projectList;
+				$rootScope.$broadcast('project.new');
 			});
 		});
 	};
