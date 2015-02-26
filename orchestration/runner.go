@@ -9,9 +9,9 @@ import (
 	log "github.com/Sirupsen/logrus"
 
 	docker "github.com/bywan/go-dockercommand"
-	commons "github.com/haklop/bazooka/commons"
-	"github.com/haklop/bazooka/commons/mongo"
-	"github.com/haklop/bazooka/commons/parallel"
+	commons "github.com/bazooka-ci/bazooka/commons"
+	"github.com/bazooka-ci/bazooka/commons/mongo"
+	"github.com/bazooka-ci/bazooka/commons/parallel"
 )
 
 type Runner struct {

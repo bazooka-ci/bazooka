@@ -8,7 +8,7 @@ import (
 
 	"github.com/gorilla/mux"
 
-	"github.com/haklop/bazooka/commons/mongo"
+	"github.com/bazooka-ci/bazooka/commons/mongo"
 	basic "github.com/haklop/go-http-basic-auth"
 )
 

@@ -5,11 +5,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/haklop/bazooka/commons/parallel"
+	"github.com/bazooka-ci/bazooka/commons/parallel"
 
 	log "github.com/Sirupsen/logrus"
 	docker "github.com/bywan/go-dockercommand"
-	lib "github.com/haklop/bazooka/commons"
+	lib "github.com/bazooka-ci/bazooka/commons"
 )
 
 type Builder struct {

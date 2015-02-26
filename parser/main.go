@@ -6,11 +6,11 @@ import (
 	"os"
 	"strings"
 
-	"github.com/haklop/bazooka/commons/matrix"
+	"github.com/bazooka-ci/bazooka/commons/matrix"
 
 	log "github.com/Sirupsen/logrus"
-	lib "github.com/haklop/bazooka/commons"
-	bzklog "github.com/haklop/bazooka/commons/logs"
+	lib "github.com/bazooka-ci/bazooka/commons"
+	bzklog "github.com/bazooka-ci/bazooka/commons/logs"
 )
 
 const (

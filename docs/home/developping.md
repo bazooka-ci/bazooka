@@ -7,10 +7,10 @@ Some tools are required to develop on Bazooka
 * npm (Install via [nvm](https://github.com/creationix/nvm))
 * gulp (Install via npm `npm install -g gulp`)
 
-* Clone this project in `$GOPATH/src/github.com/haklop/`
+* Clone this project in `$GOPATH/src/github.com/bazooka-ci/`
 
 ```bash
-git clone git@github.com:haklop/bazooka.git $GOPATH/src/github.com/haklop/
+git clone git@github.com:bazooka-ci/bazooka.git $GOPATH/src/github.com/bazooka-ci/
 ```
 
 * Run `make setup scm runner devimages` to build everything necessary to run bazooka

@@ -1,6 +1,6 @@
 package main
 
-import lib "github.com/haklop/bazooka/commons"
+import lib "github.com/bazooka-ci/bazooka/commons"
 
 func (p *context) createUser(params map[string]string, body bodyFunc) (*response, error) {
 	var user lib.User

@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"net/url"
 
-	lib "github.com/haklop/bazooka/commons"
+	lib "github.com/bazooka-ci/bazooka/commons"
 	"github.com/racker/perigee"
 )
 

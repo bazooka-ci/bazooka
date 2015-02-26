@@ -7,8 +7,8 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/gorilla/mux"
-	bzklog "github.com/haklop/bazooka/commons/logs"
-	"github.com/haklop/bazooka/commons/mongo"
+	bzklog "github.com/bazooka-ci/bazooka/commons/logs"
+	"github.com/bazooka-ci/bazooka/commons/mongo"
 )
 
 func init() {

@@ -1,6 +1,6 @@
 package main
 
-import "github.com/haklop/bazooka/commons/mongo"
+import "github.com/bazooka-ci/bazooka/commons/mongo"
 
 func (c *context) getVariant(params map[string]string, body bodyFunc) (*response, error) {
 	variant, err := c.Connector.GetVariantByID(params["id"])

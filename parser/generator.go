@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	lib "github.com/haklop/bazooka/commons"
+	lib "github.com/bazooka-ci/bazooka/commons"
 )
 
 type Generator struct {

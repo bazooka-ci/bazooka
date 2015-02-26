@@ -1,7 +1,7 @@
 package main
 
 import (
-	lib "github.com/haklop/bazooka/commons"
+	lib "github.com/bazooka-ci/bazooka/commons"
 )
 
 type ConfigGolang struct {

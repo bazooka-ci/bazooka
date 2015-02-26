@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	log "github.com/Sirupsen/logrus"
-	lib "github.com/haklop/bazooka/commons"
+	lib "github.com/bazooka-ci/bazooka/commons"
 )
 
 func (p *context) createProject(params map[string]string, body bodyFunc) (*response, error) {

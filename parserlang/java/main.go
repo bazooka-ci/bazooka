@@ -3,11 +3,11 @@ package main
 import (
 	"fmt"
 
-	"github.com/haklop/bazooka/commons/matrix"
+	"github.com/bazooka-ci/bazooka/commons/matrix"
 
 	log "github.com/Sirupsen/logrus"
-	bazooka "github.com/haklop/bazooka/commons"
-	bzklog "github.com/haklop/bazooka/commons/logs"
+	bazooka "github.com/bazooka-ci/bazooka/commons"
+	bzklog "github.com/bazooka-ci/bazooka/commons/logs"
 )
 
 const (

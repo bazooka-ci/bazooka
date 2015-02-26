@@ -9,9 +9,9 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 	docker "github.com/bywan/go-dockercommand"
-	lib "github.com/haklop/bazooka/commons"
-	bzklog "github.com/haklop/bazooka/commons/logs"
-	"github.com/haklop/bazooka/commons/mongo"
+	lib "github.com/bazooka-ci/bazooka/commons"
+	bzklog "github.com/bazooka-ci/bazooka/commons/logs"
+	"github.com/bazooka-ci/bazooka/commons/mongo"
 )
 
 const (

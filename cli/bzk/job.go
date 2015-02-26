@@ -9,7 +9,7 @@ import (
 
 	"github.com/jawher/mow.cli"
 
-	lib "github.com/haklop/bazooka/commons"
+	lib "github.com/bazooka-ci/bazooka/commons"
 )
 
 func jobStatus(j lib.JobStatus) string {

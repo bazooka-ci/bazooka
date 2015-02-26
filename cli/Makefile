@@ -1,4 +1,4 @@
 default: install
 
 install:
-	go install -v github.com/haklop/bazooka/cli/bzk
+	go install -v github.com/bazooka-ci/bazooka/cli/bzk

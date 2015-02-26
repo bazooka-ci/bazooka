@@ -11,7 +11,7 @@ import (
 
 	"gopkg.in/mgo.v2"
 
-	lib "github.com/haklop/bazooka/commons"
+	lib "github.com/bazooka-ci/bazooka/commons"
 	"gopkg.in/mgo.v2/bson"
 )
 

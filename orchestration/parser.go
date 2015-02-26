@@ -6,11 +6,11 @@ import (
 	"sort"
 	"strings"
 
-	lib "github.com/haklop/bazooka/commons"
+	lib "github.com/bazooka-ci/bazooka/commons"
 
 	log "github.com/Sirupsen/logrus"
 	docker "github.com/bywan/go-dockercommand"
-	"github.com/haklop/bazooka/commons/mongo"
+	"github.com/bazooka-ci/bazooka/commons/mongo"
 )
 
 type Parser struct {

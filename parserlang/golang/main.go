@@ -8,10 +8,10 @@ import (
 	"regexp"
 
 	log "github.com/Sirupsen/logrus"
-	bzklog "github.com/haklop/bazooka/commons/logs"
-	"github.com/haklop/bazooka/commons/matrix"
+	bzklog "github.com/bazooka-ci/bazooka/commons/logs"
+	"github.com/bazooka-ci/bazooka/commons/matrix"
 
-	bazooka "github.com/haklop/bazooka/commons"
+	bazooka "github.com/bazooka-ci/bazooka/commons"
 )
 
 const (
