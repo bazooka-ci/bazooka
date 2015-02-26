@@ -9,6 +9,3 @@ image: devimage
 buildapp:
 	npm install
 	gulp build
-
-push:
-	docker push bazooka/web
