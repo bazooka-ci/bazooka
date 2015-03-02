@@ -7,7 +7,7 @@ go_projects=( "parser" "parserlang/golang" "parserlang/python" "parserlang/java"
 
 for project in "${go_projects[@]}"
 do
-  pushd "$GOPATH/src/github.com/bazooka-ci/bazooka/$project"
+  pushd "${GOPATH//:}/src/github.com/bazooka-ci/bazooka/$project"
     errcheck -ignore 'Close|[wW]rite.*|Encode|Flush|Seek|[rR]ead.*' github.com/bazooka-ci/bazooka/$project/...
   popd
 done

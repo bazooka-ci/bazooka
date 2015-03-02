@@ -1,7 +1,7 @@
 default: docker
 
 docker:
-	$(PREFIX) docker build -t bazooka/parser-nodejs .
+	$(PREFIX) docker build -t bazooka/parser-nodejs -f Dockerfile ..
 
 devimage: gox
 	$(PREFIX) docker build -t bazooka/parser-nodejs -f Dockerfile.dev .

@@ -1,7 +1,7 @@
 default: docker
 
 docker:
-	docker build -t bazooka/parser-java .
+	docker build -t bazooka/parser-java -f Dockerfile ../..
 
 devimage: gox
 	docker build -t bazooka/parser-java -f Dockerfile.dev .

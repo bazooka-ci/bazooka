@@ -1,7 +1,7 @@
 default: docker
 
 docker:
-	docker build -t bazooka/orchestration .
+	docker build -t bazooka/orchestration -f Dockerfile ..
 
 devimage: gox
 	docker build -t bazooka/orchestration -f Dockerfile.dev .

@@ -7,7 +7,7 @@ go_projects=( "scm/git" "scm/hg")
 
 for project in "${go_projects[@]}"
 do
-  pushd "$GOPATH/src/github.com/bazooka-ci/bazooka/$project"
+  pushd "${GOPATH//:}/src/github.com/bazooka-ci/bazooka/$project"
   make
   popd
 done
