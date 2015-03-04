@@ -10,7 +10,7 @@ Some tools are required to develop on Bazooka
 * Clone this project in `$GOPATH/src/github.com/bazooka-ci/`
 
 ```bash
-git clone git@github.com:bazooka-ci/bazooka.git $GOPATH/src/github.com/bazooka-ci/
+git clone git@github.com:bazooka-ci/bazooka.git $GOPATH/src/github.com/bazooka-ci/bazooka
 ```
 
 * Run `make setup devimages` to build everything necessary to run bazooka
