@@ -13,8 +13,8 @@ Some tools are required to develop on Bazooka
 git clone git@github.com:bazooka-ci/bazooka.git $GOPATH/src/github.com/bazooka-ci/
 ```
 
-* Run `make setup scm runner devimages` to build everything necessary to run bazooka
-* Run `make run` to start bazooka
+* Run `make setup devimages` to build everything necessary to run bazooka
+* Run `bzk run --restart` to restart bazooka using the images you just built (make sure `$GOPATH/bin` is in your PATH)
 
 ## Already installed Bazooka once ?
 
