@@ -1,8 +1,7 @@
 default: docker
 
 docker:
-	docker build -t bazooka/server -f Dockerfile ../..
-
+	docker build -t bazooka/server -f Dockerfile ..
 
 devimage: gox
 	docker build -t bazooka/server -f Dockerfile.dev .
