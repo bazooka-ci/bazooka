@@ -2,13 +2,13 @@
 
 ## Install Docker
 
-Docker is an essential part of Bazooka. To install it, follow [these instructions](https://golang.org/doc/install)
+Docker is an essential part of Bazooka. To install it, follow [these instructions](https://docs.docker.com/installation/)
 
 ## Install Bazooka
 
 Everything in Bazooka can be done through the CLI (Command Line Interface), including installing bazooka itself
 
-Download Bazooka CLI on our website (TODO), and then install bazooka
+Download Bazooka CLI on our website (Coming soon), add it to your `PATH` and then install bazooka
 
 ```bash
 $ bzk run
