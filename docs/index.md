@@ -14,4 +14,4 @@ This his How Bazooka was created.
 
 Bazooka relies heavily on Docker and its ecosystem and has been designed around it, to take advantage of everything Docker is capable, and then focus on the CI/CD part.
 
-In Bazooka, everything is a plugin, and each plugin is a Docker container. You can read more about our [plugin architecture here](docs/internals/plugin.md)
+In Bazooka, everything is a plugin, and each plugin is a Docker container. You can read more about our [plugin architecture here](internals/plugin.md)
