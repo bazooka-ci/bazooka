@@ -17,7 +17,7 @@ func listVariantsCommand(cmd *cli.Cmd) {
 	})
 
 	cmd.Action = func() {
-		client, err := NewClient(*bzkUri)
+		client, err := NewClient(checkServerURI(*bzkUri))
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -43,7 +43,7 @@ func variantLogCommand(cmd *cli.Cmd) {
 		Desc: "the variant id",
 	})
 	cmd.Action = func() {
-		client, err := NewClient(*bzkUri)
+		client, err := NewClient(checkServerURI(*bzkUri))
 		if err != nil {
 			log.Fatal(err)
 		}

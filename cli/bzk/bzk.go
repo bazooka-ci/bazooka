@@ -11,7 +11,6 @@ var (
 	bzkUri = app.String(cli.StringOpt{
 		Name:   "u bazooka-uri",
 		Desc:   "URI for the bazooka server",
-		Value:  "http://localhost:3000",
 		EnvVar: "BZK_URI",
 	})
 )

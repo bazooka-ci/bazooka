@@ -30,7 +30,7 @@ func createProjectCommand(cmd *cli.Cmd) {
 	})
 
 	cmd.Action = func() {
-		client, err := NewClient(*bzkUri)
+		client, err := NewClient(checkServerURI(*bzkUri))
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -53,7 +53,7 @@ func createProjectCommand(cmd *cli.Cmd) {
 
 func listProjectsCommand(cmd *cli.Cmd) {
 	cmd.Action = func() {
-		client, err := NewClient(*bzkUri)
+		client, err := NewClient(checkServerURI(*bzkUri))
 		if err != nil {
 			log.Fatal(err)
 		}

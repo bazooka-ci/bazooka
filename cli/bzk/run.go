@@ -33,7 +33,6 @@ func run(cmd *cli.Cmd) {
 	})
 	dockerSock := cmd.String(cli.StringOpt{
 		Name:   "docker-sock",
-		Value:  "/var/run/docker.sock",
 		Desc:   "Location of the Docker unix socket, usually /var/run/docker.sock",
 		EnvVar: "BZK_DOCKERSOCK",
 	})
@@ -48,12 +47,34 @@ func run(cmd *cli.Cmd) {
 	})
 
 	cmd.Action = func() {
+		config, err := loadConfig()
+		if err != nil {
+			log.Fatal(fmt.Errorf("Unable to load Bazooka config, reason is: %v\n", err))
+		}
 		if len(*bzkHome) == 0 {
-			log.Fatal("$BZK_HOME environment variable is needed (or use --home option)")
+			if len(config.Home) == 0 {
+				*bzkHome = interactiveInput("Bazooka Home Folder")
+				config.Home = *bzkHome
+			}
+		}
+
+		if len(*dockerSock) == 0 {
+			if len(config.DockerSock) == 0 {
+				*dockerSock = interactiveInput("Docker Socket path")
+				config.DockerSock = *dockerSock
+			}
 		}
 
 		if len(*scmKey) == 0 {
-			log.Fatal("$BZK_SCM_KEYFILE environment variable is needed (or use --scm-key option)")
+			if len(config.SCMKey) == 0 {
+				*scmKey = interactiveInput("Bazooka Default SCM private key")
+				config.SCMKey = *scmKey
+			}
+		}
+
+		err = saveConfig(config)
+		if err != nil {
+			log.Fatal(fmt.Errorf("Unable to save Bazooka config, reason is: %v\n", err))
 		}
 
 		client, err := docker.NewDocker("")
