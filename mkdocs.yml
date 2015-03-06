@@ -3,6 +3,8 @@ site_url: https://github.com/bazooka-ci/bazooka/
 site_description: Bazooka Documentation
 
 repo_url: https://github.com/bazooka-ci/bazooka/
+theme_dir: 'docs/_themes'
+theme: readthedocs
 
 pages:
 - ['index.md', 'Home']

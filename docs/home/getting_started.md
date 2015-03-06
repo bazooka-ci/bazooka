@@ -1,3 +1,5 @@
+# Getting Started
+
 ## Bazooka Overview
 
 Bazooka is a Continuous Integration and Continuous Deployment Server that is highly modular. You can choose between many SCM to fetch the source code of your application, or create your own plugin for your own SCM. You can use many of our built-in build environments (Java, Go, Node...), create one of your own, or use any container available on [docker Hub](https://hub.docker.com/) as a build environment for your build process
