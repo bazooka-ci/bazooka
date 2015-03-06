@@ -7,8 +7,9 @@ repo_url: https://github.com/bazooka-ci/bazooka/
 pages:
 - ['index.md', 'Home']
 - ['home/installation.md', 'Bazooka', 'Installation']
-- ['home/developping.md', 'Bazooka', 'Developping Bazooka']
+- ['home/getting_started.md', 'Bazooka', 'Getting Started']
 - ['home/travis.md', 'Bazooka', 'Travis Compatibility']
+- ['contribute/developping.md', 'Contribute', 'Developping Bazooka']
 - ['internals/dockerindocker.md', 'Bazooka Internals', 'Docker in Docker']
 - ['internals/plugin.md', 'Bazooka Internals', 'Docker as a plugin Architecture']
 
