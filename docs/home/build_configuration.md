@@ -64,4 +64,4 @@ services:
 
 Services allow you to have the ability to use external services within your build environment, such as databases...
 
-More details on the [services page](../home/permutations)
+More details on the [services page](../home/services)
