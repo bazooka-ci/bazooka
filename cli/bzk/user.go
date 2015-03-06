@@ -24,7 +24,7 @@ func createUserCommand(cmd *cli.Cmd) {
 		EnvVar: "BZK_USER_PASSWORD",
 	})
 	cmd.Action = func() {
-		client, err := NewClient(*bzkUri)
+		client, err := NewClient(checkServerURI(*bzkUri))
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -47,7 +47,7 @@ func createUserCommand(cmd *cli.Cmd) {
 
 func listUsersCommand(cmd *cli.Cmd) {
 	cmd.Action = func() {
-		client, err := NewClient(*bzkUri)
+		client, err := NewClient(checkServerURI(*bzkUri))
 		if err != nil {
 			log.Fatal(err)
 		}

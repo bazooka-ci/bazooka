@@ -2,12 +2,14 @@ package main
 
 import (
 	"encoding/base64"
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"os"
 	"path"
 	"strings"
+
+	yaml "gopkg.in/yaml.v2"
 )
 
 const (
@@ -15,13 +17,18 @@ const (
 )
 
 // TODO handle multiple server
-type AuthConfig struct {
-	Username string `json:"username,omitempty"`
-	Password string `json:"password,omitempty"`
-	Auth     string `json:"auth"`
+type Config struct {
+	Username string `yaml:"username,omitempty"`
+	Password string `yaml:"password,omitempty"`
+	Auth     string `yaml:"auth"`
+
+	ServerURI  string `yaml:"server_uri"`
+	Home       string `yaml:"home"`
+	DockerSock string `yaml:"docker_sock"`
+	SCMKey     string `yaml:"scm_key"`
 }
 
-func saveConfig(authConfig *AuthConfig) error {
+func saveConfig(authConfig *Config) error {
 	confFile := path.Join(os.Getenv("HOME"), CONFIGFILE)
 
 	authCopy := authConfig
@@ -29,7 +36,7 @@ func saveConfig(authConfig *AuthConfig) error {
 	authCopy.Username = ""
 	authCopy.Password = ""
 
-	b, err := json.Marshal(authCopy)
+	b, err := yaml.Marshal(authCopy)
 	if err != nil {
 		return err
 	}
@@ -40,8 +47,8 @@ func saveConfig(authConfig *AuthConfig) error {
 	return nil
 }
 
-func loadConfig() (*AuthConfig, error) {
-	authConfig := AuthConfig{}
+func loadConfig() (*Config, error) {
+	authConfig := Config{}
 	confFile := path.Join(os.Getenv("HOME"), CONFIGFILE)
 	if _, err := os.Stat(confFile); err != nil {
 		return &authConfig, nil //missing file is not an error
@@ -51,7 +58,7 @@ func loadConfig() (*AuthConfig, error) {
 		return &authConfig, err
 	}
 
-	if err := json.Unmarshal(b, &authConfig); err == nil {
+	if err := yaml.Unmarshal(b, &authConfig); err == nil {
 		authConfig.Username, authConfig.Password, err = decodeAuth(authConfig.Auth)
 		if err != nil {
 			return &authConfig, err
@@ -62,7 +69,27 @@ func loadConfig() (*AuthConfig, error) {
 	return &authConfig, err
 }
 
-func encodeAuth(authConfig *AuthConfig) string {
+func checkServerURI(endpoint string) string {
+	if len(endpoint) == 0 {
+		config, err := loadConfig()
+		if err != nil {
+			log.Fatal(fmt.Errorf("Unable to load Bazooka config, reason is: %v\n", err))
+		}
+		if len(config.ServerURI) == 0 {
+			endpoint = interactiveInput("Bazooka Server URI")
+			config.ServerURI = endpoint
+
+			err = saveConfig(config)
+			if err != nil {
+				log.Fatal(fmt.Errorf("Unable to save Bazooka config, reason is: %v\n", err))
+			}
+		}
+		return config.ServerURI
+	}
+	return endpoint
+}
+
+func encodeAuth(authConfig *Config) string {
 	authStr := authConfig.Username + ":" + authConfig.Password
 	msg := []byte(authStr)
 	encoded := make([]byte, base64.StdEncoding.EncodedLen(len(msg)))
