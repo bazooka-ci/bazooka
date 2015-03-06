@@ -60,7 +60,7 @@ func run(cmd *cli.Cmd) {
 
 		if len(*dockerSock) == 0 {
 			if len(config.DockerSock) == 0 {
-				*dockerSock = interactiveInput("Bazooka Home Folder")
+				*dockerSock = interactiveInput("Docker Socket path")
 				config.DockerSock = *dockerSock
 			}
 		}
