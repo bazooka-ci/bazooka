@@ -16,6 +16,6 @@ Bazooka relies heavily on Docker and its ecosystem and has been designed around 
 
 In Bazooka, everything is a plugin, and each plugin is a Docker container. You can read more about our [plugin architecture here](docs/internals/plugin.md)
 
-## [Development Instructions](docs/contribute/developping.md)
+## Documentation
 
-## [Installation Instructions](docs/home/installation.md)
+To install Bazooka, setup development environment, or learn more about the specifics, we recommend to read [the Documentation on readthedocs.org](http://bazooka.readthedocs.org/en/latest/)
