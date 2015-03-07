@@ -2,7 +2,9 @@
 
 ## Bazooka Overview
 
-Bazooka is a Continuous Integration and Continuous Deployment Server that is highly modular. You can choose between many SCM to fetch the source code of your application, or create your own plugin for your own SCM. You can use many of our built-in build environments (Java, Go, Node...), create one of your own, or use any container available on [docker Hub](https://hub.docker.com/) as a build environment for your build process
+Bazooka is a highly modular Continuous Integration and Continuous Delivery Server.
+Out of the box, Bazooka supports many SCMs (Git, Mercurial, ...) to fetch the source code of your application, and can easily be extended to support other SCMs.
+Bazooka also comes with built-in support for many languages (Java, Go, Python, Node...), with the possiblity of supporting others by creating custom docker images, or easier still, by using any container available on [docker Hub](https://hub.docker.com/) as a build environment for your build process.
 
 ## Step 1: Register a new project
 
@@ -31,8 +33,19 @@ The private SCM Key is optional. If none is provided, Bazooka will try to use th
 
 ## Step 3: Add the .bazooka.yml file to your repository
 
-As described in our philosophy, the configuration of your bazooka build is versioned along your code, in a `.bazooka.yml` file. Create this file and commit it in your repository. The content of this file is described in details in the section [Configure your build](../home/build_configuration)
+As described in our philosophy, the configuration of your bazooka build is versioned alongside your code.
+
+Create a `.bazooka.yml` file and commit it in your repository.
+The format of this file is described in detail in the section [Configure your build](../home/build_configuration)
 
 ## Step 4: Trigger your first build
 
-Once you SCM hook is set up, push your commit that adds .bazooka.yml to your repository. Bazooka will then start a new build based on your build configuration contained in your `.bazooka.yml` each time new commits are available on your SCM
+A build can be triggered either manually or by an SCM hook.
+
+To manually trigger a build, use the Bazooka cli:
+
+```
+bzk job start NAME master
+```
+
+When an SCM hook is set up, a build is automatically triggered whenver you push a new commit to the remote repository.

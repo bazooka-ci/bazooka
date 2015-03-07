@@ -2,7 +2,14 @@
 
 ## Lifecycle phases
 
-Bazooka provides default build phases for each programming languages. For instance, Java runners will try to use Maven is a `pom.xml` is available in your repository. But any step is customizable.
+Bazooka runs every build as a sequence of steps or phases regardless of the language it uses.
+Every phase consits of running one or more commands.
+Bazooka then uses the return codes of running theses commands to decide whether to continue or abot the build, and what status to attach to it (success, failure, ...)
+
+Language specific plugins can and should define what commands to run in every phase.
+for example, the Java plugin defaults to running `mvn install` in the ` install` phase and `mvn test` in the `script phase` if your project has a `pom.xml` file.
+
+You can still override any of the default commands to run in any phase in the `.bazooka.yml` file by setting the phase key.
 
 The build phases are :
 
@@ -32,7 +39,7 @@ Run a script that effectively runs the build or the tests. For instance, in a ru
 
 ### `after_success`
 
-`after_success` commands are executed when the `script` commands are successful. A common task for after_success is to generate documentation, or to upload a build artifact to S3 for later use. You can also use this step to deploy your code to your staging or production servers.
+`after_success` commands are executed when the `script` commands are successful. A common task for `after_success` is to generate documentation, or to upload a build artifact to S3 for later use. You can also use this step to deploy your code to your staging or production servers.
 
 ### `after_failure`
 
@@ -40,7 +47,7 @@ Run a script that effectively runs the build or the tests. For instance, in a ru
 
 ### `after_script`
 
-`after_script` commands are executed whatever the result of the previous commands was.
+`after_script` commands are always executed at the end of the build, regardless of the result of the previous commands.
 
 ## Build Status: Success, Error, Failure
 
@@ -48,10 +55,12 @@ The build status of a bazooka build consists of 3 states:
 
 ### Success
 
+If no errors were raised during the ` install` and ` script` phases, the build gets marked as `succeeded`
+
 ### Error
 
-When any of the steps in the `before_install`, `install` or `before_script` stages fails with a non-zero exit code, the build will be marked as errored.
+When any of the steps in the `before_install`, `install` or `before_script` stages fails with a non-zero exit code, the build will be marked as `errored`.
 
 ### Failed
 
-When any of the steps in the `script` stage fails with a non-zero exit code, the build will be marked as failed.
+When any of the steps in the `script` stage fails with a non-zero exit code, the build will be marked as `failed`.
