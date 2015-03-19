@@ -14,6 +14,7 @@ pages:
 - ['home/build_lifecycle.md', 'Bazooka', 'Build Lifecycle']
 - ['home/permutations.md', 'Bazooka', 'Permutations']
 - ['home/services.md', 'Bazooka', 'Services']
+- ['home/cli.md', 'Bazooka', 'Bazooka CLI']
 - ['home/travis.md', 'Bazooka', 'Travis Compatibility']
 - ['languages/java.md', 'Language guides', 'Java']
 - ['contribute/developping.md', 'Contribute', 'Developping Bazooka']
