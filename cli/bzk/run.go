@@ -55,6 +55,8 @@ func run(cmd *cli.Cmd) {
 			if len(config.Home) == 0 {
 				*bzkHome = interactiveInput("Bazooka Home Folder")
 				config.Home = *bzkHome
+			} else {
+				*bzkHome = config.Home
 			}
 		}
 
@@ -62,6 +64,8 @@ func run(cmd *cli.Cmd) {
 			if len(config.DockerSock) == 0 {
 				*dockerSock = interactiveInput("Docker Socket path")
 				config.DockerSock = *dockerSock
+			} else {
+				*dockerSock = config.DockerSock
 			}
 		}
 
@@ -69,6 +73,8 @@ func run(cmd *cli.Cmd) {
 			if len(config.SCMKey) == 0 {
 				*scmKey = interactiveInput("Bazooka Default SCM private key")
 				config.SCMKey = *scmKey
+			} else {
+				*scmKey = config.SCMKey
 			}
 		}
 
