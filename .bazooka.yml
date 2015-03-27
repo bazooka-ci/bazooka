@@ -11,4 +11,5 @@ script:
   - go test -v ./...
   - make errcheck
 after_success:
-  - make devimages web push
+  # TODO add web when Dockerfile is done
+  - make images push
