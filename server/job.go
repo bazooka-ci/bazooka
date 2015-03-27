@@ -8,9 +8,9 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 
-	docker "github.com/bywan/go-dockercommand"
 	lib "github.com/bazooka-ci/bazooka/commons"
 	"github.com/bazooka-ci/bazooka/commons/mongo"
+	docker "github.com/bywan/go-dockercommand"
 )
 
 const (
@@ -18,7 +18,45 @@ const (
 	logFolderPattern   = "%s/build/%s/%s/log" // $bzk_home/build/$projectId/$buildId/log
 )
 
-func (c *context) startBuild(params map[string]string, body bodyFunc) (*response, error) {
+func (c *context) startBitbucketJob(params map[string]string, body bodyFunc) (*response, error) {
+	var bitbucketPayload BitbucketPayload
+
+	body(&bitbucketPayload)
+
+	if len(bitbucketPayload.Commits) == 0 {
+		return badRequest("no commit found in Bitbucket payload")
+	}
+
+	//TODO(julienvey) Order by timestamp to find the last commit instead of trusting
+	// Bitbucket to give us the commits in the right order
+
+	if len(bitbucketPayload.Commits[0].RawNode) == 0 {
+		return badRequest("RawNode is empty in Bitbucket payload")
+	}
+
+	return c.startJob(params, lib.StartJob{
+		ScmReference: bitbucketPayload.Commits[0].RawNode,
+	})
+
+}
+
+func (c *context) startGithubJob(params map[string]string, body bodyFunc) (*response, error) {
+	var githubPayload GithubPayload
+
+	body(&githubPayload)
+
+	if len(githubPayload.HeadCommit.ID) == 0 {
+		return badRequest("HeadCommit is empty in Github payload")
+	}
+
+	return c.startJob(params, lib.StartJob{
+		ScmReference: githubPayload.HeadCommit.ID,
+	})
+
+}
+
+func (c *context) startStandardJob(params map[string]string, body bodyFunc) (*response, error) {
+
 	var startJob lib.StartJob
 
 	body(&startJob)
@@ -26,6 +64,11 @@ func (c *context) startBuild(params map[string]string, body bodyFunc) (*response
 	if len(startJob.ScmReference) == 0 {
 		return badRequest("reference is mandatory")
 	}
+
+	return c.startJob(params, startJob)
+}
+
+func (c *context) startJob(params map[string]string, startJob lib.StartJob) (*response, error) {
 
 	project, err := c.Connector.GetProjectById(params["id"])
 	if err != nil {

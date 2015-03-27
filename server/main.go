@@ -6,9 +6,9 @@ import (
 	"os"
 
 	log "github.com/Sirupsen/logrus"
-	"github.com/gorilla/mux"
 	bzklog "github.com/bazooka-ci/bazooka/commons/logs"
 	"github.com/bazooka-ci/bazooka/commons/mongo"
+	"github.com/gorilla/mux"
 )
 
 func init() {
@@ -58,7 +58,9 @@ func main() {
 
 	r.HandleFunc("/project", mkHandler(ctx.getProjects)).Methods("GET")
 	r.HandleFunc("/project/{id}", mkHandler(ctx.getProject)).Methods("GET")
-	r.HandleFunc("/project/{id}/job", mkHandler(ctx.startBuild)).Methods("POST")
+	r.HandleFunc("/project/{id}/job", mkHandler(ctx.startStandardJob)).Methods("POST")
+	r.HandleFunc("/project/{id}/bitbucket", mkHandler(ctx.startBitbucketJob)).Methods("POST")
+	r.HandleFunc("/project/{id}/github", mkHandler(ctx.startGithubJob)).Methods("POST")
 	r.HandleFunc("/project/{id}/job", mkHandler(ctx.getJobs)).Methods("GET")
 
 	r.HandleFunc("/project/{id}/key", mkHandler(ctx.addKey)).Methods("POST")
