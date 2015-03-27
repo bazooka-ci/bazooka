@@ -1,5 +1,5 @@
 #!/bin/bash
-set -e
+set -ev
 
 : ${GOPATH:?"GOPATH has to be set. See https://golang.org/doc/code.html#GOPATH for more information."}
 
