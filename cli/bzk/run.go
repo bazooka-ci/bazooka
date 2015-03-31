@@ -133,9 +133,7 @@ func run(cmd *cli.Cmd) {
 			Links: []string{"bzk_mongodb:mongo"},
 			Env:   getServerEnv(*bzkHome, *dockerSock, *scmKey),
 			PortBindings: map[dockerclient.Port][]dockerclient.PortBinding{
-				"3000/tcp": []dockerclient.PortBinding{
-					dockerclient.PortBinding{HostPort: "3000"},
-				},
+				"3000/tcp": {{HostPort: "3000"}},
 			},
 		}, mongoRestarted || *forceRestart || *forceUpdate)
 
@@ -145,9 +143,7 @@ func run(cmd *cli.Cmd) {
 			Detach: true,
 			Links:  []string{"bzk_server:server"},
 			PortBindings: map[dockerclient.Port][]dockerclient.PortBinding{
-				"80/tcp": []dockerclient.PortBinding{
-					dockerclient.PortBinding{HostPort: "8000"},
-				},
+				"80/tcp": {{HostPort: "8000"}},
 			},
 		}, serverRestarted || *forceRestart || *forceUpdate)
 
