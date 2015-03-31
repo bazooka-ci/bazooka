@@ -36,6 +36,7 @@ func (g *Generator) GenerateDockerfile() error {
 		commands  []string
 		beforeCmd []string
 		runCmd    []string
+		always    bool
 	}
 
 	phases := []*buildPhase{
@@ -91,19 +92,51 @@ func (g *Generator) GenerateDockerfile() error {
 			name:      "script",
 			commands:  g.Config.Script,
 			beforeCmd: []string{"set -e"},
-			runCmd:    g.getScriptRunCmd(),
+			runCmd: []string{
+				"./bazooka_script.sh",
+				"exitCode=$?",
+			},
+		},
+		&buildPhase{
+			name:     "archive",
+			commands: archiveCommands(g.Config.Archive),
+		},
+		&buildPhase{
+			name:     "archive_success",
+			commands: archiveCommands(g.Config.ArchiveSuccess),
+			runCmd: []string{
+				"if [[ $exitCode == 0 ]] ; then",
+				"  ./bazooka_archive_success.sh",
+				"fi",
+			},
+		},
+		&buildPhase{
+			name:     "archive_failure",
+			commands: archiveCommands(g.Config.ArchiveFailure),
+			runCmd: []string{
+				"if [[ $exitCode != 0 ]] ; then",
+				"  ./bazooka_archive_failure.sh",
+				"fi",
+			},
 		},
 		&buildPhase{
 			name:      "after_success",
 			commands:  g.Config.AfterSuccess,
 			beforeCmd: []string{"set -e"},
-			runCmd:    []string{},
+			runCmd: []string{
+				"if [[ $exitCode == 0 ]] ; then",
+				"  ./bazooka_after_success.sh",
+				"fi",
+			},
 		},
 		&buildPhase{
 			name:      "after_failure",
 			commands:  g.Config.AfterFailure,
 			beforeCmd: []string{"set -e"},
-			runCmd:    []string{},
+			runCmd: []string{
+				"if [[ $exitCode != 0 ]] ; then",
+				"  ./bazooka_after_failure.sh",
+				"fi"},
 		},
 		&buildPhase{
 			name:      "after_script",
@@ -111,13 +144,20 @@ func (g *Generator) GenerateDockerfile() error {
 			beforeCmd: []string{"set -e"},
 			runCmd:    []string{},
 		},
+		&buildPhase{
+			name:   "end",
+			always: true,
+			runCmd: []string{
+				"exit $exitCode",
+			},
+		},
 	}
 
 	var bufferRun bytes.Buffer
 	bufferRun.WriteString("#!/bin/bash\n")
 
 	for _, phase := range phases {
-		if len(phase.commands) != 0 {
+		if len(phase.commands) > 0 {
 			var buffer bytes.Buffer
 			buffer.WriteString("#!/bin/bash\n\n")
 			buffer.WriteString(fmt.Sprintf("echo %s\n", strconv.Quote(fmt.Sprintf("<PHASE:%s>", phase.name))))
@@ -132,12 +172,16 @@ func (g *Generator) GenerateDockerfile() error {
 			if err != nil {
 				return fmt.Errorf("Phase [%d/%s]: writing file failed: %v", g.Index, phase.name, err)
 			}
-			if phase.runCmd == nil {
+			if len(phase.runCmd) == 0 {
 				bufferRun.WriteString(fmt.Sprintf("./bazooka_%s.sh\n", phase.name))
 			} else {
 				for _, action := range phase.runCmd {
 					bufferRun.WriteString(fmt.Sprintf("%s\n", action))
 				}
+			}
+		} else if phase.always {
+			for _, action := range phase.runCmd {
+				bufferRun.WriteString(fmt.Sprintf("%s\n", action))
 			}
 		}
 	}
@@ -180,34 +224,10 @@ func (g *Generator) GenerateDockerfile() error {
 	return nil
 }
 
-func (g *Generator) getScriptRunCmd() []string {
-	var commands = []string{
-		"./bazooka_script.sh",
-		"exitCode=$?",
+func archiveCommands(globs lib.Globs) []string {
+	res := make([]string, len(globs))
+	for i, pat := range globs {
+		res[i] = fmt.Sprintf("cp -R %s /artifacts/", pat)
 	}
-
-	if len(g.Config.AfterFailure) != 0 {
-		commands = append(commands,
-			"if [[ $exitCode != 0 ]] ; then",
-			"  ./bazooka_after_failure.sh",
-			"fi",
-		)
-	}
-
-	if len(g.Config.AfterSuccess) != 0 {
-		commands = append(commands,
-			"if [[ $exitCode == 0 ]] ; then",
-			"  ./bazooka_after_success.sh",
-			"fi",
-		)
-	}
-
-	if len(g.Config.AfterScript) != 0 {
-		commands = append(commands,
-			"./bazooka_after_script.sh",
-		)
-	}
-
-	commands = append(commands, "exit $exitCode")
-	return commands
+	return res
 }

@@ -1,6 +1,14 @@
 package main
 
-import "github.com/bazooka-ci/bazooka/commons/mongo"
+import (
+	"encoding/json"
+	"fmt"
+	"net/http"
+
+	"github.com/gorilla/mux"
+
+	"github.com/bazooka-ci/bazooka/commons/mongo"
+)
 
 func (c *context) getVariant(params map[string]string, body bodyFunc) (*response, error) {
 	variant, err := c.Connector.GetVariantByID(params["id"])
@@ -35,4 +43,28 @@ func (c *context) getVariantLog(params map[string]string, body bodyFunc) (*respo
 	}
 
 	return ok(&log)
+}
+
+func (c *context) getVariantArtifacts(w http.ResponseWriter, r *http.Request) {
+	vid := mux.Vars(r)["id"]
+	variant, err := c.Connector.GetVariantByID(vid)
+
+	if err != nil {
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		encoder := json.NewEncoder(w)
+
+		if err.Error() != "not found" {
+			w.WriteHeader(500)
+			encoder.Encode(err)
+			return
+		}
+
+		w.WriteHeader(404)
+		encoder.Encode(fmt.Errorf("variant not found"))
+		return
+	}
+
+	buildFolder := fmt.Sprintf("/bazooka/build/%s/%s/artifacts/%s", variant.ProjectID, variant.JobID, variant.ID)
+	prefix := fmt.Sprintf("/variant/%s/artifacts/", vid)
+	http.StripPrefix(prefix, http.FileServer(http.Dir(buildFolder))).ServeHTTP(w, r)
 }

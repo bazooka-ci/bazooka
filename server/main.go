@@ -74,6 +74,7 @@ func main() {
 
 	r.HandleFunc("/variant/{id}", mkHandler(ctx.getVariant)).Methods("GET")
 	r.HandleFunc("/variant/{id}/log", mkHandler(ctx.getVariantLog)).Methods("GET")
+	r.HandleFunc("/variant/{id}/artifacts/{path:.*}", ctx.getVariantArtifacts).Methods("GET")
 
 	r.HandleFunc("/image", mkHandler(ctx.getImages)).Methods("GET")
 	r.HandleFunc("/image/{name:.*}", mkHandler(ctx.setImage)).Methods("PUT")
