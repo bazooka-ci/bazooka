@@ -2,7 +2,7 @@ language: golang
 install:
   - curl -sL https://deb.nodesource.com/setup | bash -
   - apt-get install -y nodejs
-  - apt-get install docker.io -y
+  - wget -qO- https://get.docker.com/ | sh
   - npm install -g gulp
   - npm install -g bower
   - make setup
