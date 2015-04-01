@@ -83,7 +83,7 @@ func (r *Runner) runContainer(logger Logger, vd *variantData, env map[string]str
 		serviceContainers = append(serviceContainers, serviceContainer)
 	}
 
-	arctifactsFolder := fmt.Sprintf("%s/%s", r.ArtifactsFolderBase, vd.variant.ID)
+	artifactsFolder := fmt.Sprintf("%s/%s", r.ArtifactsFolderBase, vd.variant.ID)
 
 	// TODO link containers
 	container, err := r.client.Run(&docker.RunOptions{
@@ -91,7 +91,7 @@ func (r *Runner) runContainer(logger Logger, vd *variantData, env map[string]str
 		Links: containerLinks,
 		VolumeBinds: []string{
 			fmt.Sprintf("%s:/var/run/docker.sock", DockerSock),
-			fmt.Sprintf("%s:/artifacts", arctifactsFolder),
+			fmt.Sprintf("%s:/artifacts", artifactsFolder),
 		},
 		Detach: true,
 	})

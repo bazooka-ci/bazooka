@@ -160,7 +160,7 @@ func (c *Commands) UnmarshalYAML(unmarshal func(interface{}) error) error {
 		}
 		return nil
 	default:
-		return fmt.Errorf("Commands (install, script, ...) can be either a tring or a list of strings")
+		return fmt.Errorf("Commands (install, script, ...) can be either a string or a list of strings")
 	}
 }
 
