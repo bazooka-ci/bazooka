@@ -8,16 +8,17 @@ import (
 	"time"
 
 	log "github.com/Sirupsen/logrus"
-	docker "github.com/bywan/go-dockercommand"
 	lib "github.com/bazooka-ci/bazooka/commons"
 	bzklog "github.com/bazooka-ci/bazooka/commons/logs"
 	"github.com/bazooka-ci/bazooka/commons/mongo"
+	docker "github.com/bywan/go-dockercommand"
 )
 
 const (
-	CheckoutFolderPattern = "%s/source"
-	WorkdirFolderPattern  = "%s/work"
-	MetaFolderPattern     = "%s/meta"
+	CheckoutFolderPattern  = "%s/source"
+	WorkdirFolderPattern   = "%s/work"
+	MetaFolderPattern      = "%s/meta"
+	ArtifactsFolderPattern = "%s/artifacts"
 
 	BazookaInput   = "/bazooka"
 	DockerSock     = "/var/run/docker.sock"
@@ -131,11 +132,12 @@ func main() {
 
 	for i, v := range parsedVariants {
 		variant := &lib.Variant{
-			Started: time.Now(),
-			Status:  lib.JOB_RUNNING,
-			Number:  i,
-			JobID:   env[BazookaEnvJobID],
-			Metas:   v.meta,
+			Started:   time.Now(),
+			Status:    lib.JOB_RUNNING,
+			Number:    i,
+			ProjectID: env[BazookaEnvProjectID],
+			JobID:     env[BazookaEnvJobID],
+			Metas:     v.meta,
 		}
 		err := connector.AddVariant(variant)
 		if err != nil {
@@ -178,10 +180,12 @@ func main() {
 		}
 	}
 
+	artifactsBase := fmt.Sprintf(ArtifactsFolderPattern, env[BazookaEnvHome])
 	r := &Runner{
-		Variants: variantsToBuild,
-		Env:      env,
-		Mongo:    connector,
+		Variants:            variantsToBuild,
+		ArtifactsFolderBase: artifactsBase,
+		Env:                 env,
+		Mongo:               connector,
 	}
 
 	err = r.Run(containerLogger)

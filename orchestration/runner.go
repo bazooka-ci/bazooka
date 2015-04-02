@@ -8,17 +8,18 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 
-	docker "github.com/bywan/go-dockercommand"
 	commons "github.com/bazooka-ci/bazooka/commons"
 	"github.com/bazooka-ci/bazooka/commons/mongo"
 	"github.com/bazooka-ci/bazooka/commons/parallel"
+	docker "github.com/bywan/go-dockercommand"
 )
 
 type Runner struct {
-	Variants []*variantData
-	Env      map[string]string
-	Mongo    *mongo.MongoConnector
-	client   *docker.Docker
+	Variants            []*variantData
+	ArtifactsFolderBase string
+	Env                 map[string]string
+	Mongo               *mongo.MongoConnector
+	client              *docker.Docker
 }
 
 func (r *Runner) Run(logger Logger) error {
@@ -82,12 +83,15 @@ func (r *Runner) runContainer(logger Logger, vd *variantData, env map[string]str
 		serviceContainers = append(serviceContainers, serviceContainer)
 	}
 
+	artifactsFolder := fmt.Sprintf("%s/%s", r.ArtifactsFolderBase, vd.variant.ID)
+
 	// TODO link containers
 	container, err := r.client.Run(&docker.RunOptions{
 		Image: vd.imageTag,
 		Links: containerLinks,
 		VolumeBinds: []string{
 			fmt.Sprintf("%s:/var/run/docker.sock", DockerSock),
+			fmt.Sprintf("%s:/artifacts", artifactsFolder),
 		},
 		Detach: true,
 	})

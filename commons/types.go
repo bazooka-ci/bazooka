@@ -18,6 +18,7 @@ type Variant struct {
 	Started    time.Time     `bson:"started" json:"started"`
 	Completed  time.Time     `bson:"completed" json:"completed"`
 	BuildImage string        `bson:"image" json:"image"`
+	ProjectID  string        `bson:"project_id" json:"job_id"`
 	JobID      string        `bson:"job_id" json:"job_id"`
 	Number     int           `bson:"number" json:"number"`
 	ID         string        `bson:"id" json:"id"`
@@ -118,19 +119,22 @@ type User struct {
 }
 
 type Config struct {
-	Language      string       `yaml:"language"`
-	Setup         Commands     `yaml:"setup,omitempty"`
-	BeforeInstall Commands     `yaml:"before_install,omitempty"`
-	Install       Commands     `yaml:"install,omitempty"`
-	BeforeScript  Commands     `yaml:"before_script,omitempty"`
-	Script        Commands     `yaml:"script,omitempty"`
-	AfterScript   Commands     `yaml:"after_script,omitempty"`
-	AfterSuccess  Commands     `yaml:"after_success,omitempty"`
-	AfterFailure  Commands     `yaml:"after_failure,omitempty"`
-	Services      []string     `yaml:"services,omitempty"`
-	Env           []string     `yaml:"env,omitempty"`
-	FromImage     string       `yaml:"from"`
-	Matrix        ConfigMatrix `yaml:"matrix,omitempty"`
+	Language       string       `yaml:"language"`
+	Setup          Commands     `yaml:"setup,omitempty"`
+	BeforeInstall  Commands     `yaml:"before_install,omitempty"`
+	Install        Commands     `yaml:"install,omitempty"`
+	BeforeScript   Commands     `yaml:"before_script,omitempty"`
+	Script         Commands     `yaml:"script,omitempty"`
+	AfterScript    Commands     `yaml:"after_script,omitempty"`
+	AfterSuccess   Commands     `yaml:"after_success,omitempty"`
+	AfterFailure   Commands     `yaml:"after_failure,omitempty"`
+	Services       []string     `yaml:"services,omitempty"`
+	Env            []string     `yaml:"env,omitempty"`
+	FromImage      string       `yaml:"from"`
+	Matrix         ConfigMatrix `yaml:"matrix,omitempty"`
+	Archive        Globs        `yaml:"archive,omitempty"`
+	ArchiveSuccess Globs        `yaml:"archive_success,omitempty"`
+	ArchiveFailure Globs        `yaml:"archive_failure,omitempty"`
 }
 
 type Commands []string
@@ -156,7 +160,34 @@ func (c *Commands) UnmarshalYAML(unmarshal func(interface{}) error) error {
 		}
 		return nil
 	default:
-		return fmt.Errorf("Commands (install, script, ...) can be either a tring or a list of strings")
+		return fmt.Errorf("Commands (install, script, ...) can be either a string or a list of strings")
+	}
+}
+
+type Globs []string
+
+func (g *Globs) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	var raw interface{}
+	if err := unmarshal(&raw); err != nil {
+		return err
+	}
+
+	switch convGlob := raw.(type) {
+	case string:
+		*g = []string{convGlob}
+		return nil
+	case []interface{}:
+		*g = make([]string, len(convGlob))
+		for i, rawGlob := range convGlob {
+			glob, ok := rawGlob.(string)
+			if !ok {
+				return fmt.Errorf("Globs (archive, archive_success, archive_failure) can only contain strings")
+			}
+			(*g)[i] = glob
+		}
+		return nil
+	default:
+		return fmt.Errorf("Globs (archive, archive_success, archive_failure) can be either a tring or a list of strings")
 	}
 }
 
