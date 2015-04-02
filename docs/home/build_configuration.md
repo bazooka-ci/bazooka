@@ -70,6 +70,40 @@ matrix:
 
 More details on the [permutation page](../home/permutations)
 
+### Archiving
+
+Archiving lets you catpure and store the build generated artifacts, like a `jar` file for example for a java project.
+
+```yaml
+archive:
+  - target/*.jar
+  - target/failsafe-reports/*.xml
+```
+
+The `archive` key takes one or multiple shell-compatible globs.
+After the build, and for every build variant, any artifacts matching the specified globs will be captured and stored for later retrieval.
+
+The captured artifacts can then be downloaded using the following API endpoint: `server:port/variant/{variant_id}/artifacts/{artifact_path}`, where:
+
+* `{variant_id}` is the variant identifier
+* `{artifact_path}` is the file path of the artifact
+
+For example: `https://bzk.intranet:3000/variant/42c9d47fg/artifacts/unicorn.jar`.
+
+With `archive`, the artifacts get captured whether the build succeeds or fails (but not when it is errored).
+
+For finer control on when to capture build artifacts, bazooka also supports the following keys:
+
+* `archive_success`: like with `archive`, takes one or multiple globs, but the maching artifacts are only captured if the build succeeds. Could be used to capture the deployable artifact which is only produced when the build succeeds
+* `archive_failure`: like with `archive`, takes one or multiple globs, but the maching artifacts are only captured if the build fails. Could be used to capture the build system log and reports files when the build fails, e.g. the failsafe or surefire reports for java projects using maven as the build system
+
+Here's an example:
+
+```yaml
+archive_success: target/*.jar
+archive_failure: target/failsafe-reports/*.xml
+```
+
 ### Services
 
 Services allow you to have the ability to use external services within your build environment, such as databases...
