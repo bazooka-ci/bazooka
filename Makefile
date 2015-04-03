@@ -29,3 +29,10 @@ updatedeps:
 	go get -u -v ./...
 
 test: errcheck devimages # Include errcheck in build phase
+
+bintray: gox
+	./scripts/push-bintray.sh
+
+gox:
+	gox -os="linux" github.com/bazooka-ci/bazooka/cli/bzk
+	gox -os="darwin" github.com/bazooka-ci/bazooka/cli/bzk

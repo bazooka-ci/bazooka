@@ -1,15 +1,23 @@
-language: golang
+image: bazooka/bzk-build-base-image
 install:
-  - curl -sL https://deb.nodesource.com/setup | bash -
-  - apt-get install -y nodejs
-  - wget -qO- https://get.docker.com/ | sh
-  - npm install -g gulp
-  - npm install -g bower
   - make setup
+  - go get -d -t -v ./...
   - go build -v ./...
 script:
   - go test -v ./...
   - make errcheck
 after_success:
-  # TODO add web when Dockerfile is done
+  - make bintray
   - make images push
+env:
+  - BZK_BUILD_DIR=/go/src/github.com/bazooka-ci/bazooka
+  # DOCKER_USERNAME=****
+  - secure: caf961fef762692536b442c10f2a42838bb3b6ae67bad9fc8301f8cd3dc7639ddbd040575f0e66ad1ab8ff83e6ae2b537fe35a16
+  # DOCKER_PASSWORD=****
+  - secure: 4a15b0860ff4dee846dad0a84c84765c397df583afa805d630d1d35f88bf33e3770032e36ab3d7725ed83a12eb2f3ea550b512883afdfea2
+  # DOCKER_EMAIL=****
+  - secure: d6d3efd025687e9622b61203c84157f0d4bcdbe96013a8425b5207ed44a92c8babcf0e3fb85047fbce64f810ce8b277c33afb3c3de96d956e27e4154ead12faa3518aab685dc8050
+  # BINTRAY_USER=****
+  - secure: 1b91e0dd9fd3808aac130b8373a9b806ca6451dcfc785876f9eede9411fa1a708f0fd376e4c49451f2a23588ceb66f11
+  # BINTRAY_API_KEY=****
+  - secure: d11b084592fed5ecd744297c14a0f4dbdb7ae33f94c773569bcd153730c9bd3d04413b6ed258d3845ad9f7715403c88d918f713a6d622e6c3cb201026039db162b2936b503fc64bbbfacc1f0027b4c216b68a0b50947805bf93aaf9a

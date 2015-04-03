@@ -2,7 +2,7 @@
 
 set -e
 
-docker_projects=( "parser" "orchestration" "server")
+docker_projects=( "parser" "orchestration" "server" "web")
 
 for project in "${docker_projects[@]}"
 do
