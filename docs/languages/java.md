@@ -44,7 +44,7 @@ To determine which build tool your project is using :
 * If a file name *pom.xml* exists in your project, the build tool is **maven**
 * Otherwise, the build tool is **ant** by default
 
-## Project using Maven
+### Project using Maven
 
 the defaults generated for a *maven* project are equivalent to the following configuration
 
@@ -53,7 +53,7 @@ install: mvn install -DskipTests=true
 script: mvn test
 ```
 
-## Project using Gradlew
+### Project using Gradlew
 
 the defaults generated for a *gradlew* project are equivalent to the following configuration
 
@@ -62,7 +62,7 @@ install: ./gradlew assemble
 script: ./gradlew check
 ```
 
-## Project using Gradle
+### Project using Gradle
 
 the defaults generated for a *gradle* project are equivalent to the following configuration
 
