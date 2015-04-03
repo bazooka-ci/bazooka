@@ -54,7 +54,7 @@ And a second time with the environment variables set to:
 
 This allow you to make sure your project works with different configurations.
 
-### Matrix
+## Matrix
 
 The `matrix` allows you to have a finer control over the generated [permutations](../home/permutations).
 At this time, only `exclude` parameter is supported and lets you exclude some specific possible permutations.
@@ -70,7 +70,7 @@ matrix:
 
 More details on the [permutation page](../home/permutations)
 
-### Archiving
+## Archiving
 
 Archiving lets you catpure and store the build generated artifacts, like a `jar` file for example for a java project.
 
@@ -104,7 +104,7 @@ archive_success: target/*.jar
 archive_failure: target/failsafe-reports/*.xml
 ```
 
-### Services
+## Services
 
 Services allow you to have the ability to use external services within your build environment, such as databases...
 
