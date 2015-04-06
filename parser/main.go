@@ -42,19 +42,28 @@ func main() {
 		"config": config,
 	}).Debug("Configuration parsed")
 
-	// resolve the docker image corresponding to this particular language parser
-	image, err := resolveLanguageParser(config.Language)
-	if err != nil {
-		log.Fatal(err)
-	}
+	var variants []*variantData
 
-	// run the parser image
-	langParser := &LanguageParser{
-		Image: image,
-	}
-	variants, err := langParser.Parse()
-	if err != nil {
-		log.Fatal(err)
+	if len(config.Language) == 0 {
+		if len(config.Image) == 0 {
+			log.Fatal("One of 'language' or 'image' needs to be set")
+		}
+		variants = generateImageVariants(config)
+	} else {
+		// resolve the docker image corresponding to this particular language parser
+		image, err := resolveLanguageParser(config.Language)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		// run the parser image
+		langParser := &LanguageParser{
+			Image: image,
+		}
+		variants, err = langParser.Parse()
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
 
 	log.Info("Starting Matrix generation")
@@ -154,6 +163,24 @@ func handlePermutation(permutation map[string]string, config *lib.Config, meta m
 	lib.Flush(meta, metaFile)
 
 	return nil
+}
+
+func generateImageVariants(conf *lib.Config) []*variantData {
+	res := make([]*variantData, len(conf.Image))
+	for i, im := range conf.Image {
+		imageConf := *conf
+		imageConf.FromImage = im
+		imageConf.Image = nil
+
+		res[i] = &variantData{
+			counter: fmt.Sprintf("%d", i),
+			config:  &imageConf,
+			meta: map[string]interface{}{
+				"image": im,
+			},
+		}
+	}
+	return res
 }
 
 func feedMatrix(extra map[string]interface{}, mx *matrix.Matrix) error {
