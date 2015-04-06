@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	log "github.com/Sirupsen/logrus"
-	"github.com/bazooka-ci/bazooka/commons/matrix"
 
 	bazooka "github.com/bazooka-ci/bazooka/commons"
 	bzklog "github.com/bazooka-ci/bazooka/commons/logs"
@@ -42,30 +41,43 @@ func main() {
 		log.Fatal("Pyton builds should define a script value in the build descriptor")
 	}
 
-	mx := matrix.Matrix{
-		PyLang: conf.PyVersions,
+	versions := conf.PyVersions
+	images := conf.Base.Image
+
+	if len(versions) == 0 && len(images) == 0 {
+		versions = []string{"2.7"}
 	}
 
-	if len(conf.PyVersions) == 0 {
-		mx[PyLang] = []string{"2.7"}
-	}
-	mx.IterAll(func(permutation map[string]string, counter string) {
-		if err := managePyVersion(counter, conf, permutation[PyLang]); err != nil {
+	for i, version := range versions {
+		if err := managePyVersion(fmt.Sprintf("0%d", i), conf, version, ""); err != nil {
 			log.Fatal(err)
 		}
-	}, nil)
+	}
+	for i, image := range images {
+		if err := managePyVersion(fmt.Sprintf("1%d", i), conf, "", image); err != nil {
+			log.Fatal(err)
+		}
+	}
 }
 
-func managePyVersion(counter string, conf *ConfigPython, version string) error {
-	conf.PyVersions = []string{}
-	image, err := resolvePyImage(version)
-	conf.Base.FromImage = image
-	if err != nil {
-		return err
-	}
+func managePyVersion(counter string, conf *ConfigPython, version, image string) error {
+	conf.PyVersions = nil
+	conf.Base.Image = nil
 
-	err = bazooka.AppendToFile(fmt.Sprintf("%s/%s", MetaFolder, counter), fmt.Sprintf("%s: %s\n", PyLang, version), 0644)
-	if err != nil {
+	meta := map[string]string{}
+	if len(version) > 0 {
+		var err error
+		image, err = resolvePyImage(version)
+		if err != nil {
+			return err
+		}
+		meta[PyLang] = version
+	} else {
+		meta["image"] = image
+	}
+	conf.Base.FromImage = image
+
+	if err := bazooka.Flush(meta, fmt.Sprintf("%s/%s", MetaFolder, counter)); err != nil {
 		return err
 	}
 	return bazooka.Flush(conf, fmt.Sprintf("%s/.bazooka.%s.yml", OutputFolder, counter))

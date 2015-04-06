@@ -8,10 +8,9 @@ import (
 	"regexp"
 
 	log "github.com/Sirupsen/logrus"
-	bzklog "github.com/bazooka-ci/bazooka/commons/logs"
-	"github.com/bazooka-ci/bazooka/commons/matrix"
 
 	bazooka "github.com/bazooka-ci/bazooka/commons"
+	bzklog "github.com/bazooka-ci/bazooka/commons/logs"
 )
 
 const (
@@ -37,36 +36,49 @@ func main() {
 		log.Fatal(err)
 	}
 
-	mx := matrix.Matrix{
-		Golang: conf.GoVersions,
-	}
+	versions := conf.GoVersions
+	images := conf.Base.Image
 
-	if len(conf.GoVersions) == 0 {
-		mx[Golang] = []string{"tip"}
+	if len(versions) == 0 && len(images) == 0 {
+		versions = []string{"tip"}
 	}
-	mx.IterAll(func(permutation map[string]string, counter string) {
-		if err := manageGoVersion(counter, conf, permutation[Golang]); err != nil {
+	for i, version := range versions {
+		if err := manageGoVersion(fmt.Sprintf("0%d", i), conf, version, ""); err != nil {
 			log.Fatal(err)
 		}
-	}, nil)
+	}
+
+	for i, image := range images {
+		if err := manageGoVersion(fmt.Sprintf("1%d", i), conf, "", image); err != nil {
+			log.Fatal(err)
+		}
+	}
 }
 
-func manageGoVersion(counter string, conf *ConfigGolang, version string) error {
-	conf.GoVersions = []string{}
+func manageGoVersion(counter string, conf *ConfigGolang, version string, image string) error {
+	conf.GoVersions = nil
+	conf.Base.Image = nil
+
 	setGodir(conf)
 	setDefaultInstall(conf)
 	err := setDefaultScript(conf)
 	if err != nil {
 		return err
 	}
-	image, err := resolveGoImage(version)
-	conf.Base.FromImage = image
-	if err != nil {
-		return err
-	}
 
-	err = bazooka.AppendToFile(fmt.Sprintf("%s/%s", MetaFolder, counter), fmt.Sprintf("%s: %s\n", Golang, version), 0644)
-	if err != nil {
+	meta := map[string]string{}
+	if len(version) > 0 {
+		image, err = resolveGoImage(version)
+		if err != nil {
+			return err
+		}
+		meta[Golang] = version
+	} else {
+		meta["image"] = image
+	}
+	conf.Base.FromImage = image
+
+	if err = bazooka.Flush(meta, fmt.Sprintf("%s/%s", MetaFolder, counter)); err != nil {
 		return err
 	}
 	return bazooka.Flush(conf, fmt.Sprintf("%s/.bazooka.%s.yml", OutputFolder, counter))

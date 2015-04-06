@@ -3,9 +3,8 @@ package main
 import (
 	"fmt"
 
-	"github.com/bazooka-ci/bazooka/commons/matrix"
-
 	log "github.com/Sirupsen/logrus"
+
 	bazooka "github.com/bazooka-ci/bazooka/commons"
 	bzklog "github.com/bazooka-ci/bazooka/commons/logs"
 )
@@ -37,20 +36,25 @@ func main() {
 		log.Fatal(err)
 	}
 
-	mx := matrix.Matrix{
-		Jdk: conf.JdkVersions,
+	versions := conf.JdkVersions
+	images := conf.Base.Image
+
+	if len(versions) == 0 && len(images) == 0 {
+		versions = []string{"oraclejdk8"}
+
 	}
 
-	if len(conf.JdkVersions) == 0 {
-		mx[Jdk] = []string{"oraclejdk8"}
-
-	}
-
-	mx.IterAll(func(permutation map[string]string, counter string) {
-		if err := manageJdkVersion(counter, conf, permutation[Jdk], buildTool); err != nil {
+	for i, version := range versions {
+		if err := manageJdkVersion(fmt.Sprintf("0%d", i), conf, version, "", buildTool); err != nil {
 			log.Fatal(err)
 		}
-	}, nil)
+	}
+
+	for i, image := range images {
+		if err := manageJdkVersion(fmt.Sprintf("1%d", i), conf, "", image, buildTool); err != nil {
+			log.Fatal(err)
+		}
+	}
 }
 
 func detectBuildTool(source string) (string, error) {
@@ -79,17 +83,27 @@ func detectBuildTool(source string) (string, error) {
 	return "ant", nil
 }
 
-func manageJdkVersion(counter string, conf *ConfigJava, version, buildTool string) error {
-	conf.JdkVersions = []string{}
+func manageJdkVersion(counter string, conf *ConfigJava, version, image, buildTool string) error {
+	conf.JdkVersions = nil
+	conf.Base.Image = nil
+
 	setDefaultInstall(conf, buildTool)
 	setDefaultScript(conf, buildTool)
-	image, err := resolveJdkImage(version)
-	conf.Base.FromImage = image
-	if err != nil {
-		return err
+
+	meta := map[string]string{}
+	if len(version) > 0 {
+		var err error
+		image, err = resolveJdkImage(version)
+		if err != nil {
+			return err
+		}
+		meta[Jdk] = version
+	} else {
+		meta["image"] = image
 	}
-	err = bazooka.AppendToFile(fmt.Sprintf("%s/%s", MetaFolder, counter), fmt.Sprintf("%s: %s\n", Jdk, version), 0644)
-	if err != nil {
+	conf.Base.FromImage = image
+
+	if err := bazooka.Flush(meta, fmt.Sprintf("%s/%s", MetaFolder, counter)); err != nil {
 		return err
 	}
 
