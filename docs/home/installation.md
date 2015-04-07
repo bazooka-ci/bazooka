@@ -18,14 +18,19 @@ Download Bazooka CLI with the following links, rename it simply to `bzk`add it t
 * [linux_amd64 ](https://bintray.com/artifact/download/bazooka/bazooka/bzk_linux_amd64)
 * [linux_arm](https://bintray.com/artifact/download/bazooka/bazooka/bzk_linux_arm)
 
-
 ## Installation
 
-Install bazooka is a oneliner
+Installing bazooka is a one-liner
 
 ```bash
 $ bzk run
 ```
+
+You will be prompted for minimal information need for bazooka to run
+
+* Bazooka Home Folder: The path of a directory on your host where bazooka will work. It will contain workspaces of your build, artefacts...
+* Docker Socket Path: The path to the docker socket on your local host, usually `/var/run/docker.sock`
+* Bazooka Default SCM private key: The path to the private key bazooka will try to use by default when fetching SCM data, for instance with git
 
 ## Upgrade
 
