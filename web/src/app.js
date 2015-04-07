@@ -86,8 +86,8 @@ angular.module('bzk').controller('ProjectsController', function($scope, Projects
 	}
 
 	$scope.$on('project.new', function (event) {
-    refresh()
-  })
+    refresh();
+  });
 
 	refresh();
 
