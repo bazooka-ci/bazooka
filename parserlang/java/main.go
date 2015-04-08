@@ -108,7 +108,7 @@ func setDefaultInstall(conf *ConfigJava, buildTool string) {
 func switchDefaultInstall(buildTool string) string {
 	switch buildTool {
 	case "maven":
-		return "mvn install -DskipTests=true"
+		return "mvn install -DskipTests=true --batch-mode"
 	case "gradle":
 		return "gradle assemble"
 	case "gradlew":
@@ -128,7 +128,7 @@ func setDefaultScript(conf *ConfigJava, buildTool string) {
 func switchDefaultScript(buildTool string) string {
 	switch buildTool {
 	case "maven":
-		return "mvn test"
+		return "mvn test --batch-mode"
 	case "gradle":
 		return "gradle check"
 	case "gradlew":
