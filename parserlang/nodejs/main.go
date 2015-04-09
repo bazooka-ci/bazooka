@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	log "github.com/Sirupsen/logrus"
-	"github.com/bazooka-ci/bazooka/commons/matrix"
 
 	bazooka "github.com/bazooka-ci/bazooka/commons"
 	bzklog "github.com/bazooka-ci/bazooka/commons/logs"
@@ -38,33 +37,46 @@ func main() {
 		log.Fatal(err)
 	}
 
-	mx := matrix.Matrix{
-		Nodejs: conf.NodeVersions,
-	}
+	versions := conf.NodeVersions
+	images := conf.Base.Image
 
-	if len(conf.NodeVersions) == 0 {
-		mx[Nodejs] = []string{"0.10"}
+	if len(versions) == 0 && len(images) == 0 {
+		versions = []string{"0.10"}
 	}
-	mx.IterAll(func(permutation map[string]string, counter string) {
-		if err := manageNodejsVersion(counter, conf, permutation[Nodejs]); err != nil {
+	for i, version := range versions {
+		if err := manageNodejsVersion(fmt.Sprintf("0%d", i), conf, version, ""); err != nil {
 			log.Fatal(err)
 		}
-	}, nil)
+	}
+	for i, image := range images {
+		if err := manageNodejsVersion(fmt.Sprintf("1%d", i), conf, "", image); err != nil {
+			log.Fatal(err)
+		}
+	}
+
 }
 
-func manageNodejsVersion(counter string, conf *ConfigNodejs, version string) error {
-	conf.NodeVersions = []string{}
-	image, err := resolveNodejsImage(version)
-	if err != nil {
-		return err
-	}
-	conf.Base.FromImage = image
+func manageNodejsVersion(counter string, conf *ConfigNodejs, version, image string) error {
+	conf.NodeVersions = nil
+	conf.Base.Image = nil
 
 	setDefaultInstall(conf)
 	setDefaultScript(conf)
 
-	err = bazooka.AppendToFile(fmt.Sprintf("%s/%s", MetaFolder, counter), fmt.Sprintf("%s: %s\n", Nodejs, version), 0644)
-	if err != nil {
+	meta := map[string]string{}
+	if len(version) > 0 {
+		var err error
+		image, err = resolveNodejsImage(version)
+		if err != nil {
+			return err
+		}
+		meta[Nodejs] = version
+	} else {
+		meta["image"] = image
+	}
+	conf.Base.FromImage = image
+
+	if err := bazooka.Flush(meta, fmt.Sprintf("%s/%s", MetaFolder, counter)); err != nil {
 		return err
 	}
 	return bazooka.Flush(conf, fmt.Sprintf("%s/.bazooka.%s.yml", OutputFolder, counter))

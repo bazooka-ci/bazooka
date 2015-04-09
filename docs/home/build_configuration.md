@@ -18,6 +18,35 @@ Every language comes with its own specific fields, like the language version(s) 
 
 Languages specifics are described in their own pages.
 
+The `language` key is optional.
+
+When it is present, a language specific version key can be used to specify the language versions to use to build the project.
+Bazooka also uses the `language` value and the workspace contents to auto-fill the `install` and `script` commands with sensible values.
+
+When no `language` is specified, the `image` key becomes mandatory otherwise the build will fail.
+
+## Image
+
+When you specify a `language`, and possibly the language specific version(s), bazooka automatically determines which docker image to use to build the project.
+
+With the `image` key, you can tell bazooka to use a specific docker image of your choosing.
+
+```yaml
+image: java:8
+```
+
+or:
+
+```yaml
+image:
+  - java:8
+  - java:7
+```
+
+Bazooka creates a build variant for every value of the `image` key. 
+
+If the language versions is also set (`go` for `golang` or `jdk` for `java` for example), bazooka will still create one variant for every version.
+
 ## Environment variables
 
 You can inject any number of environment variables into your build using the `env` key:

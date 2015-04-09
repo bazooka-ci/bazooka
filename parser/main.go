@@ -1,9 +1,7 @@
 package main
 
 import (
-	"bytes"
 	"fmt"
-	"os"
 	"strings"
 
 	"github.com/bazooka-ci/bazooka/commons/matrix"
@@ -44,42 +42,33 @@ func main() {
 		"config": config,
 	}).Debug("Configuration parsed")
 
-	// resolve the docker image corresponding to this particular language parser
-	image, err := resolveLanguageParser(config.Language)
-	if err != nil {
-		log.Fatal(err)
-	}
+	var variants []*variantData
 
-	// run the parser image
-	langParser := &LanguageParser{
-		Image: image,
-	}
-	err = langParser.Parse()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	// if all went well, the parser should have generated one or more "sub" .bazooka.*.yml files
-	// one for each compiler version for example
-	//
-	// they are also supposed to enrich it with a from attribute corresponding to a base docker image
-	// to be used to run the build
-
-	log.Info("Starting Matrix generation")
-	files, err := lib.ListFilesWithPrefix(OutputFolder, ".bazooka")
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	// for each of those files (the "sub" .bazooka.*.yml)
-	for _, file := range files {
-		// parse the damned thing
-		config := &lib.Config{}
-		err = lib.Parse(file, config)
+	if len(config.Language) == 0 {
+		if len(config.Image) == 0 {
+			log.Fatal("One of 'language' or 'image' needs to be set")
+		}
+		variants = generateImageVariants(config)
+	} else {
+		// resolve the docker image corresponding to this particular language parser
+		image, err := resolveLanguageParser(config.Language)
 		if err != nil {
-			log.Fatal(fmt.Errorf("Error while parsing config file %s: %v", file, err))
+			log.Fatal(err)
 		}
 
+		// run the parser image
+		langParser := &LanguageParser{
+			Image: image,
+		}
+		variants, err = langParser.Parse()
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+
+	log.Info("Starting Matrix generation")
+
+	for _, variant := range variants {
 		// create a matrix from the environment variables
 		// a matrix has N variables (dimensions) where each variable has M values
 		// config.Env is a list of key=value strings
@@ -91,41 +80,17 @@ func main() {
 		// but since we would like to be able to extract them later, and to avoid mixing them with a language specific variables (like jdk, go, etc.)
 		// explode prefixes the env variables names with a prefix defined in the constant MX_ENV_PREFIX
 		// Hence, our matrix is more like: {"env::A": [1, 2], "env::B": [3]}
-		mx := matrix.Matrix(explodeProps(config.Env, MX_ENV_PREFIX))
+		mx := matrix.Matrix(explodeProps(variant.config.Env, MX_ENV_PREFIX))
 
-		// extract the "*" part from the .bazooka.*.yml file
-		rootCounter := parseCounter(file)
-		// for every .bazooka.*.yml file, the language parser is also supposed to have generated a meta/* file
-		// which is a simple yml file containing the language specific  matrix variables
-		// for example, if the original .bazooka.yml file defined 2 go versions:
-		//
-		// go:
-		// - 1.2.2
-		// - 1.3.1
-		//
-		// the language parser should generate 2 meta files, one for each go version in this format:
-		//
-		// go: 1.2.2
-		//
-		// and
-		//
-		// go: 1.3.1
-		rootMetaFile := fmt.Sprintf("%s/%s", MetaFolder, rootCounter)
-		// since we have no idea of the generated meta file structure, we'll parse it into a map[string]interface{}
-		var langExtraVars map[string]interface{}
-		err := lib.Parse(rootMetaFile, &langExtraVars)
-		if err != nil {
-			log.Fatal(err)
-		}
 		// and then add the new language specific variables parsed from the meta file to the build matrix (which already contains the env variables)
-		err = feedMatrix(langExtraVars, &mx)
+		err = feedMatrix(variant.meta, &mx)
 		if err != nil {
 			log.Fatal(err)
 		}
 
 		// we're not done yet: we need to also handle the matrix exclusions
 		// we parse them into a list of matrices
-		exclusions, err := exclusionsMatrices(config.Matrix.Exclude)
+		exclusions, err := exclusionsMatrices(variant.config.Matrix.Exclude)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -137,29 +102,16 @@ func main() {
 			// handlePermutation will start from the .bazooka.*.yml file, which should already contain a single language specific permutation
 			// and enrich it with the env variables combination
 			// the same goes for the meta file
-			if err := handlePermutation(permutation, config, counter, rootCounter); err != nil {
+			if err := handlePermutation(permutation, variant.config, variant.meta, counter, variant.counter); err != nil {
 				log.Fatal(fmt.Errorf("Error while generating the permutations: %v", err))
 			}
 		}, exclusions)
-
-		// after we're done iterating over the .bazooka.*.yml, and since we generated a new set of build files
-		// we can now safely remove them
-		err = os.Remove(file)
-		if err != nil {
-			log.Fatal(fmt.Errorf("Error while removing file %s: %v", file, err))
-		}
-
-		// same for the meta files
-		err = os.Remove(fmt.Sprintf("%s/%s", MetaFolder, rootCounter))
-		if err != nil {
-			log.Fatal(fmt.Errorf("Error while removing meta folders: %v", err))
-		}
 	}
 	log.Info("Matrix generated")
 
 	log.Info("Starting generating Dockerfiles from Matrix")
 	// Now we're left with the final build files
-	files, err = lib.ListFilesWithPrefix(OutputFolder, ".bazooka")
+	files, err := lib.ListFilesWithPrefix(OutputFolder, ".bazooka")
 	if err != nil {
 		log.Fatal(fmt.Errorf("Error while listing .bazooka* files: %v", err))
 	}
@@ -186,8 +138,7 @@ func main() {
 
 }
 
-func handlePermutation(permutation map[string]string, config *lib.Config, counter, rootCounter string) error {
-	//Flush file
+func handlePermutation(permutation map[string]string, config *lib.Config, meta map[string]interface{}, counter, rootCounter string) error {
 	// start from the language-spcecific permutation
 	newConfig := *config
 
@@ -206,25 +157,30 @@ func handlePermutation(permutation map[string]string, config *lib.Config, counte
 
 	// do the same for the meta file
 	// start from the language specific permutation meta file
-	rootMetaFile := fmt.Sprintf("%s/%s", MetaFolder, rootCounter)
+	// and add this permutation's env map
+	meta["env"] = newConfig.Env
 	metaFile := fmt.Sprintf("%s/%s%s", MetaFolder, rootCounter, counter)
-
-	// copy it to a global (lang specific+env vars) permutation meta file
-	if err := lib.CopyFile(rootMetaFile, metaFile); err != nil {
-		return err
-	}
-	// and add to it this unique permutation of env variables
-	var buffer bytes.Buffer
-	buffer.WriteString("env:\n")
-	for _, env := range lib.FlattenEnvMap(envMap) {
-		buffer.WriteString(fmt.Sprintf(" - %s\n", env))
-	}
-	// and write it to disk
-	if err := lib.AppendToFile(metaFile, buffer.String(), 0644); err != nil {
-		return err
-	}
+	lib.Flush(meta, metaFile)
 
 	return nil
+}
+
+func generateImageVariants(conf *lib.Config) []*variantData {
+	res := make([]*variantData, len(conf.Image))
+	for i, im := range conf.Image {
+		imageConf := *conf
+		imageConf.FromImage = im
+		imageConf.Image = nil
+
+		res[i] = &variantData{
+			counter: fmt.Sprintf("%d", i),
+			config:  &imageConf,
+			meta: map[string]interface{}{
+				"image": im,
+			},
+		}
+	}
+	return res
 }
 
 func feedMatrix(extra map[string]interface{}, mx *matrix.Matrix) error {

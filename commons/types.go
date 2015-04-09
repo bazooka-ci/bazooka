@@ -119,7 +119,8 @@ type User struct {
 }
 
 type Config struct {
-	Language       string       `yaml:"language"`
+	Language       string       `yaml:"language,omitempty"`
+	Image          Images       `yaml:"image,omitempty"`
 	Setup          Commands     `yaml:"setup,omitempty"`
 	BeforeInstall  Commands     `yaml:"before_install,omitempty"`
 	Install        Commands     `yaml:"install,omitempty"`
@@ -135,6 +136,33 @@ type Config struct {
 	Archive        Globs        `yaml:"archive,omitempty"`
 	ArchiveSuccess Globs        `yaml:"archive_success,omitempty"`
 	ArchiveFailure Globs        `yaml:"archive_failure,omitempty"`
+}
+
+type Images []string
+
+func (im *Images) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	var raw interface{}
+	if err := unmarshal(&raw); err != nil {
+		return err
+	}
+
+	switch convCmd := raw.(type) {
+	case string:
+		*im = []string{convCmd}
+		return nil
+	case []interface{}:
+		*im = make([]string, len(convCmd))
+		for i, rawCmd := range convCmd {
+			cmd, ok := rawCmd.(string)
+			if !ok {
+				return fmt.Errorf("Image list can only contain strings")
+			}
+			(*im)[i] = cmd
+		}
+		return nil
+	default:
+		return fmt.Errorf("Image can be either a string or a list of strings")
+	}
 }
 
 type Commands []string
