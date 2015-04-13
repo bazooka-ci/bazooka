@@ -63,6 +63,10 @@ func main() {
 	r.HandleFunc("/project/{id}/github", mkHandler(ctx.startGithubJob)).Methods("POST")
 	r.HandleFunc("/project/{id}/job", mkHandler(ctx.getJobs)).Methods("GET")
 
+	r.HandleFunc("/project/{id}/config", mkHandler(ctx.getProjectConfig)).Methods("GET")
+	r.HandleFunc("/project/{id}/config/{key}", ctx.setProjectConfigKey).Methods("PUT")
+	r.HandleFunc("/project/{id}/config/{key}", mkHandler(ctx.unsetProjectConfigKey)).Methods("DELETE")
+
 	r.HandleFunc("/project/{id}/key", mkHandler(ctx.addKey)).Methods("POST")
 	r.HandleFunc("/project/{id}/key", mkHandler(ctx.updateKey)).Methods("PUT")
 	r.HandleFunc("/project/{id}/key", mkHandler(ctx.listKeys)).Methods("GET")

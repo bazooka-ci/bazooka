@@ -37,6 +37,47 @@ func (c *Client) ListProjects() ([]lib.Project, error) {
 	return p, err
 }
 
+func (c *Client) GetProjectConfig(id string) (map[string]string, error) {
+	var res map[string]string
+
+	requestURL, err := c.getRequestURL(fmt.Sprintf("project/%s/config", id))
+	if err != nil {
+		return nil, err
+	}
+
+	err = perigee.Get(requestURL, perigee.Options{
+		Results:    &res,
+		OkCodes:    []int{200},
+		SetHeaders: c.authenticateRequest,
+	})
+	return res, err
+}
+
+func (c *Client) SetProjectConfigKey(id, key, value string) error {
+
+	requestURL, err := c.getRequestURL(fmt.Sprintf("project/%s/config/%s", id, key))
+	if err != nil {
+		return err
+	}
+	return perigee.Put(requestURL, perigee.Options{
+		ReqBody:    value,
+		OkCodes:    []int{204},
+		SetHeaders: c.authenticateRequest,
+	})
+}
+
+func (c *Client) UnsetProjectConfigKey(id, key string) error {
+
+	requestURL, err := c.getRequestURL(fmt.Sprintf("project/%s/config/%s", id, key))
+	if err != nil {
+		return err
+	}
+	return perigee.Delete(requestURL, perigee.Options{
+		OkCodes:    []int{204},
+		SetHeaders: c.authenticateRequest,
+	})
+}
+
 func (c *Client) ListJobs(projectID string) ([]lib.Job, error) {
 	var j []lib.Job
 

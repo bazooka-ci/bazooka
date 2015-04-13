@@ -69,3 +69,122 @@ func listProjectsCommand(cmd *cli.Cmd) {
 		w.Flush()
 	}
 }
+
+func listProjectConfigCommand(cmd *cli.Cmd) {
+	cmd.Spec = "PROJECT_ID"
+
+	pid := cmd.String(cli.StringArg{
+		Name: "PROJECT_ID",
+		Desc: "the project id",
+	})
+
+	cmd.Action = func() {
+		client, err := NewClient(checkServerURI(*bzkUri))
+		if err != nil {
+			log.Fatal(err)
+		}
+		res, err := client.GetProjectConfig(*pid)
+		if err != nil {
+			log.Fatal(err)
+		}
+		w := tabwriter.NewWriter(os.Stdout, 15, 1, 3, ' ', 0)
+		fmt.Fprint(w, "KEY\tVALUE\n")
+
+		for k, v := range res {
+			fmt.Fprintf(w, "%s\t%s\n", k, v)
+		}
+		w.Flush()
+	}
+}
+
+func getProjectConfigKeyCommand(cmd *cli.Cmd) {
+	cmd.Spec = "PROJECT_ID KEY"
+
+	pid := cmd.String(cli.StringArg{
+		Name: "PROJECT_ID",
+		Desc: "the project id",
+	})
+
+	key := cmd.String(cli.StringArg{
+		Name: "KEY",
+		Desc: "the configuration key",
+	})
+
+	cmd.Action = func() {
+		client, err := NewClient(checkServerURI(*bzkUri))
+		if err != nil {
+			log.Fatal(err)
+		}
+		res, err := client.GetProjectConfig(*pid)
+		if err != nil {
+			log.Fatal(err)
+		}
+		w := tabwriter.NewWriter(os.Stdout, 15, 1, 3, ' ', 0)
+		fmt.Fprint(w, "KEY\tVALUE\n")
+
+		v, found := res[*key]
+		if !found {
+			v = "<not set>"
+		}
+
+		fmt.Fprintf(w, "%s\t%s\n", *key, v)
+		w.Flush()
+	}
+}
+
+func setProjectConfigKeyCommand(cmd *cli.Cmd) {
+	cmd.Spec = "PROJECT_ID KEY VALUE"
+
+	pid := cmd.String(cli.StringArg{
+		Name: "PROJECT_ID",
+		Desc: "the project id",
+	})
+
+	key := cmd.String(cli.StringArg{
+		Name: "KEY",
+		Desc: "the configuration key",
+	})
+
+	value := cmd.String(cli.StringArg{
+		Name: "VALUE",
+		Desc: "the configuration value",
+	})
+
+	cmd.Action = func() {
+		client, err := NewClient(checkServerURI(*bzkUri))
+		if err != nil {
+			log.Fatal(err)
+		}
+		if err := client.SetProjectConfigKey(*pid, *key, *value); err != nil {
+			log.Fatal(err)
+		}
+		w := tabwriter.NewWriter(os.Stdout, 15, 1, 3, ' ', 0)
+		fmt.Fprint(w, "KEY\tVALUE\n")
+		fmt.Fprintf(w, "%s\t%s\n", *key, *value)
+		w.Flush()
+	}
+}
+
+func unsetProjectConfigKeyCommand(cmd *cli.Cmd) {
+	cmd.Spec = "PROJECT_ID KEY"
+
+	pid := cmd.String(cli.StringArg{
+		Name: "PROJECT_ID",
+		Desc: "the project id",
+	})
+
+	key := cmd.String(cli.StringArg{
+		Name: "KEY",
+		Desc: "the configuration key",
+	})
+
+	cmd.Action = func() {
+		client, err := NewClient(checkServerURI(*bzkUri))
+		if err != nil {
+			log.Fatal(err)
+		}
+		if err := client.UnsetProjectConfigKey(*pid, *key); err != nil {
+			log.Fatal(err)
+		}
+	}
+}

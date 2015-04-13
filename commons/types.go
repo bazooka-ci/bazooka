@@ -6,11 +6,12 @@ import (
 )
 
 type Project struct {
-	ScmType    string `bson:"scm_type" json:"scm_type"`
-	ScmURI     string `bson:"scm_uri" json:"scm_uri"`
-	Name       string `bson:"name" json:"name"`
-	ID         string `bson:"id" json:"id"`
-	JobCounter int    `bson:"job_counter" json:"job_counter"`
+	ScmType    string            `bson:"scm_type" json:"scm_type"`
+	ScmURI     string            `bson:"scm_uri" json:"scm_uri"`
+	Name       string            `bson:"name" json:"name"`
+	ID         string            `bson:"id" json:"id"`
+	JobCounter int               `bson:"job_counter" json:"job_counter"`
+	Config     map[string]string `bson:"config" json:"config"`
 }
 
 type Variant struct {
