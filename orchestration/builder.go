@@ -8,8 +8,8 @@ import (
 	"github.com/bazooka-ci/bazooka/commons/parallel"
 
 	log "github.com/Sirupsen/logrus"
-	docker "github.com/bywan/go-dockercommand"
 	lib "github.com/bazooka-ci/bazooka/commons"
+	docker "github.com/bywan/go-dockercommand"
 )
 
 type Builder struct {
@@ -17,9 +17,9 @@ type Builder struct {
 }
 
 type BuildOptions struct {
-	SourceFolder string
-	ProjectID    string
-	Variants     []*variantData
+	BaseFolder string
+	ProjectID  string
+	Variants   []*variantData
 }
 
 func (b *Builder) Build() error {
@@ -59,22 +59,12 @@ func (b *Builder) buildContainer(client *docker.Docker, vd *variantData) error {
 		"variant": vd.counter,
 	}).Info("Building container for variant")
 
-	for _, script := range vd.scripts {
-
-		splitString := strings.Split(script, "/")
-		dest := fmt.Sprintf("%s/%s", b.Options.SourceFolder, splitString[len(splitString)-1])
-		err := lib.CopyFile(script, dest)
-		if err != nil {
-			return err
-		}
-	}
-
 	tag := fmt.Sprintf("bazooka/build-%s-%s-%d", b.Options.ProjectID, vd.variant.JobID, vd.variant.Number)
 
 	err := client.Build(&docker.BuildOptions{
 		Tag:        tag,
-		Dockerfile: vd.dockerFile,
-		Path:       b.Options.SourceFolder,
+		Dockerfile: strings.TrimPrefix(vd.dockerFile, "/bazooka/"), //Ugly hack: the Dockerfile path needs to be relative to context dir
+		Path:       b.Options.BaseFolder,
 	})
 	if err != nil {
 		return err

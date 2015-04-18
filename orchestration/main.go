@@ -136,9 +136,9 @@ func main() {
 
 	b := &Builder{
 		Options: &BuildOptions{
-			SourceFolder: paths.container.source,
-			ProjectID:    env[BazookaEnvProjectID],
-			Variants:     parsedVariants,
+			BaseFolder: paths.container.base,
+			ProjectID:  env[BazookaEnvProjectID],
+			Variants:   parsedVariants,
 		},
 	}
 
