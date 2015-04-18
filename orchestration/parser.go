@@ -22,7 +22,6 @@ type ParseOptions struct {
 	InputFolder    string
 	OutputFolder   string
 	DockerSock     string
-	HostBaseFolder string
 	MetaFolder     string
 	Env            map[string]string
 }
@@ -37,7 +36,7 @@ type variantData struct {
 }
 
 func (p *Parser) Parse(logger Logger) ([]*variantData, error) {
-	client, err := docker.NewDocker(DockerEndpoint)
+	client, err := docker.NewDocker(paths.container.dockerEndpoint)
 	if err != nil {
 		return nil, err
 	}
@@ -51,9 +50,15 @@ func (p *Parser) Parse(logger Logger) ([]*variantData, error) {
 		"image": image,
 	}).Info("Running Parsing Image on checked-out source")
 
+	env := map[string]string{
+		"BZK_HOME": paths.host.base,
+	}
+	for k, v:=range p.Options.Env {
+		env[k]=v
+	}
 	container, err := client.Run(&docker.RunOptions{
 		Image: image,
-		Env:   p.Options.Env,
+		Env:   env,
 		VolumeBinds: []string{
 			fmt.Sprintf("%s:/bazooka", p.Options.InputFolder),
 			fmt.Sprintf("%s:/meta", p.Options.MetaFolder),

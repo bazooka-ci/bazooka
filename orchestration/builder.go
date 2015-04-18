@@ -25,7 +25,7 @@ type BuildOptions struct {
 func (b *Builder) Build() error {
 	log.Info("Starting building Dockerfiles")
 
-	client, err := docker.NewDocker(DockerEndpoint)
+	client, err := docker.NewDocker(paths.container.dockerEndpoint)
 	if err != nil {
 		return err
 	}

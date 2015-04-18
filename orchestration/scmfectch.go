@@ -39,7 +39,7 @@ func (f *SCMFetcher) Fetch(logger Logger) error {
 		"image": image,
 	}).Info("Starting SCM Fetch")
 
-	client, err := docker.NewDocker(DockerEndpoint)
+	client, err := docker.NewDocker(paths.container.dockerEndpoint)
 	if err != nil {
 		return err
 	}
@@ -83,8 +83,8 @@ func (f *SCMFetcher) Fetch(logger Logger) error {
 	})
 
 	scmMetadata := &lib.SCMMetadata{}
-	localMetaFolder := fmt.Sprintf(MetaFolderPattern, BazookaInput)
-	scmMetadataFile := fmt.Sprintf("%s/scm", localMetaFolder)
+	
+	scmMetadataFile := fmt.Sprintf("%s/scm", paths.container.meta)
 	err = lib.Parse(scmMetadataFile, scmMetadata)
 	if err != nil {
 		return err

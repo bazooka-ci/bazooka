@@ -23,7 +23,7 @@ type Runner struct {
 }
 
 func (r *Runner) Run(logger Logger) error {
-	client, err := docker.NewDocker(DockerEndpoint)
+	client, err := docker.NewDocker(paths.container.dockerEndpoint)
 	if err != nil {
 		return err
 	}
@@ -60,7 +60,7 @@ func (r *Runner) Run(logger Logger) error {
 
 func (r *Runner) runContainer(logger Logger, vd *variantData, env map[string]string) error {
 	success := true
-	servicesFile := fmt.Sprintf("%s/work/%d/services", BazookaInput, vd.counter)
+	servicesFile := fmt.Sprintf("%s/%d/services", paths.container.work, vd.counter)
 
 	servicesList, err := listServices(servicesFile)
 	if err != nil {
@@ -90,7 +90,7 @@ func (r *Runner) runContainer(logger Logger, vd *variantData, env map[string]str
 		Image: vd.imageTag,
 		Links: containerLinks,
 		VolumeBinds: []string{
-			fmt.Sprintf("%s:/var/run/docker.sock", DockerSock),
+			fmt.Sprintf("%s:/var/run/docker.sock", paths.host.dockerSock),
 			fmt.Sprintf("%s:/artifacts", artifactsFolder),
 		},
 		Detach: true,
