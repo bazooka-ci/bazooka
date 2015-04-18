@@ -12,9 +12,6 @@ import (
 )
 
 const (
-	SourceFolder      = "/bazooka"
-	OutputFolder      = "/bazooka-output"
-	MetaFolder        = "/meta"
 	BazookaConfigFile = ".bazooka.yml"
 	TravisConfigFile  = ".travis.yml"
 	MX_ENV_PREFIX     = "env::"
@@ -27,7 +24,7 @@ func init() {
 func main() {
 	log.Info("Starting Parsing Phase")
 	// Find either .travis.yml or .bazooka.yml file in the project
-	configFile, err := lib.ResolveConfigFile(SourceFolder)
+	configFile, err := lib.ResolveConfigFile(paths.container.source)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -111,7 +108,7 @@ func main() {
 
 	log.Info("Starting generating Dockerfiles from Matrix")
 	// Now we're left with the final build files
-	files, err := lib.ListFilesWithPrefix(OutputFolder, ".bazooka")
+	files, err := lib.ListFilesWithPrefix(paths.container.output, ".bazooka")
 	if err != nil {
 		log.Fatal(fmt.Errorf("Error while listing .bazooka* files: %v", err))
 	}
@@ -126,7 +123,7 @@ func main() {
 		// transform the .bazooka.x.yml file into a set of dockerfile + shell scripts who perform the actual build
 		g := &Generator{
 			Config:       config,
-			OutputFolder: OutputFolder,
+			OutputFolder: paths.container.output,
 			Index:        parseCounter(file),
 		}
 		err = g.GenerateDockerfile()
@@ -151,7 +148,7 @@ func handlePermutation(permutation map[string]string, config *lib.Config, meta m
 	}
 
 	newConfig.Env = lib.FlattenEnvMap(envMap)
-	if err := lib.Flush(newConfig, fmt.Sprintf("%s/.bazooka.%s%s.yml", OutputFolder, rootCounter, counter)); err != nil {
+	if err := lib.Flush(newConfig, fmt.Sprintf("%s/.bazooka.%s%s.yml", paths.container.output, rootCounter, counter)); err != nil {
 		return err
 	}
 
@@ -159,7 +156,7 @@ func handlePermutation(permutation map[string]string, config *lib.Config, meta m
 	// start from the language specific permutation meta file
 	// and add this permutation's env map
 	meta["env"] = newConfig.Env
-	metaFile := fmt.Sprintf("%s/%s%s", MetaFolder, rootCounter, counter)
+	metaFile := fmt.Sprintf("%s/%s%s", paths.container.meta, rootCounter, counter)
 	lib.Flush(meta, metaFile)
 
 	return nil

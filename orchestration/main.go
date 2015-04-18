@@ -15,23 +15,12 @@ import (
 )
 
 const (
-	CheckoutFolderPattern  = "%s/source"
-	WorkdirFolderPattern   = "%s/work"
-	MetaFolderPattern      = "%s/meta"
-	ArtifactsFolderPattern = "%s/artifacts"
-
-	BazookaInput   = "/bazooka"
-	DockerSock     = "/var/run/docker.sock"
-	DockerEndpoint = "unix://" + DockerSock
-
 	BazookaEnvSCM          = "BZK_SCM"
 	BazookaEnvSCMUrl       = "BZK_SCM_URL"
 	BazookaEnvSCMReference = "BZK_SCM_REFERENCE"
-	BazookaEnvSCMKeyfile   = "BZK_SCM_KEYFILE"
 	BazookaEnvProjectID    = "BZK_PROJECT_ID"
 	BazookaEnvJobID        = "BZK_JOB_ID"
-	BazookaEnvHome         = "BZK_HOME"
-	BazookaEnvDockerSock   = "BZK_DOCKERSOCK"
+	
 	BazookaEnvMongoAddr    = "MONGO_PORT_27017_TCP_ADDR"
 	BazookaEnvMongoPort    = "MONGO_PORT_27017_TCP_PORT"
 )
@@ -54,11 +43,8 @@ func main() {
 		BazookaEnvSCM:          os.Getenv(BazookaEnvSCM),
 		BazookaEnvSCMUrl:       os.Getenv(BazookaEnvSCMUrl),
 		BazookaEnvSCMReference: os.Getenv(BazookaEnvSCMReference),
-		BazookaEnvSCMKeyfile:   os.Getenv(BazookaEnvSCMKeyfile),
 		BazookaEnvProjectID:    os.Getenv(BazookaEnvProjectID),
 		BazookaEnvJobID:        os.Getenv(BazookaEnvJobID),
-		BazookaEnvHome:         os.Getenv(BazookaEnvHome),
-		BazookaEnvDockerSock:   os.Getenv(BazookaEnvDockerSock),
 	}
 
 	var containerLogger Logger = func(image string, variantID string, container *docker.Container) {
@@ -87,8 +73,6 @@ func main() {
 		"environment": env,
 	}).Info("Starting Orchestration")
 
-	checkoutFolder := fmt.Sprintf(CheckoutFolderPattern, env[BazookaEnvHome])
-	metaFolder := fmt.Sprintf(MetaFolderPattern, env[BazookaEnvHome])
 	f := &SCMFetcher{
 		MongoConnector: connector,
 		Options: &FetchOptions{
@@ -96,9 +80,9 @@ func main() {
 			URL:         env[BazookaEnvSCMUrl],
 			Reference:   env[BazookaEnvSCMReference],
 			JobID:       env[BazookaEnvJobID],
-			LocalFolder: checkoutFolder,
-			MetaFolder:  metaFolder,
-			KeyFile:     env[BazookaEnvSCMKeyfile],
+			LocalFolder: paths.host.source,
+			MetaFolder:  paths.host.meta,
+			KeyFile:     paths.host.key,
 			Env:         env,
 		},
 	}
@@ -113,11 +97,10 @@ func main() {
 	p := &Parser{
 		MongoConnector: connector,
 		Options: &ParseOptions{
-			InputFolder:    checkoutFolder,
-			OutputFolder:   fmt.Sprintf(WorkdirFolderPattern, env[BazookaEnvHome]),
-			DockerSock:     env[BazookaEnvDockerSock],
-			HostBaseFolder: checkoutFolder,
-			MetaFolder:     metaFolder,
+			InputFolder:    paths.host.source,
+			OutputFolder:   paths.host.work,
+			DockerSock:     paths.host.dockerSock,
+			MetaFolder:     paths.host.meta,
 			Env:            env,
 		},
 	}
@@ -153,7 +136,7 @@ func main() {
 
 	b := &Builder{
 		Options: &BuildOptions{
-			SourceFolder: fmt.Sprintf(CheckoutFolderPattern, BazookaInput),
+			SourceFolder: paths.container.source,
 			ProjectID:    env[BazookaEnvProjectID],
 			Variants:     parsedVariants,
 		},
@@ -180,10 +163,9 @@ func main() {
 		}
 	}
 
-	artifactsBase := fmt.Sprintf(ArtifactsFolderPattern, env[BazookaEnvHome])
 	r := &Runner{
 		Variants:            variantsToBuild,
-		ArtifactsFolderBase: artifactsBase,
+		ArtifactsFolderBase: paths.host.artifacts,
 		Env:                 env,
 		Mongo:               connector,
 	}

@@ -33,13 +33,13 @@ func (p *LanguageParser) Parse() ([]*variantData, error) {
 	if err != nil {
 		return nil, err
 	}
-	bazookaHome := os.Getenv("BZK_HOME")
+	
 	container, err := client.Run(&docker.RunOptions{
 		Image: p.Image,
 		VolumeBinds: []string{
-			fmt.Sprintf("%s/source/:/bazooka", bazookaHome),
-			fmt.Sprintf("%s/work/:/bazooka-output", bazookaHome),
-			fmt.Sprintf("%s/meta/:/meta", bazookaHome),
+			fmt.Sprintf("%s:/bazooka", paths.host.source),
+			fmt.Sprintf("%s:/bazooka-output", paths.host.output),
+			fmt.Sprintf("%s:/meta", paths.host.meta),
 		},
 		Detach: true,
 	})
@@ -72,7 +72,7 @@ func (p *LanguageParser) Parse() ([]*variantData, error) {
 	// they are also supposed to enrich it with a from attribute corresponding to a base docker image
 	// to be used to run the build
 
-	files, err := lib.ListFilesWithPrefix(OutputFolder, ".bazooka")
+	files, err := lib.ListFilesWithPrefix(paths.container.output, ".bazooka")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -105,7 +105,7 @@ func (p *LanguageParser) Parse() ([]*variantData, error) {
 		// and
 		//
 		// go: 1.3.1
-		rootMetaFile := fmt.Sprintf("%s/%s", MetaFolder, rootCounter)
+		rootMetaFile := fmt.Sprintf("%s/%s", paths.container.meta, rootCounter)
 		// since we have no idea of the generated meta file structure, we'll parse it into a map[string]interface{}
 		var langExtraVars map[string]interface{}
 		err := lib.Parse(rootMetaFile, &langExtraVars)
