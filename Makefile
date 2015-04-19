@@ -20,16 +20,13 @@ errcheck:
 runner:
 	./scripts/build-runner.sh
 
-scm:
-	./scripts/build-scm.sh
-
 web:
 	cd web && make
 
 push:
 	./scripts/push-images.sh
 
-deploy: setup devimages runner scm web push
+deploy: setup devimages runner web push
 
 updatedeps:
 	go get -u -v ./...
