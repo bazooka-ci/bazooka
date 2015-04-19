@@ -17,9 +17,6 @@ setup:
 errcheck:
 	./scripts/errcheck.sh
 
-runner:
-	./scripts/build-runner.sh
-
 web:
 	cd web && make
 
