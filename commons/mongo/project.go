@@ -56,6 +56,54 @@ func (c *MongoConnector) AddProject(project *lib.Project) error {
 	return c.database.C("projects").Insert(project)
 }
 
+func (c *MongoConnector) SetProjectConfig(id string, config map[string]string) error {
+	proj, err := c.GetProjectById(id)
+	if err != nil {
+		return err
+	}
+	selector := bson.M{
+		"id": proj.ID,
+	}
+	request := bson.M{
+		"$set": bson.M{
+			"config": config,
+		},
+	}
+	return c.database.C("projects").Update(selector, request)
+}
+
+func (c *MongoConnector) SetProjectConfigKey(id, key, value string) error {
+	proj, err := c.GetProjectById(id)
+	if err != nil {
+		return err
+	}
+	selector := bson.M{
+		"id": proj.ID,
+	}
+	request := bson.M{
+		"$set": bson.M{
+			fmt.Sprintf("config.%s", key): value,
+		},
+	}
+	return c.database.C("projects").Update(selector, request)
+}
+
+func (c *MongoConnector) UnsetProjectConfigKey(id, key string) error {
+	proj, err := c.GetProjectById(id)
+	if err != nil {
+		return err
+	}
+	selector := bson.M{
+		"id": proj.ID,
+	}
+	request := bson.M{
+		"$unset": bson.M{
+			fmt.Sprintf("config.%s", key): "",
+		},
+	}
+	return c.database.C("projects").Update(selector, request)
+}
+
 func (c *MongoConnector) AddJob(job *lib.Job) error {
 	var err error
 	if job.ID, err = c.randomId(); err != nil {

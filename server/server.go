@@ -62,6 +62,12 @@ func ok(payload interface{}) (*response, error) {
 	}, nil
 }
 
+func noContent() (*response, error) {
+	return &response{
+		Code: 204,
+	}, nil
+}
+
 func created(payload interface{}, location string) (*response, error) {
 	return &response{
 		201,

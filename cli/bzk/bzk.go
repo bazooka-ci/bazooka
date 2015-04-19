@@ -19,6 +19,12 @@ func main() {
 	app.Command("project", "Actions on projects", func(cmd *cli.Cmd) {
 		cmd.Command("list", "List bazooka projects", listProjectsCommand)
 		cmd.Command("create", "Create a new bazooka project", createProjectCommand)
+		cmd.Command("config", "View or modify a bazooka project configuration", func(cfgCmd *cli.Cmd) {
+			cfgCmd.Command("list", "List full project configuration", listProjectConfigCommand)
+			cfgCmd.Command("get", "Get a specific project configuration key", getProjectConfigKeyCommand)
+			cfgCmd.Command("set", "Set a specific project configuration key", setProjectConfigKeyCommand)
+			cfgCmd.Command("unset", "Delete a specific project configuration key", unsetProjectConfigKeyCommand)
+		})
 	})
 
 	app.Command("job", "Actions on jobs", func(cmd *cli.Cmd) {

@@ -1,7 +1,12 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"net/http"
+
+	"github.com/gorilla/mux"
 
 	log "github.com/Sirupsen/logrus"
 	lib "github.com/bazooka-ci/bazooka/commons"
@@ -78,4 +83,52 @@ func (p *context) getProjects(params map[string]string, body bodyFunc) (*respons
 	}
 
 	return ok(&projects)
+}
+
+func (p *context) getProjectConfig(params map[string]string, body bodyFunc) (*response, error) {
+	project, err := p.Connector.GetProjectById(params["id"])
+	if err != nil {
+		if err.Error() != "not found" {
+			return nil, err
+		}
+		return notFound("project not found")
+	}
+
+	return ok(project.Config)
+}
+
+func (p *context) setProjectConfigKey(w http.ResponseWriter, r *http.Request) {
+	id, key := mux.Vars(r)["id"], mux.Vars(r)["key"]
+	body, err := ioutil.ReadAll(r.Body)
+	r.Body.Close()
+	if err != nil {
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		encoder := json.NewEncoder(w)
+
+		w.WriteHeader(400)
+		encoder.Encode(fmt.Errorf("cannot read value: %s", err))
+		return
+	}
+
+	if err := p.Connector.SetProjectConfigKey(id, key, string(body)); err != nil {
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		encoder := json.NewEncoder(w)
+
+		w.WriteHeader(500)
+		encoder.Encode(fmt.Errorf("cannot set configuration key: %s", err))
+		return
+	}
+
+	w.WriteHeader(204)
+}
+
+func (p *context) unsetProjectConfigKey(params map[string]string, body bodyFunc) (*response, error) {
+	if err := p.Connector.UnsetProjectConfigKey(params["id"], params["key"]); err != nil {
+		if err.Error() != "not found" {
+			return nil, err
+		}
+		return notFound("project not found")
+	}
+
+	return noContent()
 }
