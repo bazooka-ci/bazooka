@@ -23,13 +23,16 @@ func (g *Generator) GenerateDockerfile() error {
 		return err
 	}
 
-	var buffer bytes.Buffer
+	var dockerBuffer bytes.Buffer
 
-	buffer.WriteString(fmt.Sprintf("FROM %s\n\n", g.Config.FromImage))
+	dockerBuffer.WriteString(fmt.Sprintf("FROM %s\n\n", g.Config.FromImage))
 
 	envMap := lib.GetEnvMap(g.Config.Env)
-	buffer.WriteString(fmt.Sprintf("ADD . %s\n\n", envMap["BZK_BUILD_DIR"][0]))
-	buffer.WriteString(fmt.Sprintf("RUN chmod +x %s/bazooka_run.sh\n\n", envMap["BZK_BUILD_DIR"][0]))
+
+	dockerBuffer.WriteString(fmt.Sprintf("COPY source %s/\n\n", envMap["BZK_BUILD_DIR"][0]))
+
+	dockerBuffer.WriteString(fmt.Sprintf("COPY work/%s/bazooka_run.sh %s/\n", g.Index, envMap["BZK_BUILD_DIR"][0]))
+	dockerBuffer.WriteString(fmt.Sprintf("RUN  chmod +x %s/bazooka_run.sh\n\n", envMap["BZK_BUILD_DIR"][0]))
 
 	type buildPhase struct {
 		name      string
@@ -158,20 +161,24 @@ func (g *Generator) GenerateDockerfile() error {
 
 	for _, phase := range phases {
 		if len(phase.commands) > 0 {
-			var buffer bytes.Buffer
-			buffer.WriteString("#!/bin/bash\n\n")
-			buffer.WriteString(fmt.Sprintf("echo %s\n", strconv.Quote(fmt.Sprintf("<PHASE:%s>", phase.name))))
+			var phaseBuffer bytes.Buffer
+			phaseBuffer.WriteString("#!/bin/bash\n\n")
+			phaseBuffer.WriteString(fmt.Sprintf("echo %s\n", strconv.Quote(fmt.Sprintf("<PHASE:%s>", phase.name))))
 			for _, action := range phase.beforeCmd {
-				buffer.WriteString(fmt.Sprintf("%s\n", action))
+				phaseBuffer.WriteString(fmt.Sprintf("%s\n", action))
 			}
 			for _, action := range phase.commands {
-				buffer.WriteString(fmt.Sprintf("echo %s\n", strconv.Quote(fmt.Sprintf("<CMD:%s>", action))))
-				buffer.WriteString(fmt.Sprintf("%s\n", action))
+				phaseBuffer.WriteString(fmt.Sprintf("echo %s\n", strconv.Quote(fmt.Sprintf("<CMD:%s>", action))))
+				phaseBuffer.WriteString(fmt.Sprintf("%s\n", action))
 			}
-			err = ioutil.WriteFile(fmt.Sprintf("%s/%s/bazooka_%s.sh", g.OutputFolder, g.Index, phase.name), buffer.Bytes(), 0644)
+			err = ioutil.WriteFile(fmt.Sprintf("%s/%s/bazooka_%s.sh", g.OutputFolder, g.Index, phase.name), phaseBuffer.Bytes(), 0644)
 			if err != nil {
 				return fmt.Errorf("Phase [%d/%s]: writing file failed: %v", g.Index, phase.name, err)
 			}
+
+			dockerBuffer.WriteString(fmt.Sprintf("COPY work/%s/bazooka_%s.sh %s/\n", g.Index, phase.name, envMap["BZK_BUILD_DIR"][0]))
+			dockerBuffer.WriteString(fmt.Sprintf("RUN  chmod +x %s/bazooka_%s.sh\n\n", envMap["BZK_BUILD_DIR"][0], phase.name))
+
 			if len(phase.runCmd) == 0 {
 				bufferRun.WriteString(fmt.Sprintf("./bazooka_%s.sh\n", phase.name))
 			} else {
@@ -191,22 +198,16 @@ func (g *Generator) GenerateDockerfile() error {
 		return fmt.Errorf("Phase [%d/run]: writing file failed: %v", g.Index, err)
 	}
 
-	for _, phase := range phases {
-		if len(phase.commands) != 0 {
-			buffer.WriteString(fmt.Sprintf("RUN chmod +x %s/bazooka_%s.sh\n\n", envMap["BZK_BUILD_DIR"][0], phase.name))
-		}
-	}
-
 	for _, env := range g.Config.Env {
 		envSplit := strings.Split(env, "=")
-		buffer.WriteString(fmt.Sprintf("ENV %s %s\n", envSplit[0], envSplit[1]))
+		dockerBuffer.WriteString(fmt.Sprintf("ENV  %s %s\n", envSplit[0], envSplit[1]))
 	}
 
-	buffer.WriteString(fmt.Sprintf("WORKDIR %s\n\n", envMap["BZK_BUILD_DIR"][0]))
+	dockerBuffer.WriteString(fmt.Sprintf("WORKDIR %s\n\n", envMap["BZK_BUILD_DIR"][0]))
 
-	buffer.WriteString("CMD ./bazooka_run.sh\n")
+	dockerBuffer.WriteString("CMD  ./bazooka_run.sh\n")
 
-	err = ioutil.WriteFile(fmt.Sprintf("%s/%s/Dockerfile", g.OutputFolder, g.Index), buffer.Bytes(), 0644)
+	err = ioutil.WriteFile(fmt.Sprintf("%s/%s/Dockerfile", g.OutputFolder, g.Index), dockerBuffer.Bytes(), 0644)
 	if err != nil {
 		return fmt.Errorf("Phase [%d/docker]: writing file failed: %v", g.Index, err)
 	}
