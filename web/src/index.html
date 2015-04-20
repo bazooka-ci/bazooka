@@ -17,8 +17,14 @@
 	<script src="dev.js"></script>
 	<script src="utils.js"></script>
 	<script src="app.js"></script>
+	<script src="home/home.js"></script>
+	<script src="home/homeController.js"></script>
+	<script src="jobs/jobs.js"></script>
+	<script src="jobs/jobsListDirective.js"></script>
+	<script src="jobs/jobDetail.js"></script>
+	<script src="jobs/jobInfoDirective.js"></script>
 	<script src="project/project.js"></script>
-	<script src="job/job.js"></script>
+	<script src="project/projectController.js"></script>
 	<script src="variant/variant.js"></script>
 	<script src="projects/projects.js"></script>
 </head>
@@ -33,6 +39,7 @@
 		</div>
 
 		<div class="content pure-u-1 pure-u-md-3-4">
+			<div ng-include="'breadcrumb.html'"></div><!-- TODO : directive -->
 			<div ng-view>Bazooka</div>
 		</div>
 	</div>

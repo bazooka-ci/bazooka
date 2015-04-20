@@ -1,38 +1,14 @@
 "use strict";
 
-angular.module('bzk', ['bzk.projects', 'bzk.project', 'bzk.job', 'bzk.variant', 'bzk.utils', 'bzk.templates', 'ngRoute']);
+angular.module('bzk', ['bzk.home', 'bzk.projects', 'bzk.project', 'bzk.jobs', 'bzk.variant', 'bzk.utils', 'bzk.templates', 'ngRoute']);
 
 angular.module('bzk').config(function($routeProvider){
 	$routeProvider
 	.when('/', {
-		templateUrl: 'home.html',
+		templateUrl: 'home/home.html',
 		controller: 'HomeController',
 	}).otherwise({
 		redirectTo: '/'
-	});
-});
-
-angular.module('bzk').factory('HomeJobResource', function($http){
-	return {
-		jobs: function() {
-			return $http.get('/api/job');
-		}
-	};
-});
-
-angular.module('bzk').controller('HomeController', function($scope, HomeJobResource, $interval){
-	$scope.refreshJobs = function() {
-		HomeJobResource.jobs().success(function(jobs){
-			$scope.jobs = jobs;
-			console.log(jobs);
-		});
-	};
-
-	$scope.refreshJobs();
-
-	var refreshPromise = $interval($scope.refreshJobs, 5000);
-	$scope.$on('$destroy', function() {
-		$interval.cancel(refreshPromise);
 	});
 });
 

@@ -1,6 +1,5 @@
-<div id="job" ng-controller="VariantsController">
-	<div ng-include="'breadcrumb.html'"></div>
-	<div ng-include="'jobdetail.html'"></div>
+<div id="job">
+	<bzk-job-info></bzk-job-info>
 	<table class="pure-table pure-table-horizontal" ng-if="variants.length > 0">
 		<thead>
 			<tr>
@@ -24,7 +23,6 @@
 	</table>
 
 	<div ng-controller="JobLogsController">
-		<div class="logs" bzk-log="logger.job">
-		</div>
+		<div class="logs" bzk-log="logger.job"></div>
 	</div>
 </div>
