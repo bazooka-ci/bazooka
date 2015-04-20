@@ -14,10 +14,10 @@ const (
 	travisConfigFile  = ".travis.yml"
 )
 
-func FlattenEnvMap(mapp map[string]string) []string {
-	res := []string{}
+func FlattenEnvMap(mapp map[BzkString]BzkString) []BzkString {
+	res := []BzkString{}
 	for key, value := range mapp {
-		res = append(res, fmt.Sprintf("%s=%s", key, value))
+		res = append(res, BzkString(fmt.Sprintf("%s=%s", key, value)))
 	}
 	return res
 }
@@ -60,11 +60,10 @@ func Flush(object interface{}, outputFile string) error {
 	}
 	return ioutil.WriteFile(outputFile, d, 0644)
 }
-
-func GetEnvMap(envArray []string) map[string][]string {
+func GetEnvMap(envArray []BzkString) map[string][]string {
 	envKeyMap := make(map[string][]string)
 	for _, env := range envArray {
-		envSplit := strings.Split(env, "=")
+		envSplit := strings.Split(string(env), "=")
 		envKeyMap[envSplit[0]] = append(envKeyMap[envSplit[0]], envSplit[1])
 	}
 	return envKeyMap

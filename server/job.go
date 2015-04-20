@@ -135,11 +135,35 @@ func (c *context) startJob(params map[string]string, startJob lib.StartJob) (*re
 		orchestrationEnv["BZK_SCM_KEYFILE"] = fmt.Sprintf("%s/key", buildFolder)
 	}
 
+	projectCryptoKey, err := c.Connector.GetProjectCryptoKey(project.ID)
+	fmt.Printf("Key: %s\n", projectCryptoKey)
+	if err != nil {
+		_, keyNotFound := err.(*mongo.NotFoundError)
+		if !keyNotFound {
+			return nil, err
+		}
+	} else {
+		fmt.Printf("found\n")
+		err = os.MkdirAll(buildFolderLocal, 0644)
+		if err != nil {
+			return nil, err
+		}
+
+		err = ioutil.WriteFile(fmt.Sprintf("%s/crypto-key", buildFolderLocal), []byte(projectCryptoKey.Content), 0600)
+		if err != nil {
+			return nil, err
+		}
+		orchestrationEnv["BZK_CRYPTO_KEYFILE"] = fmt.Sprintf("%s/crypto-key", buildFolder)
+	}
+
 	container, err := client.Run(&docker.RunOptions{
-		Image:       orchestrationImage,
-		VolumeBinds: []string{fmt.Sprintf("%s:/bazooka", buildFolder), fmt.Sprintf("%s:/var/run/docker.sock", c.Env[BazookaEnvDockerSock])},
-		Env:         orchestrationEnv,
-		Detach:      true,
+		Image: orchestrationImage,
+		VolumeBinds: []string{
+			fmt.Sprintf("%s:/bazooka", buildFolder),
+			fmt.Sprintf("%s:/var/run/docker.sock", c.Env[BazookaEnvDockerSock]),
+		},
+		Env:    orchestrationEnv,
+		Detach: true,
 	})
 
 	runningJob.OrchestrationID = container.ID()

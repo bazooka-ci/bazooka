@@ -17,6 +17,7 @@ type stdPaths struct {
 	meta           string
 	artifacts      string
 	key            string
+	cryptoKey      string
 	dockerSock     string
 	dockerEndpoint string
 }
@@ -34,6 +35,7 @@ var paths = bzkPaths{
 		"/bazooka/meta",
 		"/bazooka/artifacts",
 		"/bazooka/key",
+		"/bazooka-cryptokey",
 		"/var/run/docker.sock",
 		"unix:///var/run/docker.sock",
 	},
@@ -44,6 +46,7 @@ var paths = bzkPaths{
 		os.Getenv(BazookaEnvHome) + "/meta",
 		os.Getenv(BazookaEnvHome) + "/artifacts",
 		os.Getenv(BazookaEnvSCMKeyfile),
+		os.Getenv(BazookaEnvHome) + "/crypto-key",
 		os.Getenv(BazookaEnvDockerSock),
 		"unix://" + os.Getenv(BazookaEnvDockerSock),
 	},

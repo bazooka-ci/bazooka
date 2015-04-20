@@ -33,13 +33,14 @@ func (p *LanguageParser) Parse() ([]*variantData, error) {
 	if err != nil {
 		return nil, err
 	}
-	
+
 	container, err := client.Run(&docker.RunOptions{
 		Image: p.Image,
 		VolumeBinds: []string{
 			fmt.Sprintf("%s:/bazooka", paths.host.source),
 			fmt.Sprintf("%s:/bazooka-output", paths.host.output),
 			fmt.Sprintf("%s:/meta", paths.host.meta),
+			fmt.Sprintf("%s:/bazooka-cryptokey", paths.host.cryptoKey),
 		},
 		Detach: true,
 	})

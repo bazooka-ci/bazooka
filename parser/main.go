@@ -185,10 +185,10 @@ func feedMatrix(extra map[string]interface{}, mx *matrix.Matrix) error {
 		switch k {
 		case "env":
 			if vs, ok := v.([]interface{}); ok {
-				envVars := []string{}
+				envVars := []lib.BzkString{}
 				for _, envVar := range vs {
 					if strEnvVar, ok := envVar.(string); ok {
-						envVars = append(envVars, strEnvVar)
+						envVars = append(envVars, lib.BzkString(strEnvVar))
 					} else {
 						return fmt.Errorf("Invalid config: env should contain a sequence of strings: found a non string value %v:%T", envVar, envVar)
 
@@ -227,10 +227,10 @@ func parseCounter(filePath string) string {
 
 // explodeProps starts from a list of key=valye strings and stores them into a map
 // it also handles repeated values, so ["A=1", "A=2", B="3"] gets transformed into {A: [1, 2], B: [3]}
-func explodeProps(props []string, keyPrefix string) map[string][]string {
+func explodeProps(props []lib.BzkString, keyPrefix string) map[string][]string {
 	envKeyMap := make(map[string][]string)
 	for _, env := range props {
-		envSplit := strings.Split(env, "=")
+		envSplit := strings.Split(string(env), "=")
 		envKeyMap[keyPrefix+envSplit[0]] = append(envKeyMap[keyPrefix+envSplit[0]], envSplit[1])
 	}
 	return envKeyMap
@@ -247,11 +247,11 @@ func prefixMapKeys(m map[string][]string, prefix string) map[string][]string {
 
 // extractPrefixedKeysMap returns a new map containing only the values whose keys have the specified prefix, removing the latter in the process
 // Given {xA: 1, B: 2, xC: 3}, it returns {A: 1, C: 3} if given a prefix x
-func extractPrefixedKeysMap(m map[string]string, prefix string) map[string]string {
-	res := make(map[string]string)
+func extractPrefixedKeysMap(m map[string]string, prefix string) map[lib.BzkString]lib.BzkString {
+	res := make(map[lib.BzkString]lib.BzkString)
 	for k, v := range m {
 		if strings.HasPrefix(k, prefix) {
-			res[k[len(prefix):]] = v
+			res[lib.BzkString(k[len(prefix):])] = lib.BzkString(v)
 		}
 	}
 	return res

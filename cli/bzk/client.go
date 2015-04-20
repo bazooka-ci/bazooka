@@ -246,6 +246,28 @@ func (c *Client) UpdateKey(projectID, keyPath string) (*lib.SSHKey, error) {
 	return updatedKey, err
 }
 
+func (c *Client) EncryptData(projectID, toEncryptString string) (string, error) {
+	toEncryptData := &lib.StringValue{
+		Value: toEncryptString,
+	}
+
+	requestURL, err := c.getRequestURL(fmt.Sprintf("project/%s/crypto", url.QueryEscape(projectID)))
+	if err != nil {
+		return "", err
+	}
+
+	encryptedData := &lib.StringValue{}
+
+	err = perigee.Put(requestURL, perigee.Options{
+		ReqBody:    &toEncryptData,
+		Results:    &encryptedData,
+		OkCodes:    []int{200},
+		SetHeaders: c.authenticateRequest,
+	})
+
+	return encryptedData.Value, err
+}
+
 func (c *Client) JobLog(jobID string) ([]lib.LogEntry, error) {
 	var log []lib.LogEntry
 

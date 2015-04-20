@@ -16,6 +16,7 @@ type stdPaths struct {
 	output         string
 	dockerSock     string
 	dockerEndpoint string
+	cryptoKey      string
 }
 
 type bzkPaths struct {
@@ -30,6 +31,7 @@ var paths = bzkPaths{
 		"/bazooka-output",
 		"/docker.sock",
 		"unix:///docker.sock",
+		"/bazooka-cryptokey",
 	},
 	stdPaths{
 		os.Getenv(BazookaEnvHome) + "/source",
@@ -37,5 +39,6 @@ var paths = bzkPaths{
 		os.Getenv(BazookaEnvHome) + "/work",
 		"",
 		"",
+		os.Getenv(BazookaEnvHome) + "/crypto-key",
 	},
 }
