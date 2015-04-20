@@ -3,12 +3,11 @@ package bazooka
 import (
 	"encoding/hex"
 	"fmt"
-	"io/ioutil"
 	"time"
 )
 
-const (
-	CRYPTOKEYFILE = "/bazooka-cryptokey"
+var (
+	PrivateKey []byte
 )
 
 type Project struct {
@@ -266,9 +265,8 @@ func extractBzkString(raw interface{}) (BzkString, error) {
 }
 
 func decryptBzkString(str string) ([]byte, error) {
-	key, err := readCryptoKey()
-	if err != nil {
-		return nil, err
+	if PrivateKey == nil {
+		return nil, fmt.Errorf("PrivateKey is not set")
 	}
 
 	toDecryptDataAsHex, err := hex.DecodeString(string(str))
@@ -276,28 +274,11 @@ func decryptBzkString(str string) ([]byte, error) {
 		return nil, fmt.Errorf("Unable to decode string as hexa data, reason is: %v\n", err)
 	}
 
-	decrypted, err := Decrypt(key, toDecryptDataAsHex)
+	decrypted, err := Decrypt(PrivateKey, toDecryptDataAsHex)
 	if err != nil {
 		return nil, fmt.Errorf("Error while trying to decrypt data, reason is: %v\n", err)
 	}
 	return decrypted, nil
-}
-
-func readCryptoKey() ([]byte, error) {
-	exists, err := FileExists(CRYPTOKEYFILE)
-	if err != nil {
-		return nil, fmt.Errorf("Error while trying to check existence of file: %s, reason is: %v\n", CRYPTOKEYFILE, err)
-	}
-
-	if !exists {
-		return nil, fmt.Errorf("Your bazooka config contains secured data but the keyfile can not be found at %s, reason is: %v\n", CRYPTOKEYFILE, err)
-	}
-
-	key, err := ioutil.ReadFile(CRYPTOKEYFILE)
-	if err != nil {
-		return nil, fmt.Errorf("Error while reading crypto key file: %s, reason is: %v\n", CRYPTOKEYFILE, err)
-	}
-	return key, nil
 }
 
 type ConfigMatrix struct {

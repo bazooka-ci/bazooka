@@ -6,7 +6,9 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"errors"
+	"fmt"
 	"io"
+	"io/ioutil"
 )
 
 // Encrypt encrypts some data with the key
@@ -44,4 +46,27 @@ func Decrypt(key, text []byte) ([]byte, error) {
 		return nil, err
 	}
 	return data, nil
+}
+
+func ReadCryptoKey(filePath string) ([]byte, error) {
+	exists, err := FileExists(filePath)
+	if err != nil {
+		return nil, fmt.Errorf("Error while trying to check existence of file: %s, reason is: %v\n", filePath, err)
+	}
+
+	if !exists {
+		return nil, fmt.Errorf("Your bazooka config contains secured data but the keyfile can not be found at %s, reason is: %v\n", filePath, err)
+	}
+
+	key, err := ioutil.ReadFile(filePath)
+	if err != nil {
+		return nil, fmt.Errorf("Error while reading crypto key file: %s, reason is: %v\n", filePath, err)
+	}
+	return key, nil
+}
+
+func LoadCryptoKeyFromFile(filePath string) error {
+	var err error
+	PrivateKey, err = ReadCryptoKey(filePath)
+	return err
 }

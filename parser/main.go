@@ -19,6 +19,7 @@ const (
 
 func init() {
 	log.SetFormatter(&bzklog.BzkFormatter{})
+	lib.LoadCryptoKeyFromFile("/bazooka-cryptokey")
 }
 
 func main() {
