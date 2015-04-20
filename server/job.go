@@ -136,14 +136,13 @@ func (c *context) startJob(params map[string]string, startJob lib.StartJob) (*re
 	}
 
 	projectCryptoKey, err := c.Connector.GetProjectCryptoKey(project.ID)
-	fmt.Printf("Key: %s\n", projectCryptoKey)
+
 	if err != nil {
 		_, keyNotFound := err.(*mongo.NotFoundError)
 		if !keyNotFound {
 			return nil, err
 		}
 	} else {
-		fmt.Printf("found\n")
 		err = os.MkdirAll(buildFolderLocal, 0644)
 		if err != nil {
 			return nil, err
