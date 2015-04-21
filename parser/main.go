@@ -19,7 +19,11 @@ const (
 
 func init() {
 	log.SetFormatter(&bzklog.BzkFormatter{})
-	lib.LoadCryptoKeyFromFile("/bazooka-cryptokey")
+	err := lib.LoadCryptoKeyFromFile("/bazooka-cryptokey")
+	if err != nil {
+		log.Fatal(err)
+	}
+
 }
 
 func main() {
