@@ -12,6 +12,7 @@ pages:
 - ['home/getting_started.md', 'Bazooka', 'Getting Started']
 - ['home/build_configuration.md', 'Bazooka', 'Build Configuration']
 - ['home/build_lifecycle.md', 'Bazooka', 'Build Lifecycle']
+- ['home/secured_variables.md', 'Bazooka', 'Secured Variables']
 - ['home/permutations.md', 'Bazooka', 'Permutations']
 - ['home/services.md', 'Bazooka', 'Services']
 - ['home/cli.md', 'Bazooka', 'Bazooka CLI']

@@ -43,7 +43,7 @@ image:
   - java:7
 ```
 
-Bazooka creates a build variant for every value of the `image` key. 
+Bazooka creates a build variant for every value of the `image` key.
 
 If the language versions is also set (`go` for `golang` or `jdk` for `java` for example), bazooka will still create one variant for every version.
 
@@ -59,10 +59,12 @@ env:
 
 In the example above, during the build, two environment variables `X` and `Y` will be available and set to `42` and `true` respectively.
 
+It is also possible to use [secured environment variables](../home/secured_variables/).
+
 ### Environment variables permutations
 
 You can specify multiple values for a single environment variable by repeating the variable assignement.
-Bazooka will the automatically generate all the possible [permutations](../home/permutations).
+Bazooka will the automatically generate all the possible [permutations](../home/permutations/).
 
 ```yaml
 env:
