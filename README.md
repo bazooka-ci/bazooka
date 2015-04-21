@@ -4,7 +4,7 @@ Bazooka is a **Continuous Integration and Continuous Deployment Server** designe
 
 ## The Philosophy
 
-We believe your build configuration should reside along your code, and be versioned as well. Tools like [Travis](https://travis-ci.org/) or [CircleCI](https://circleci.com/) leaded the way.
+We believe your build configuration should reside along your code, and be versioned as well. Tools like [Travis](https://travis-ci.org/) or [CircleCI](https://circleci.com/) lead the way.
 
 But most of this tools are hosted services, and the "install yourself" alternatives are few and did not match what we think a Continuous Integration Tool like this should be.
 
