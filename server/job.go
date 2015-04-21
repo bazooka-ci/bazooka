@@ -116,6 +116,7 @@ func (c *context) startJob(params map[string]string, startJob lib.StartJob) (*re
 		"BZK_SCM_URL":        project.ScmURI,
 		"BZK_SCM_REFERENCE":  startJob.ScmReference,
 		"BZK_HOME":           buildFolder,
+		"BZK_SRC":            buildFolder + "/source",
 		"BZK_PROJECT_ID":     project.ID,
 		"BZK_JOB_ID":         runningJob.ID,
 		"BZK_DOCKERSOCK":     c.Env[BazookaEnvDockerSock],
@@ -169,14 +170,41 @@ func (c *context) startJob(params map[string]string, startJob lib.StartJob) (*re
 		orchestrationEnv["BZK_CRYPTO_KEYFILE"] = fmt.Sprintf("%s/crypto-key", buildFolder)
 	}
 
+	orchestrationVolumes := []string{
+		fmt.Sprintf("%s:/bazooka", buildFolder),
+		fmt.Sprintf("%s:/var/run/docker.sock", c.Env[BazookaEnvDockerSock]),
+	}
+
+	reuseScmCheckout := project.Config["bzk.scm.reuse"] == "true"
+	if reuseScmCheckout {
+		hostSharedSourceFolder := fmt.Sprintf("%s/build/%s/source", c.Env[BazookaEnvHome], runningJob.ProjectID)
+		containerSharedSourceFolder := fmt.Sprintf("/bazooka/build/%s/source", runningJob.ProjectID)
+
+		_, err := os.Stat(containerSharedSourceFolder)
+		if err != nil {
+			if os.IsNotExist(err) {
+				err = os.MkdirAll(containerSharedSourceFolder, 0644)
+				if err != nil {
+					return nil, fmt.Errorf("Failed to create a shared source directory for project %s, job %s: %v",
+						runningJob.ProjectID, runningJob.ID, err)
+				}
+			} else {
+				return nil, fmt.Errorf("Failed to stat the shared source directory for project %s, job %s: %v",
+					runningJob.ProjectID, runningJob.ID, err)
+			}
+		}
+
+		orchestrationEnv["BZK_SRC"] = hostSharedSourceFolder
+		orchestrationEnv["BZK_REUSE_SCM_CHECKOUT"] = "1"
+
+		orchestrationVolumes = append(orchestrationVolumes, fmt.Sprintf("%s:/bazooka/source", hostSharedSourceFolder))
+	}
+
 	container, err := client.Run(&docker.RunOptions{
-		Image: orchestrationImage,
-		VolumeBinds: []string{
-			fmt.Sprintf("%s:/bazooka", buildFolder),
-			fmt.Sprintf("%s:/var/run/docker.sock", c.Env[BazookaEnvDockerSock]),
-		},
-		Env:    orchestrationEnv,
-		Detach: true,
+		Image:       orchestrationImage,
+		VolumeBinds: orchestrationVolumes,
+		Env:         orchestrationEnv,
+		Detach:      true,
 	})
 
 	runningJob.OrchestrationID = container.ID()

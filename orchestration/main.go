@@ -75,6 +75,8 @@ func main() {
 		"environment": env,
 	}).Info("Starting Orchestration")
 
+	reuseScmCheckout := os.Getenv("BZK_REUSE_SCM_CHECKOUT") != ""
+
 	f := &SCMFetcher{
 		MongoConnector: connector,
 		Options: &FetchOptions{
@@ -85,10 +87,16 @@ func main() {
 			LocalFolder: paths.host.source,
 			MetaFolder:  paths.host.meta,
 			KeyFile:     paths.host.key,
+			Update: reuseScmCheckout,
 			Env:         env,
 		},
 	}
-	if err := f.Fetch(containerLogger); err != nil {
+	err := f.Fetch(containerLogger)
+	if err!= nil {
+		f.Options.Update = false
+		err = f.Fetch(containerLogger)
+	}
+	if err != nil {
 		mongoErr := connector.FinishJob(env[BazookaEnvJobID], lib.JOB_ERRORED, time.Now())
 		if mongoErr != nil {
 			log.Fatal(mongoErr)

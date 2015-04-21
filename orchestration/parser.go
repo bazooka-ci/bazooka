@@ -53,6 +53,7 @@ func (p *Parser) Parse(logger Logger) ([]*variantData, error) {
 
 	env := map[string]string{
 		"BZK_HOME": paths.host.base,
+		"BZK_SRC": paths.host.source,
 	}
 	for k, v := range p.Options.Env {
 		env[k] = v

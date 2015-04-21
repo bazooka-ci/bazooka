@@ -4,9 +4,9 @@ import (
 	"fmt"
 
 	log "github.com/Sirupsen/logrus"
-	docker "github.com/bywan/go-dockercommand"
 	lib "github.com/bazooka-ci/bazooka/commons"
 	"github.com/bazooka-ci/bazooka/commons/mongo"
+	docker "github.com/bywan/go-dockercommand"
 )
 
 type SCMFetcher struct {
@@ -23,6 +23,7 @@ type FetchOptions struct {
 	MetaFolder  string
 	JobID       string
 	Env         map[string]string
+	Update       bool
 }
 
 func (f *SCMFetcher) Fetch(logger Logger) error {
@@ -44,6 +45,14 @@ func (f *SCMFetcher) Fetch(logger Logger) error {
 		return err
 	}
 
+	env := map[string]string{}
+	for k, v:=range f.Options.Env {
+		env[k] = v
+	}
+	if f.Options.Update {
+		env["UPDATE"] = "1"
+	}
+
 	volumes := []string{
 		fmt.Sprintf("%s:/bazooka", f.Options.LocalFolder),
 		fmt.Sprintf("%s:/meta", f.Options.MetaFolder),
@@ -51,11 +60,12 @@ func (f *SCMFetcher) Fetch(logger Logger) error {
 	if len(f.Options.KeyFile) > 0 {
 		volumes = append(volumes, fmt.Sprintf("%s:/bazooka-key", f.Options.KeyFile))
 	}
+	
 
 	container, err := client.Run(&docker.RunOptions{
 		Image:       image,
 		VolumeBinds: volumes,
-		Env:         f.Options.Env,
+		Env:         env,
 		Detach:      true,
 	})
 	if err != nil {
@@ -83,7 +93,7 @@ func (f *SCMFetcher) Fetch(logger Logger) error {
 	})
 
 	scmMetadata := &lib.SCMMetadata{}
-	
+
 	scmMetadataFile := fmt.Sprintf("%s/scm", paths.container.meta)
 	err = lib.Parse(scmMetadataFile, scmMetadata)
 	if err != nil {
