@@ -20,9 +20,9 @@ const (
 	BazookaEnvSCMReference = "BZK_SCM_REFERENCE"
 	BazookaEnvProjectID    = "BZK_PROJECT_ID"
 	BazookaEnvJobID        = "BZK_JOB_ID"
-	
-	BazookaEnvMongoAddr    = "MONGO_PORT_27017_TCP_ADDR"
-	BazookaEnvMongoPort    = "MONGO_PORT_27017_TCP_PORT"
+
+	BazookaEnvMongoAddr = "MONGO_PORT_27017_TCP_ADDR"
+	BazookaEnvMongoPort = "MONGO_PORT_27017_TCP_PORT"
 )
 
 func init() {
@@ -97,11 +97,12 @@ func main() {
 	p := &Parser{
 		MongoConnector: connector,
 		Options: &ParseOptions{
-			InputFolder:    paths.host.source,
-			OutputFolder:   paths.host.work,
-			DockerSock:     paths.host.dockerSock,
-			MetaFolder:     paths.host.meta,
-			Env:            env,
+			InputFolder:   paths.host.source,
+			OutputFolder:  paths.host.work,
+			DockerSock:    paths.host.dockerSock,
+			MetaFolder:    paths.host.meta,
+			CryptoKeyFile: paths.host.cryptoKey,
+			Env:           env,
 		},
 	}
 	parsedVariants, err := p.Parse(containerLogger)

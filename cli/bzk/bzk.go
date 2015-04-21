@@ -54,6 +54,8 @@ func main() {
 		cmd.Command("create", "Create a new bazooka user", createUserCommand)
 	})
 
+	app.Command("encrypt", "Encrypt some data", encryptData)
+
 	app.Command("run", "Run bazooka", run)
 
 	app.Command("login", "Log in to the bazooka server", login)

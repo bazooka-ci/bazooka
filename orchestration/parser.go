@@ -9,8 +9,8 @@ import (
 	lib "github.com/bazooka-ci/bazooka/commons"
 
 	log "github.com/Sirupsen/logrus"
-	docker "github.com/bywan/go-dockercommand"
 	"github.com/bazooka-ci/bazooka/commons/mongo"
+	docker "github.com/bywan/go-dockercommand"
 )
 
 type Parser struct {
@@ -19,11 +19,12 @@ type Parser struct {
 }
 
 type ParseOptions struct {
-	InputFolder    string
-	OutputFolder   string
-	DockerSock     string
-	MetaFolder     string
-	Env            map[string]string
+	InputFolder   string
+	OutputFolder  string
+	DockerSock    string
+	CryptoKeyFile string
+	MetaFolder    string
+	Env           map[string]string
 }
 
 type variantData struct {
@@ -53,18 +54,26 @@ func (p *Parser) Parse(logger Logger) ([]*variantData, error) {
 	env := map[string]string{
 		"BZK_HOME": paths.host.base,
 	}
-	for k, v:=range p.Options.Env {
-		env[k]=v
+	for k, v := range p.Options.Env {
+		env[k] = v
 	}
+
+	volumes := []string{
+		fmt.Sprintf("%s:/bazooka", p.Options.InputFolder),
+		fmt.Sprintf("%s:/meta", p.Options.MetaFolder),
+		fmt.Sprintf("%s:/bazooka-output", p.Options.OutputFolder),
+		fmt.Sprintf("%s:/docker.sock", p.Options.DockerSock),
+	}
+
+	if len(p.Options.CryptoKeyFile) > 0 {
+		volumes = append(volumes, fmt.Sprintf("%s:/bazooka-cryptokey", p.Options.CryptoKeyFile))
+	}
+
 	container, err := client.Run(&docker.RunOptions{
-		Image: image,
-		Env:   env,
-		VolumeBinds: []string{
-			fmt.Sprintf("%s:/bazooka", p.Options.InputFolder),
-			fmt.Sprintf("%s:/meta", p.Options.MetaFolder),
-			fmt.Sprintf("%s:/bazooka-output", p.Options.OutputFolder),
-			fmt.Sprintf("%s:/docker.sock", p.Options.DockerSock)},
-		Detach: true,
+		Image:       image,
+		Env:         env,
+		VolumeBinds: volumes,
+		Detach:      true,
 	})
 	if err != nil {
 		return nil, err

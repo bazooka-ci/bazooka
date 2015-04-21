@@ -1,8 +1,13 @@
 package bazooka
 
 import (
+	"encoding/hex"
 	"fmt"
 	"time"
+)
+
+var (
+	PrivateKey []byte
 )
 
 type Project struct {
@@ -131,7 +136,7 @@ type Config struct {
 	AfterSuccess   Commands     `yaml:"after_success,omitempty"`
 	AfterFailure   Commands     `yaml:"after_failure,omitempty"`
 	Services       []string     `yaml:"services,omitempty"`
-	Env            []string     `yaml:"env,omitempty"`
+	Env            []BzkString  `yaml:"env,omitempty"`
 	FromImage      string       `yaml:"from"`
 	Matrix         ConfigMatrix `yaml:"matrix,omitempty"`
 	Archive        Globs        `yaml:"archive,omitempty"`
@@ -220,6 +225,62 @@ func (g *Globs) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	}
 }
 
+type BzkString string
+
+func (c *BzkString) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	var raw interface{}
+	if err := unmarshal(&raw); err != nil {
+		return err
+	}
+
+	bzkStr, err := extractBzkString(raw)
+	if err != nil {
+		return err
+	}
+	*c = bzkStr
+	return nil
+}
+
+func extractBzkString(raw interface{}) (BzkString, error) {
+	switch convCmd := raw.(type) {
+	case string:
+		return BzkString(convCmd), nil
+	case map[interface{}]interface{}:
+		if len(convCmd) > 1 {
+			return "", fmt.Errorf("BzkString should either be a go string or 'secure: <string>'")
+		}
+		if _, ok := convCmd["secure"]; !ok {
+			return "", fmt.Errorf("BzkString should either be a go string or 'secure: <string>'")
+		}
+
+		decrypted, err := decryptBzkString(convCmd["secure"].(string))
+		if err != nil {
+			return "", fmt.Errorf("Error while trying to decrypt data, reason is: %v\n", err)
+		}
+
+		return BzkString(decrypted), nil
+	default:
+		return "", fmt.Errorf("BzkString should either be a go string or 'secure: <string>'")
+	}
+}
+
+func decryptBzkString(str string) ([]byte, error) {
+	if PrivateKey == nil {
+		return nil, fmt.Errorf("PrivateKey is not set")
+	}
+
+	toDecryptDataAsHex, err := hex.DecodeString(string(str))
+	if err != nil {
+		return nil, fmt.Errorf("Unable to decode string as hexa data, reason is: %v\n", err)
+	}
+
+	decrypted, err := Decrypt(PrivateKey, toDecryptDataAsHex)
+	if err != nil {
+		return nil, fmt.Errorf("Error while trying to decrypt data, reason is: %v\n", err)
+	}
+	return decrypted, nil
+}
+
 type ConfigMatrix struct {
 	Exclude []map[string]interface{} `yaml:"exclude,omitempty"`
 }
@@ -274,4 +335,14 @@ type SSHKey struct {
 	ID        string `bson:"id" json:"id"`
 	Content   string `bson:"content" json:"content"`
 	ProjectID string `bson:"project_id" json:"project_id"`
+}
+
+type CryptoKey struct {
+	ID        string `bson:"id" json:"id"`
+	Content   []byte `bson:"content" json:"content"`
+	ProjectID string `bson:"project_id" json:"project_id"`
+}
+
+type StringValue struct {
+	Value string `bson:"value" json:"value"`
 }

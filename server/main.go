@@ -71,6 +71,8 @@ func main() {
 	r.HandleFunc("/project/{id}/key", mkHandler(ctx.updateKey)).Methods("PUT")
 	r.HandleFunc("/project/{id}/key", mkHandler(ctx.listKeys)).Methods("GET")
 
+	r.HandleFunc("/project/{id}/crypto", mkHandler(ctx.encryptData)).Methods("PUT")
+
 	r.HandleFunc("/job", mkHandler(ctx.getAllJobs)).Methods("GET")
 	r.HandleFunc("/job/{id}", mkHandler(ctx.getJob)).Methods("GET")
 	r.HandleFunc("/job/{id}/log", mkHandler(ctx.getJobLog)).Methods("GET")

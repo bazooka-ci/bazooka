@@ -4,7 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"math/rand"
 	"net/http"
+	"time"
 
 	"github.com/gorilla/mux"
 
@@ -58,7 +60,27 @@ func (p *context) createProject(params map[string]string, body bodyFunc) (*respo
 		return nil, err
 	}
 
+	cryptoKey := &lib.CryptoKey{
+		Content:   []byte(randSeq(32)),
+		ProjectID: project.ID,
+	}
+
+	if err = p.Connector.AddCryptoKey(cryptoKey); err != nil {
+		return nil, err
+	}
+
 	return created(&project, "/project/"+project.ID)
+}
+
+var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
+
+func randSeq(n int) string {
+	b := make([]rune, n)
+	for i := range b {
+		rand.Seed(time.Now().UTC().UnixNano())
+		b[i] = letters[rand.Intn(len(letters))]
+	}
+	return string(b)
 }
 
 func (p *context) getProject(params map[string]string, body bodyFunc) (*response, error) {
