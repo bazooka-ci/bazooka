@@ -10,13 +10,13 @@ Docker is an essential part of Bazooka. To install it, follow [these instruction
 
 Everything in Bazooka can be done through the CLI (Command Line Interface), including installing bazooka itself
 
-Download Bazooka CLI with the following links, rename it simply to `bzk`add it to your `PATH`
+Download Bazooka CLI with the following links and add it to your `PATH`
 
-* [darwin_386](https://bintray.com/artifact/download/bazooka/bazooka/bzk_darwin_386)
-* [darwin_amd64](https://bintray.com/artifact/download/bazooka/bazooka/bzk_darwin_amd64)
-* [linux_386](https://bintray.com/artifact/download/bazooka/bazooka/bzk_linux_386)
-* [linux_amd64 ](https://bintray.com/artifact/download/bazooka/bazooka/bzk_linux_amd64)
-* [linux_arm](https://bintray.com/artifact/download/bazooka/bazooka/bzk_linux_arm)
+* [darwin_386](https://bintray.com/artifact/download/bazooka/bazooka/bzk_darwin_386/bzk)
+* [darwin_amd64](https://bintray.com/artifact/download/bazooka/bazooka/bzk_darwin_amd64/bzk)
+* [linux_386](https://bintray.com/artifact/download/bazooka/bazooka/bzk_linux_386/bzk)
+* [linux_amd64 ](https://bintray.com/artifact/download/bazooka/bazooka/bzk_linux_amd64/bzk)
+* [linux_arm](https://bintray.com/artifact/download/bazooka/bazooka/bzk_linux_arm/bzk)
 
 ## Installation
 
