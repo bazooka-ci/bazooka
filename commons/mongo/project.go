@@ -37,6 +37,8 @@ func (c *MongoConnector) GetProjectById(id string) (*lib.Project, error) {
 	if err := c.ByIdOrName("projects", id, result); err != nil {
 		return nil, err
 	}
+	result.Config = unescapeDotsInMap(result.Config)
+
 	return result, nil
 }
 
@@ -44,7 +46,13 @@ func (c *MongoConnector) GetProjects() ([]*lib.Project, error) {
 	result := []*lib.Project{}
 
 	err := c.database.C("projects").Find(bson.M{}).All(&result)
-	return result, err
+	if err != nil {
+		return nil, err
+	}
+	for _, project := range result {
+		project.Config = unescapeDotsInMap(project.Config)
+	}
+	return result, nil
 }
 
 func (c *MongoConnector) AddProject(project *lib.Project) error {
@@ -53,6 +61,7 @@ func (c *MongoConnector) AddProject(project *lib.Project) error {
 		return err
 	}
 
+	project.Config = escapeDotsInMap(project.Config)
 	return c.database.C("projects").Insert(project)
 }
 
@@ -64,9 +73,13 @@ func (c *MongoConnector) SetProjectConfig(id string, config map[string]string) e
 	selector := bson.M{
 		"id": proj.ID,
 	}
+	escapedConfig := map[string]string{}
+	for k, v := range config {
+		escapedConfig[escapeDots(k)] = v
+	}
 	request := bson.M{
 		"$set": bson.M{
-			"config": config,
+			"config": escapedConfig,
 		},
 	}
 	return c.database.C("projects").Update(selector, request)
@@ -82,7 +95,7 @@ func (c *MongoConnector) SetProjectConfigKey(id, key, value string) error {
 	}
 	request := bson.M{
 		"$set": bson.M{
-			fmt.Sprintf("config.%s", key): value,
+			fmt.Sprintf("config.%s", escapeDots(key)): value,
 		},
 	}
 	return c.database.C("projects").Update(selector, request)
@@ -98,10 +111,38 @@ func (c *MongoConnector) UnsetProjectConfigKey(id, key string) error {
 	}
 	request := bson.M{
 		"$unset": bson.M{
-			fmt.Sprintf("config.%s", key): "",
+			fmt.Sprintf("config.%s", escapeDots(key)): "",
 		},
 	}
 	return c.database.C("projects").Update(selector, request)
+}
+
+const (
+	escapedDot = "//"
+)
+
+func escapeDots(s string) string {
+	return strings.Replace(s, ".", escapedDot, -1)
+}
+
+func escapeDotsInMap(m map[string]string) map[string]string {
+	u := map[string]string{}
+	for k, v := range m {
+		u[escapeDots(k)] = v
+	}
+	return u
+}
+
+func unescapeDots(s string) string {
+	return strings.Replace(s, escapedDot, ".", -1)
+}
+
+func unescapeDotsInMap(m map[string]string) map[string]string {
+	u := map[string]string{}
+	for k, v := range m {
+		u[unescapeDots(k)] = v
+	}
+	return u
 }
 
 func (c *MongoConnector) AddJob(job *lib.Job) error {

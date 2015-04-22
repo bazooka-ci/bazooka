@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"strings"
 
 	lib "github.com/bazooka-ci/bazooka/commons"
 	"github.com/racker/perigee"
@@ -54,15 +55,15 @@ func (c *Client) GetProjectConfig(id string) (map[string]string, error) {
 }
 
 func (c *Client) SetProjectConfigKey(id, key, value string) error {
-
 	requestURL, err := c.getRequestURL(fmt.Sprintf("project/%s/config/%s", id, key))
 	if err != nil {
 		return err
 	}
 	return perigee.Put(requestURL, perigee.Options{
-		ReqBody:    value,
-		OkCodes:    []int{204},
-		SetHeaders: c.authenticateRequest,
+		ContentType: "text/plain",
+		ReqBody:     strings.NewReader(value),
+		OkCodes:     []int{204},
+		SetHeaders:  c.authenticateRequest,
 	})
 }
 
