@@ -60,7 +60,8 @@ func (ms *VariantMetas) Less(i, j int) bool {
 }
 
 type StartJob struct {
-	ScmReference string `json:"reference"`
+	ScmReference string   `json:"reference"`
+	Parameters   []string `json:"parameters"`
 }
 
 type JobStatus string
@@ -81,6 +82,7 @@ type Job struct {
 	Completed       time.Time   `bson:"completed" json:"completed"`
 	Status          JobStatus   `bson:"status" json:"status"`
 	SCMMetadata     SCMMetadata `bson:"scm_metadata" json:"scm_metadata"`
+	Parameters      []string    `bson:"parameters" json:"parameters"`
 }
 
 type LogEntry struct {

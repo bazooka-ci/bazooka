@@ -60,6 +60,7 @@ func Flush(object interface{}, outputFile string) error {
 	}
 	return ioutil.WriteFile(outputFile, d, 0644)
 }
+
 func GetEnvMap(envArray []BzkString) map[string][]string {
 	envKeyMap := make(map[string][]string)
 	for _, env := range envArray {

@@ -1,7 +1,9 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/bazooka-ci/bazooka/commons/matrix"
@@ -12,9 +14,10 @@ import (
 )
 
 const (
-	BazookaConfigFile = ".bazooka.yml"
-	TravisConfigFile  = ".travis.yml"
-	MX_ENV_PREFIX     = "env::"
+	BazookaConfigFile       = ".bazooka.yml"
+	TravisConfigFile        = ".travis.yml"
+	MX_ENV_PREFIX           = "env::"
+	BazookaEnvJobParameters = "BZK_JOB_PARAMETERS"
 )
 
 func init() {
@@ -33,6 +36,12 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	envParamString := os.Getenv(BazookaEnvJobParameters)
+	var envParams []lib.BzkString
+	json.Unmarshal([]byte(envParamString), &envParams)
+
+	jobParameters := explodeProps(envParams, MX_ENV_PREFIX)
 
 	// parse the configuration
 	config := &lib.Config{}
@@ -82,7 +91,21 @@ func main() {
 		// but since we would like to be able to extract them later, and to avoid mixing them with a language specific variables (like jdk, go, etc.)
 		// explode prefixes the env variables names with a prefix defined in the constant MX_ENV_PREFIX
 		// Hence, our matrix is more like: {"env::A": [1, 2], "env::B": [3]}
-		mx := matrix.Matrix(explodeProps(variant.config.Env, MX_ENV_PREFIX))
+		explodedProps := explodeProps(variant.config.Env, MX_ENV_PREFIX)
+
+		// insert or replace environment variables defined by the job parameters
+		for k, v := range jobParameters {
+			explodedProps[k] = v
+		}
+
+		// check if all environment variables are defined
+		for k, v := range explodedProps {
+			if len(v) == 1 && len(v[0]) == 0 {
+				log.Fatalf("Missing required parameter %v", k)
+			}
+		}
+
+		mx := matrix.Matrix(explodedProps)
 
 		// and then add the new language specific variables parsed from the meta file to the build matrix (which already contains the env variables)
 		err = feedMatrix(variant.meta, &mx)
@@ -236,7 +259,11 @@ func explodeProps(props []lib.BzkString, keyPrefix string) map[string][]string {
 	envKeyMap := make(map[string][]string)
 	for _, env := range props {
 		envSplit := strings.Split(string(env), "=")
-		envKeyMap[keyPrefix+envSplit[0]] = append(envKeyMap[keyPrefix+envSplit[0]], envSplit[1])
+		value := ""
+		if len(envSplit) == 2 {
+			value = envSplit[1]
+		}
+		envKeyMap[keyPrefix+envSplit[0]] = append(envKeyMap[keyPrefix+envSplit[0]], value)
 	}
 	return envKeyMap
 }

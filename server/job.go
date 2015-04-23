@@ -1,9 +1,11 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"os"
+	"strings"
 	"time"
 
 	log "github.com/Sirupsen/logrus"
@@ -89,25 +91,37 @@ func (c *context) startJob(params map[string]string, startJob lib.StartJob) (*re
 	}
 
 	runningJob := &lib.Job{
-		ProjectID: project.ID,
-		Started:   time.Now(),
+		ProjectID:  project.ID,
+		Started:    time.Now(),
+		Parameters: startJob.Parameters,
 	}
 
 	if err := c.Connector.AddJob(runningJob); err != nil {
 		return nil, err
 	}
 
+	for _, v := range startJob.Parameters {
+		if !strings.Contains(v, "=") {
+			return nil, &errorResponse{400, fmt.Sprintf("Environment variable %v is empty", v)}
+		}
+	}
+	jobParameters, err := json.Marshal(startJob.Parameters)
+	if err != nil {
+		return nil, err
+	}
+
 	buildFolder := fmt.Sprintf(buildFolderPattern, c.Env[BazookaEnvHome], runningJob.ProjectID, runningJob.ID)
 	orchestrationEnv := map[string]string{
-		"BZK_SCM":           project.ScmType,
-		"BZK_SCM_URL":       project.ScmURI,
-		"BZK_SCM_REFERENCE": startJob.ScmReference,
-		"BZK_HOME":          buildFolder,
-		"BZK_PROJECT_ID":    project.ID,
-		"BZK_JOB_ID":        runningJob.ID,
-		"BZK_DOCKERSOCK":    c.Env[BazookaEnvDockerSock],
-		BazookaEnvMongoAddr: c.Env[BazookaEnvMongoAddr],
-		BazookaEnvMongoPort: c.Env[BazookaEnvMongoPort],
+		"BZK_SCM":            project.ScmType,
+		"BZK_SCM_URL":        project.ScmURI,
+		"BZK_SCM_REFERENCE":  startJob.ScmReference,
+		"BZK_HOME":           buildFolder,
+		"BZK_PROJECT_ID":     project.ID,
+		"BZK_JOB_ID":         runningJob.ID,
+		"BZK_DOCKERSOCK":     c.Env[BazookaEnvDockerSock],
+		"BZK_JOB_PARAMETERS": string(jobParameters),
+		BazookaEnvMongoAddr:  c.Env[BazookaEnvMongoAddr],
+		BazookaEnvMongoPort:  c.Env[BazookaEnvMongoPort],
 	}
 
 	buildFolderLocal := fmt.Sprintf(buildFolderPattern, "/bazooka", runningJob.ProjectID, runningJob.ID)

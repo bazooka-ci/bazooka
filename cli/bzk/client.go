@@ -152,9 +152,10 @@ func (c *Client) CreateProject(name, scm, scmUri string) (*lib.Project, error) {
 	return createdProject, err
 }
 
-func (c *Client) StartJob(projectID, scmReference string) (*lib.Job, error) {
+func (c *Client) StartJob(projectID, scmReference string, envParameters []string) (*lib.Job, error) {
 	startJob := lib.StartJob{
 		ScmReference: scmReference,
+		Parameters:   envParameters,
 	}
 	createdJob := &lib.Job{}
 
