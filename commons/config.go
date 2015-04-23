@@ -64,7 +64,7 @@ func Flush(object interface{}, outputFile string) error {
 func GetEnvMap(envArray []BzkString) map[string][]string {
 	envKeyMap := make(map[string][]string)
 	for _, env := range envArray {
-		envSplit := strings.Split(string(env), "=")
+		envSplit := strings.SplitN(string(env), "=", 2)
 		envKeyMap[envSplit[0]] = append(envKeyMap[envSplit[0]], envSplit[1])
 	}
 	return envKeyMap

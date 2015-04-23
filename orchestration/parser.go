@@ -171,7 +171,7 @@ func parseMeta(file string, vf *variantData) error {
 						if strings.HasPrefix(strEnvVar, "BZK_") {
 							continue
 						}
-						nv := strings.Split(strEnvVar, "=")
+						nv := strings.SplitN(strEnvVar, "=", 2)
 						vf.meta.Append(&lib.VariantMeta{Kind: lib.META_ENV, Name: nv[0], Value: nv[1]})
 					} else {
 						return fmt.Errorf("Invalid config: env should contain a sequence of strings: found a non string value %v:%T", envVar, envVar)

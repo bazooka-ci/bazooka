@@ -258,7 +258,7 @@ func parseCounter(filePath string) string {
 func explodeProps(props []lib.BzkString, keyPrefix string) map[string][]string {
 	envKeyMap := make(map[string][]string)
 	for _, env := range props {
-		envSplit := strings.Split(string(env), "=")
+		envSplit := strings.SplitN(string(env), "=", 2)
 		value := ""
 		if len(envSplit) == 2 {
 			value = envSplit[1]
