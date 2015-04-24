@@ -15,12 +15,6 @@ import (
 )
 
 const (
-	BazookaEnvSCM          = "BZK_SCM"
-	BazookaEnvSCMUrl       = "BZK_SCM_URL"
-	BazookaEnvSCMReference = "BZK_SCM_REFERENCE"
-	BazookaEnvProjectID    = "BZK_PROJECT_ID"
-	BazookaEnvJobID        = "BZK_JOB_ID"
-
 	BazookaEnvMongoAddr = "MONGO_PORT_27017_TCP_ADDR"
 	BazookaEnvMongoPort = "MONGO_PORT_27017_TCP_PORT"
 )
