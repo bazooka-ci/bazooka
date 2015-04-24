@@ -15,17 +15,11 @@ import (
 	"gopkg.in/mgo.v2/bson"
 )
 
-func (c *MongoConnector) HasProject(name string, scmType string, scmURI string) (bool, error) {
+func (c *MongoConnector) HasProject(name string) (bool, error) {
 	request := bson.M{}
 
 	if len(name) > 0 {
 		request["name"] = name
-	}
-	if len(scmType) > 0 {
-		request["scm_type"] = scmType
-	}
-	if len(scmURI) > 0 {
-		request["scm_uri"] = scmURI
 	}
 
 	count, err := c.database.C("projects").Find(request).Count()

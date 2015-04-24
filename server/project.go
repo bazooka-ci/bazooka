@@ -28,15 +28,7 @@ func (p *context) createProject(params map[string]string, body bodyFunc) (*respo
 		return badRequest("name is mandatory")
 	}
 
-	exists, err := p.Connector.HasProject("", project.ScmType, project.ScmURI)
-	switch {
-	case err != nil:
-		return nil, err
-	case exists:
-		return conflict("scm_uri is already known")
-	}
-
-	exists, err = p.Connector.HasProject(project.Name, "", "")
+	exists, err := p.Connector.HasProject(project.Name)
 	switch {
 	case err != nil:
 		return nil, err
