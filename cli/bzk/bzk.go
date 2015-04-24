@@ -29,7 +29,7 @@ func main() {
 		cmd.Command("env", "View or modify a bazooka project environment variable", func(cfgCmd *cli.Cmd) {
 			cfgCmd.Command("list", "List project environment variables", listProjectEnvCommand)
 			cfgCmd.Command("get", "Get a specific project environment variable", getProjectEnvKeyCommand)
-			cfgCmd.Command("set", "Set a specific projectenvironment variable", setProjectEnvKeyCommand)
+			cfgCmd.Command("set", "Set a specific project environment variable", setProjectEnvKeyCommand)
 			cfgCmd.Command("unset", "Delete a specific project configuration key", unsetProjectEnvKeyCommand)
 		})
 	})

@@ -75,10 +75,25 @@ func (c *context) startJob(params map[string]string, startJob lib.StartJob, comm
 		return nil, &errorResponse{500, fmt.Sprintf("Failed to retrieve the orchestration image: %v", err)}
 	}
 
+	// Merge project settings with job parameters
+	incomingEnvParameters := lib.GetStringsEnvMap(startJob.Parameters)
+	for k, v := range project.Env {
+		if _, ok := incomingEnvParameters[k]; !ok {
+			incomingEnvParameters[k] = append(incomingEnvParameters[k], v)
+		}
+	}
+
+	flattenParameters := []string{}
+	for k, v := range incomingEnvParameters {
+		for _, i := range v {
+			flattenParameters = append(flattenParameters, k+"="+i)
+		}
+	}
+
 	runningJob := &lib.Job{
 		ProjectID:  project.ID,
 		Started:    time.Now(),
-		Parameters: startJob.Parameters,
+		Parameters: flattenParameters,
 		SCMMetadata: lib.SCMMetadata{
 			Reference: startJob.ScmReference,
 		},
@@ -89,7 +104,7 @@ func (c *context) startJob(params map[string]string, startJob lib.StartJob, comm
 	}
 
 	var parametersAsBzkString []lib.BzkString
-	for _, v := range startJob.Parameters {
+	for _, v := range flattenParameters {
 		if !strings.Contains(v, "=") {
 			return nil, &errorResponse{400, fmt.Sprintf("Environment variable %v is empty", v)}
 		}
@@ -98,6 +113,7 @@ func (c *context) startJob(params map[string]string, startJob lib.StartJob, comm
 			Name: name, Value: value, Secured: false,
 		})
 	}
+
 	jobParameters, err := json.Marshal(parametersAsBzkString)
 	if err != nil {
 		return nil, err
