@@ -1,6 +1,9 @@
 default: images
 
-.PHONY: scm runner docs web
+.PHONY: cli devimages images docs web
+
+cli:
+	cd cli && make
 
 devimages:
 	./scripts/build-devimages.sh
