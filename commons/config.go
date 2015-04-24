@@ -65,7 +65,11 @@ func GetEnvMap(envArray []BzkString) map[string][]string {
 	envKeyMap := make(map[string][]string)
 	for _, env := range envArray {
 		envSplit := strings.SplitN(string(env), "=", 2)
-		envKeyMap[envSplit[0]] = append(envKeyMap[envSplit[0]], envSplit[1])
+		value := ""
+		if len(envSplit) == 2 {
+			value = envSplit[1]
+		}
+		envKeyMap[envSplit[0]] = append(envKeyMap[envSplit[0]], value)
 	}
 	return envKeyMap
 }
