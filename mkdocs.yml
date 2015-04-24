@@ -15,6 +15,7 @@ pages:
 - ['home/secured_variables.md', 'Bazooka', 'Secured Variables']
 - ['home/permutations.md', 'Bazooka', 'Permutations']
 - ['home/services.md', 'Bazooka', 'Services']
+- ['home/project_configuration.md', 'Bazooka', 'Project Configuration']
 - ['home/cli.md', 'Bazooka', 'Bazooka CLI']
 - ['home/travis.md', 'Bazooka', 'Travis Compatibility']
 - ['languages/java.md', 'Language guides', 'Java']
