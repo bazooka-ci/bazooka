@@ -8,6 +8,3 @@ devimage: gox
 
 gox:
 	gox -osarch="linux/amd64" -output="main"
-
-push:
-	docker push bazooka/parser
