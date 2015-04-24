@@ -1,6 +1,6 @@
 # Building a Java project
 
-This guide walks you through the build environment and configuration topics specific to Java projects. Please make sure to read our [Getting Started](../home/getting_started) and [general build configuration](../home/build_configuration) guides first.
+This guide walks you through the build environment and configuration topics specific to Java projects. Please make sure to read our [Getting Started](./home/getting_started) and [general build configuration](./home/build_configuration) guides first.
 
 ## Choose the Java language
 
@@ -30,7 +30,7 @@ jdk:
   - oraclejdk8
 ```
 
-This will generate [permutations](../home/permutations) on which your project will be tested
+This will generate [permutations](./home/permutations) on which your project will be tested
 
 ## Discovering your build tool
 

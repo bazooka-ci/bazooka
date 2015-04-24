@@ -5,7 +5,6 @@ site_description: Bazooka Documentation
 repo_url: https://github.com/bazooka-ci/bazooka/
 theme_dir: 'docs/_themes'
 theme: readthedocs
-use_directory_urls: false
 
 pages:
 - ['index.md', 'Home']

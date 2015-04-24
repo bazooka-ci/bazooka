@@ -59,12 +59,12 @@ env:
 
 In the example above, during the build, two environment variables `X` and `Y` will be available and set to `42` and `true` respectively.
 
-It is also possible to use [secured environment variables](../home/secured_variables/).
+It is also possible to use [secured environment variables](./home/secured_variables/).
 
 ### Environment variables permutations
 
 You can specify multiple values for a single environment variable by repeating the variable assignement.
-Bazooka will the automatically generate all the possible [permutations](../home/permutations/).
+Bazooka will the automatically generate all the possible [permutations](./home/permutations/).
 
 ```yaml
 env:
@@ -87,7 +87,7 @@ This allow you to make sure your project works with different configurations.
 
 ## Matrix
 
-The `matrix` allows you to have a finer control over the generated [permutations](../home/permutations).
+The `matrix` allows you to have a finer control over the generated [permutations](./home/permutations).
 At this time, only `exclude` parameter is supported and lets you exclude some specific possible permutations.
 
 ```yaml
@@ -99,7 +99,7 @@ matrix:
 ```
 
 
-More details on the [permutation page](../home/permutations)
+More details on the [permutation page](./home/permutations)
 
 ## Archiving
 
@@ -144,4 +144,4 @@ services:
   - mongodb
 ```
 
-More details on the [services page](../home/services)
+More details on the [services page](./home/services)
