@@ -1,4 +1,7 @@
 default: install
 
-install:
-	go install -v github.com/bazooka-ci/bazooka/cli/bzk
+commons:
+	cd ../commons && go install ./...
+
+install: commons
+	cd bzk && go install
