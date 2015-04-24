@@ -37,7 +37,7 @@ func (r *Runner) Run(logger Logger) error {
 		}
 		variant := ivariant
 		par.Submit(func() error {
-			return r.runContainer(logger, variant, r.Env)
+			return r.runContainer(logger, variant)
 		}, variant)
 	}
 
@@ -58,7 +58,7 @@ func (r *Runner) Run(logger Logger) error {
 	return nil
 }
 
-func (r *Runner) runContainer(logger Logger, vd *variantData, env map[string]string) error {
+func (r *Runner) runContainer(logger Logger, vd *variantData) error {
 	success := true
 	servicesFile := fmt.Sprintf("%s/%d/services", paths.container.work, vd.counter)
 
@@ -70,7 +70,7 @@ func (r *Runner) runContainer(logger Logger, vd *variantData, env map[string]str
 	serviceContainers := []*docker.Container{}
 	containerLinks := []string{}
 	for _, service := range servicesList {
-		name := fmt.Sprintf("service-%s-%s-%d", env[BazookaEnvProjectID], env[BazookaEnvJobID], vd.variant.Number)
+		name := fmt.Sprintf("service-%s-%s-%d", r.Env[BazookaEnvProjectID], r.Env[BazookaEnvJobID], vd.variant.Number)
 		containerLinks = append(containerLinks, fmt.Sprintf("%s:%s", name, service))
 		serviceContainer, err := r.client.Run(&docker.RunOptions{
 			Name:   name,

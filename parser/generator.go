@@ -199,7 +199,7 @@ func (g *Generator) GenerateDockerfile() error {
 	}
 
 	for _, env := range g.Config.Env {
-		envSplit := strings.Split(string(env), "=")
+		envSplit := strings.SplitN(string(env), "=", 2)
 		dockerBuffer.WriteString(fmt.Sprintf("ENV  %s %s\n", envSplit[0], envSplit[1]))
 	}
 

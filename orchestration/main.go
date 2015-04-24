@@ -15,11 +15,12 @@ import (
 )
 
 const (
-	BazookaEnvSCM          = "BZK_SCM"
-	BazookaEnvSCMUrl       = "BZK_SCM_URL"
-	BazookaEnvSCMReference = "BZK_SCM_REFERENCE"
-	BazookaEnvProjectID    = "BZK_PROJECT_ID"
-	BazookaEnvJobID        = "BZK_JOB_ID"
+	BazookaEnvSCM           = "BZK_SCM"
+	BazookaEnvSCMUrl        = "BZK_SCM_URL"
+	BazookaEnvSCMReference  = "BZK_SCM_REFERENCE"
+	BazookaEnvProjectID     = "BZK_PROJECT_ID"
+	BazookaEnvJobID         = "BZK_JOB_ID"
+	BazookaEnvJobParameters = "BZK_JOB_PARAMETERS"
 
 	BazookaEnvMongoAddr = "MONGO_PORT_27017_TCP_ADDR"
 	BazookaEnvMongoPort = "MONGO_PORT_27017_TCP_PORT"
@@ -40,11 +41,12 @@ func main() {
 	defer connector.Close()
 
 	env := map[string]string{
-		BazookaEnvSCM:          os.Getenv(BazookaEnvSCM),
-		BazookaEnvSCMUrl:       os.Getenv(BazookaEnvSCMUrl),
-		BazookaEnvSCMReference: os.Getenv(BazookaEnvSCMReference),
-		BazookaEnvProjectID:    os.Getenv(BazookaEnvProjectID),
-		BazookaEnvJobID:        os.Getenv(BazookaEnvJobID),
+		BazookaEnvSCM:           os.Getenv(BazookaEnvSCM),
+		BazookaEnvSCMUrl:        os.Getenv(BazookaEnvSCMUrl),
+		BazookaEnvSCMReference:  os.Getenv(BazookaEnvSCMReference),
+		BazookaEnvProjectID:     os.Getenv(BazookaEnvProjectID),
+		BazookaEnvJobID:         os.Getenv(BazookaEnvJobID),
+		BazookaEnvJobParameters: os.Getenv(BazookaEnvJobParameters),
 	}
 
 	var containerLogger Logger = func(image string, variantID string, container *docker.Container) {

@@ -45,7 +45,7 @@ func fmtAuthor(author lib.Person) string {
 }
 
 func startJobCommand(cmd *cli.Cmd) {
-	cmd.Spec = "PROJECT_ID [SCM_REF]"
+	cmd.Spec = "PROJECT_ID [SCM_REF] [--env...]"
 
 	pid := cmd.String(cli.StringArg{
 		Name: "PROJECT_ID",
@@ -56,6 +56,10 @@ func startJobCommand(cmd *cli.Cmd) {
 		Desc:  "the scm ref to build",
 		Value: "master",
 	})
+	envParameters := cmd.Strings(cli.StringsOpt{
+		Name: "e env",
+		Desc: "define an environment variable for the job",
+	})
 
 	cmd.Action = func() {
 
@@ -63,7 +67,7 @@ func startJobCommand(cmd *cli.Cmd) {
 		if err != nil {
 			log.Fatal(err)
 		}
-		res, err := client.StartJob(*pid, *scmRef)
+		res, err := client.StartJob(*pid, *scmRef, *envParameters)
 		if err != nil {
 			log.Fatal(err)
 		}
