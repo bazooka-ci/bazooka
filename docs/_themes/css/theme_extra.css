@@ -45,3 +45,7 @@ code {
 code {
   font-size: 80% !important;
 }
+
+.hljs {
+  line-height: 18px;
+}
