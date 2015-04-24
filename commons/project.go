@@ -10,6 +10,7 @@ type Project struct {
 	HookKey    string            `bson:"hook_key" json:"hook_key"`
 	JobCounter int               `bson:"job_counter" json:"job_counter"`
 	Config     map[string]string `bson:"config" json:"config"`
+	Env        map[string]string `bson:"env" json:"env"`
 }
 
 type ProjectWithStatus struct {

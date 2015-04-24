@@ -12,6 +12,7 @@ type Project struct {
 	config *Config
 	Key    *ProjectKey
 	Config *ProjectConfig
+	Env    *ProjectEnv
 }
 
 func (c *Project) List() ([]lib.Project, error) {

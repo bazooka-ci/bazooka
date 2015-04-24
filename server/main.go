@@ -77,6 +77,10 @@ func main() {
 	r.HandleFunc("/project/{id}/key", ctx.mkAuthHandler(ctx.updateKey)).Methods("PUT")
 	r.HandleFunc("/project/{id}/key", ctx.mkAuthHandler(ctx.listKeys)).Methods("GET")
 
+	r.HandleFunc("/project/{id}/env", ctx.mkAuthHandler(ctx.getProjectEnv)).Methods("GET")
+	r.HandleFunc("/project/{id}/env/{key}", ctx.mkAuthHandler(ctx.setProjectEnvKey)).Methods("PUT")
+	r.HandleFunc("/project/{id}/env/{key}", ctx.mkAuthHandler(ctx.unsetProjectEnvKey)).Methods("DELETE")
+
 	r.HandleFunc("/project/{id}/crypto", ctx.mkAuthHandler(ctx.encryptData)).Methods("PUT")
 
 	r.HandleFunc("/job", ctx.mkAuthHandler(ctx.getAllJobs)).Methods("GET")

@@ -73,17 +73,17 @@ func (p *context) getProject(r *request) (*response, error) {
 	return ok(&project)
 }
 
-func (c *context) getProjects(r *request) (*response, error) {
+func (p *context) getProjects(r *request) (*response, error) {
 	includeStatus := len(r.r.URL.Query().Get("include-status")) > 0
 
 	if includeStatus {
-		projects, err := c.Connector.GetProjectsWithStatus()
+		projects, err := p.Connector.GetProjectsWithStatus()
 		if err != nil {
 			return nil, err
 		}
 		return ok(projects)
 	}
-	projects, err := c.Connector.GetProjects()
+	projects, err := p.Connector.GetProjects()
 	if err != nil {
 		return nil, err
 	}
@@ -116,6 +116,40 @@ func (p *context) setProjectConfigKey(r *request) (*response, error) {
 
 func (p *context) unsetProjectConfigKey(r *request) (*response, error) {
 	if err := p.Connector.UnsetProjectConfigKey(r.vars["id"], r.vars["key"]); err != nil {
+		if err.Error() != "not found" {
+			return nil, err
+		}
+		return notFound("project not found")
+	}
+
+	return noContent()
+}
+
+func (p *context) getProjectEnv(r *request) (*response, error) {
+	project, err := p.Connector.GetProjectById(r.vars["id"])
+	if err != nil {
+		if err.Error() != "not found" {
+			return nil, err
+		}
+		return notFound("project not found")
+	}
+
+	return ok(project.Env)
+}
+
+func (p *context) setProjectEnvKey(r *request) (*response, error) {
+	id, key := r.vars["id"], r.vars["key"]
+	body := r.rawBody()
+
+	if err := p.Connector.SetProjectEnvKey(id, key, string(body)); err != nil {
+		return nil, err
+	}
+
+	return noContent()
+}
+
+func (p *context) unsetProjectEnvKey(r *request) (*response, error) {
+	if err := p.Connector.UnsetProjectEnvKey(r.vars["id"], r.vars["key"]); err != nil {
 		if err.Error() != "not found" {
 			return nil, err
 		}
