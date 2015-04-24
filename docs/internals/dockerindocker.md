@@ -13,7 +13,7 @@ To run Docker containers within another Container, we mount as a volume the Dock
 ```bash
 docker run -v /var/run/docker.socker:/var/run/docker.sock <my_image>
 ```
-![](../assets/img/docker_in_docker.png)
+![](../../assets/img/docker_in_docker.png)
 
 One thing you should consider when building bazooka: Each container can have access to all the containers on the host, even bazooka server, web or the MongoDB database.
 
