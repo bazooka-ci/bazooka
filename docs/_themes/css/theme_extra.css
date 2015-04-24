@@ -41,3 +41,7 @@ h3 {
 code {
     white-space: pre;
 }
+
+code {
+  font-size: 75% !important;
+}
