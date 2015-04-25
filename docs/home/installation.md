@@ -23,7 +23,7 @@ Download Bazooka CLI with the following links and add it to your `PATH`
 Installing bazooka is a one-liner
 
 ```bash
-$ bzk run
+$ bzk service start
 ```
 
 You will be prompted for minimal information need for bazooka to run
@@ -39,5 +39,5 @@ You will be prompted for minimal information need for bazooka to run
 If you already installed bazooka once and want to upgrade it to the latest version, it's as simple as
 
 ```bash
-$ bzk run --update
+$ bzk service upgrade
 ```

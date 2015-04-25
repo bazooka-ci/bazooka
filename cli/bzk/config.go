@@ -26,6 +26,7 @@ type Config struct {
 	Home       string `yaml:"home"`
 	DockerSock string `yaml:"docker_sock"`
 	SCMKey     string `yaml:"scm_key"`
+	Registry   string `yaml:"registry"`
 }
 
 func saveConfig(authConfig *Config) error {
