@@ -1,6 +1,6 @@
-"usr strict";
+"use strict";
 
-angular.module('bzk.jobs').controller('JobDetailController', function($scope, JobResource, $routeParams, $timeout){
+angular.module('bzk.job').controller('JobController', function($scope, BzkApi, $routeParams, $timeout){
 	var jId;
 	var pId;
 	var refreshJobPromise;
@@ -12,13 +12,13 @@ angular.module('bzk.jobs').controller('JobDetailController', function($scope, Jo
 	function refresh() {
 		pId = $routeParams.pid;
 		if(pId) {
-			JobResource.project(pId).success(function(project){
+			BzkApi.project.get(pId).success(function(project){
 				$scope.project = project;
 			});
 		}
 		jId = $routeParams.jid;
   		if(jId) {
-			JobResource.job(jId).success(function(job){
+			BzkApi.job.get(jId).success(function(job){
 				$scope.job = job;
 
 				if (job.status==='RUNNING') {
@@ -41,7 +41,7 @@ angular.module('bzk.jobs').controller('JobDetailController', function($scope, Jo
 	function refreshVariants() {
 		var jId = $routeParams.jid;
   		if(jId) {
-			JobResource.variants(jId).success(function(variants){
+			BzkApi.job.variants(jId).success(function(variants){
 
 				$scope.variants = variants;
 				setupMeta(variants);

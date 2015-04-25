@@ -11,10 +11,10 @@
 		</tr>
 	</thead>
 
-	<tbody ng-repeat="job in jobs | orderBy:'completed':true">
+	<tbody ng-repeat="job in jobs() | orderBy:'completed':true">
 		<tr class="{{job.status | lowercase}}">
 			<td><span class="{{job.status | lowercase}}">{{job.status | titleCase}}</span></td>
-			<td><a ng-href="#/p/{{job.project_id | bzkExcerpt}}/{{job | bzkId}}">{{getProjectName(job.project_id)}}/{{job.number}}</a></td>
+			<td><a ng-href="#/p/{{job.project_id | bzkExcerpt}}/{{job | bzkId}}">{{projectName(job.project_id)}}/{{job.number}}</a></td>
 			<td>
 			<span ng-if="job.scm_metadata.reference">{{job.scm_metadata.commit_id | bzkExcerpt}} ({{job.scm_metadata.reference}})</span>
 			</td>

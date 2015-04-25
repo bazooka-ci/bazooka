@@ -1,6 +1,6 @@
 "use strict";
 
-angular.module('bzk.home', ['bzk.utils', 'bzk.jobs', 'ngRoute']);
+angular.module('bzk.home', ['bzk.utils', 'ngRoute']);
 
 angular.module('bzk.home').config(function($routeProvider){
 	$routeProvider.when('/', {
@@ -8,12 +8,4 @@ angular.module('bzk.home').config(function($routeProvider){
 			controller: 'HomeController',
 			reloadOnSearch: false
 		});
-});
-
-angular.module('bzk.home').factory('HomeJobResource', function($http){
-	return {
-		jobs: function() {
-			return $http.get('/api/job');
-		}
-	};
 });

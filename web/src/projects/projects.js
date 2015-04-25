@@ -10,27 +10,16 @@ angular.module('bzk.projects').config(function($routeProvider){
 		});
 });
 
-angular.module('bzk.projects').factory('ProjectListResource', function($http){
-	return {
-		list: function() {
-			return $http.get('/api/project');
-		},
-		create: function (project) {
-			return $http.post('/api/project', project);
-		}
-	};
-});
-
-angular.module('bzk.projects').controller('ProjectListController', function($scope, $rootScope, $routeParams, ProjectListResource){
+angular.module('bzk.projects').controller('ProjectListController', function($scope, BzkApi, $rootScope, $routeParams){
 	var pId = $routeParams.pid;
 
-	ProjectListResource.list().success(function(projectList){
+	BzkApi.project.list().success(function(projectList){
 		$scope.projectList = projectList;
 	});
 
 	$scope.createProject = function(project) {
-		ProjectListResource.create(project).success(function(){
-			ProjectListResource.list().success(function(projectList){
+		BzkApi.project.create(project).success(function(){
+			BzkApi.project.list().success(function(projectList){
 				$scope.projectList = projectList;
 				$rootScope.$broadcast('project.new');
 			});
@@ -38,6 +27,6 @@ angular.module('bzk.projects').controller('ProjectListController', function($sco
 	};
 });
 
-angular.module('bzk.projects').controller('NewProjectController', function($scope, $routeParams, ProjectListResource){
+angular.module('bzk.projects').controller('NewProjectController', function($scope, $routeParams, BzkApi){
 
 });

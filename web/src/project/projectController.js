@@ -1,15 +1,14 @@
 "use strict";
 
-angular.module('bzk.project').controller('ProjectController', function($scope, $routeParams, $interval, ProjectResource){
+angular.module('bzk.project').controller('ProjectController', function($scope, BzkApi, $routeParams, $interval, $location){
 	var pId = $routeParams.pid;
 
-	ProjectResource.fetch(pId).success(function(project){
+	BzkApi.project.get(pId).success(function(project){
 		$scope.project = project;
 	});
 
-	var pId = $routeParams.pid;
 	$scope.refreshJobs = function() {
-		ProjectResource.jobs(pId).success(function(jobs){
+		BzkApi.project.jobs(pId).success(function(jobs){
 			$scope.jobs = jobs;
 		});
 	};
@@ -25,7 +24,7 @@ angular.module('bzk.project').controller('ProjectController', function($scope, $
 	};
 
 	$scope.startJob = function() {
-		ProjectResource.build($scope.project.id, $scope.newJob.reference).success(function(){
+		BzkApi.project.build($scope.project.id, $scope.newJob.reference).success(function(){
 			$scope.refreshJobs();
 			$scope.showNewJob = false;
 		});

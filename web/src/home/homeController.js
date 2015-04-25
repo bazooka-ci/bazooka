@@ -1,6 +1,8 @@
-angular.module('bzk.home').controller('HomeController', function($scope, HomeJobResource, $interval){
+"use strict";
+
+angular.module('bzk.home').controller('HomeController', function($scope, BzkApi, $interval){
 	$scope.refreshJobs = function() {
-		HomeJobResource.jobs().success(function(jobs){
+		BzkApi.job.list().success(function(jobs){
 			$scope.jobs = jobs;
 		});
 	};

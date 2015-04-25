@@ -16,7 +16,14 @@ var runSequence = require('run-sequence');
 
 var paths = {
   src: {
-    js: ['src/**/*.js', '!src/dev.js'],
+    js: [
+    'src/utils/utils.js',
+    'src/home/home.js',
+    'src/job/job.js',
+    'src/project/project.js',
+    'src/home/home.js',
+    'src/**/*.js',
+    '!src/dev.js'],
     scss: 'src/**/*.scss',
     html: ['src/**/*.html', '!index*.html'],
     htmlIndex: 'src/index-build.html',
