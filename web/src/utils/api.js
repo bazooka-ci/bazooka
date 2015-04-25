@@ -22,7 +22,7 @@ angular.module('bzk.utils').factory('BzkApi', function($http) {
             }
         },
         job: {
-        	list: function() {
+            list: function() {
                 return $http.get('/api/job');
             },
             get: function(id) {
