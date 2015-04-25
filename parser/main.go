@@ -39,7 +39,10 @@ func main() {
 
 	envParamString := os.Getenv(BazookaEnvJobParameters)
 	var envParams []lib.BzkString
-	json.Unmarshal([]byte(envParamString), &envParams)
+	err = json.Unmarshal([]byte(envParamString), &envParams)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	jobParameters := explodeProps(envParams, MX_ENV_PREFIX)
 
