@@ -179,6 +179,27 @@ func (c *context) startJob(params map[string]string, startJob lib.StartJob) (*re
 		Detach: true,
 	})
 
+	// remove the container at the end of its execution
+	go func(container *docker.Container) {
+		exitCode, err := container.Wait()
+		if err != nil {
+			log.Errorf("Error while listening container %s", container.ID, err)
+		}
+
+		if exitCode != 0 {
+			log.Errorf("Error during execution of Orchestrator container. Check Docker container logs, id is %s\n", container.ID())
+			return
+		}
+
+		err = container.Remove(&docker.RemoveOptions{
+			Force:         true,
+			RemoveVolumes: true,
+		})
+		if err != nil {
+			log.Errorf("Cannot remove container %s", container.ID)
+		}
+	}(container)
+
 	runningJob.OrchestrationID = container.ID()
 	log.WithFields(log.Fields{
 		"job_id":           runningJob.ID,
