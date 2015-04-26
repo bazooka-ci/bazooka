@@ -6,6 +6,7 @@ import (
 
 const (
 	BazookaEnvHome       = "BZK_HOME"
+	BazookaEnvSrc        = "BZK_SRC"
 	BazookaEnvSCMKeyfile = "BZK_SCM_KEYFILE"
 	BazookaEnvDockerSock = "BZK_DOCKERSOCK"
 )
@@ -34,7 +35,7 @@ var paths = bzkPaths{
 		"/bazooka-cryptokey",
 	},
 	stdPaths{
-		os.Getenv(BazookaEnvHome) + "/source",
+		os.Getenv(BazookaEnvSrc),
 		os.Getenv(BazookaEnvHome) + "/meta",
 		os.Getenv(BazookaEnvHome) + "/work",
 		"",
