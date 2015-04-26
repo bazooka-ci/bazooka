@@ -94,36 +94,49 @@ angular.module('bzk.job').controller('JobController', function($scope, BzkApi, $
             '#000000'
         ];
 
-        var metaLabels = [],
+        var metaList = [],
             colors = {};
         if (variants.length > 0) {
-            var vref = variants[0];
-            _.each(vref.metas, function(m) {
-                metaLabels.push(m.kind == 'env' ? '$' + m.name : m.name);
-            });
-
-            _.each(vref.metas, function(m, i) {
-                var mcolors = {};
-                colors[m.name] = mcolors;
-                var colIdx = 0;
-                _.each(variants, function(v) {
-                    var val = v.metas[i].value;
-                    if (!mcolors[val]) {
-                        mcolors[val] = colorsDb[colIdx];
-                        if (colIdx < colorsDb.length - 1) {
-                            colIdx++;
-                        }
+            var visitedMeta = {};
+            _.each(variants, function(v) {
+                v.metaMap = _.indexBy(v.metas, 'name');
+                _.each(v.metas, function(m) {
+                    if (!visitedMeta[m.name]) {
+                        metaList.push(m);
+                        m.label = m.kind == 'env' ? '$' + m.name : m.name;
+                        visitedMeta[m.name] = true;
                     }
                 });
             });
 
+            _.each(metaList, function(m) {
+                var mcolors = {};
+                colors[m.name] = mcolors;
+                var colIdx = 0;
+                _.each(variants, function(v) {
+                    var vm = _.findWhere(v.metas, {
+                        name: m.name
+                    });
+                    if (vm) {
+                        var val = vm.value;
+                        if (!mcolors[val]) {
+                            mcolors[val] = colorsDb[colIdx];
+                            if (colIdx < colorsDb.length - 1) {
+                                colIdx++;
+                            }
+                        }
+                    }
+                });
+            });
         }
 
-        $scope.metaLabels = metaLabels;
+        $scope.metaList = metaList;
         $scope.metaColors = colors;
     }
 
     $scope.metaColor = function(vmeta) {
-        return $scope.metaColors[vmeta.name][vmeta.value];
+        if (vmeta) {
+            return $scope.metaColors[vmeta.name][vmeta.value];
+        }
     };
 });
