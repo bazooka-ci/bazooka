@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"bufio"
 	"fmt"
 	"os"
@@ -85,14 +86,22 @@ func (r *Runner) runContainer(logger Logger, vd *variantData) error {
 
 	artifactsFolder := fmt.Sprintf("%s/%s", r.ArtifactsFolderBase, vd.variant.ID)
 
+	volumes := []string{
+			fmt.Sprintf("%s:/var/run/docker.sock", paths.host.dockerSock),
+			fmt.Sprintf("%s:/artifacts", artifactsFolder),
+		}
+	cacheVolumes, err:=cacheVolumes()
+	if err != nil {
+		return err
+	}
+	
+	volumes = append(volumes, cacheVolumes...)
+
 	// TODO link containers
 	container, err := r.client.Run(&docker.RunOptions{
 		Image: vd.imageTag,
 		Links: containerLinks,
-		VolumeBinds: []string{
-			fmt.Sprintf("%s:/var/run/docker.sock", paths.host.dockerSock),
-			fmt.Sprintf("%s:/artifacts", artifactsFolder),
-		},
+		VolumeBinds: volumes,
 		Detach: true,
 	})
 	if err != nil {
@@ -156,4 +165,20 @@ func listServices(servicesFile string) ([]string, error) {
 		return nil, err
 	}
 	return services, nil
+}
+
+func cacheVolumes() ([]string, error) {
+	mounts := os.Getenv("BZK_CACHE_MOUNTS")
+	if len(mounts)> 0 {
+		m:=map[string]string{}
+		if err:=json.Unmarshal([]byte(mounts), &m); err!=nil {
+			return nil, err
+		}
+		volumes :=[]string{}
+		for hostDir, containerDir:=range m {
+			volumes = append(volumes, fmt.Sprintf("%s:%s", hostDir, containerDir))
+		}
+		return volumes, nil
+	}
+	return nil, nil
 }

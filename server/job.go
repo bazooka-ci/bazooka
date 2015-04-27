@@ -200,6 +200,26 @@ func (c *context) startJob(params map[string]string, startJob lib.StartJob) (*re
 		orchestrationVolumes = append(orchestrationVolumes, fmt.Sprintf("%s:/bazooka/source", hostSharedSourceFolder))
 	}
 
+	cacheDirs := project.Config["bzk.cache.dirs"]
+	if len(cacheDirs) > 0 {
+		cacheMounts := map[string]string{}
+		dirs := strings.Split(cacheDirs, ":")
+
+		for _, containerDir := range dirs {
+			hostCachedDir := fmt.Sprintf("%s/build/%s/cache/%s", c.Env[BazookaEnvHome], runningJob.ProjectID, containerDir)
+			if err := os.MkdirAll(hostCachedDir, 0644); err != nil {
+				return nil, fmt.Errorf("Failed to create cached dir %s: %v", hostCachedDir, err)
+			}
+			cacheMounts[hostCachedDir] = containerDir
+		}
+
+		cacheMountsJson, err := json.Marshal(cacheMounts)
+		if err != nil {
+			return nil, err
+		}
+		orchestrationEnv["BZK_CACHE_MOUNTS"] = string(cacheMountsJson)
+	}
+
 	container, err := client.Run(&docker.RunOptions{
 		Image:       orchestrationImage,
 		VolumeBinds: orchestrationVolumes,
