@@ -9,6 +9,8 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"log"
+	"os"
 )
 
 // Encrypt encrypts some data with the key
@@ -55,7 +57,7 @@ func ReadCryptoKey(filePath string) ([]byte, error) {
 	}
 
 	if !exists {
-		return nil, fmt.Errorf("Your bazooka config contains secured data but the keyfile can not be found at %s, reason is: %v\n", filePath, err)
+		return nil, os.ErrNotExist
 	}
 
 	key, err := ioutil.ReadFile(filePath)
@@ -68,5 +70,9 @@ func ReadCryptoKey(filePath string) ([]byte, error) {
 func LoadCryptoKeyFromFile(filePath string) error {
 	var err error
 	PrivateKey, err = ReadCryptoKey(filePath)
+	if err != nil && os.IsNotExist(err) {
+		log.Printf("Your bazooka keyfile can not be found at %s. If you have secured data in your .bazooka.yml, decryption will certainly fail\n", filePath)
+		return nil
+	}
 	return err
 }
