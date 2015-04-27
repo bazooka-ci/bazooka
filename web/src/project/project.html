@@ -1,5 +1,13 @@
-<div id="project" ng-controller="JobsController">
-	<div ng-include="'breadcrumb.html'"></div>
-	<div ng-include="'projectdetail.html'"></div>
-	<div ng-include="'joblist.html'"></div>
+<bzk-breadcrumbs project="project"></bzk-breadcrumbs>
+<div id="project">
+	<table class="details">
+		<tbody>
+			<tr>
+				<th>SCM</th>
+				<td>{{project.scm_uri}}</td>
+			</tr>
+		</tbody>
+	</table>
+
+	<bzk-jobs-list jobs="jobs"></bzk-jobs-list>
 </div>

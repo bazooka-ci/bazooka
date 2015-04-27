@@ -1,6 +1,8 @@
-<div id="job" ng-controller="VariantsController">
-	<div ng-include="'breadcrumb.html'"></div>
-	<div ng-include="'jobdetail.html'"></div>
+<div id="job">
+	<bzk-breadcrumbs project="project" job="job" variant="variant"></bzk-breadcrumbs>
+
+	<bzk-job-info job="job"></bzk-job-info>
+
 	<div ng-controller="VariantLogsController">
 		<div class="logs" bzk-log="logger.variant"></div>
 	</div>
