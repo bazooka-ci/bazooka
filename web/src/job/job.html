@@ -8,7 +8,7 @@
 				<th>Variant</th>
 				<th>Duration</th>
 				<th>Finished</th>
-				<th ng-repeat="label in metaLabels" class="meta">{{label}}</th>
+				<th ng-repeat="m in metaList" class="meta">{{m.label}}</th>
 			</tr>
 		</thead>
 
@@ -18,7 +18,7 @@
 				<td><a ng-href="#/p/{{project | bzkId}}/{{job | bzkId}}/{{variant | bzkId}}">{{job.number}}.{{variant.number}}</a></td>
 				<td>{{variant | bzkDuration}}</td>
 				<td>{{variant | bzkFinished}}</td>
-				<td ng-repeat="vmeta in variant.metas" class="meta" ng-style="{'color': metaColor(vmeta)}">{{vmeta.value}}</td>
+				<td ng-repeat="m in metaList" class="meta" ng-style="{'color': metaColor(variant.metaMap[m.name])}">{{variant.metaMap[m.name].value}}</td>
 			</tr>
 		</tbody>
 	</table>
