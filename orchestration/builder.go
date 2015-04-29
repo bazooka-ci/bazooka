@@ -59,7 +59,7 @@ func (b *Builder) buildContainer(client *docker.Docker, vd *variantData) error {
 		"variant": vd.counter,
 	}).Info("Building container for variant")
 
-	tag := fmt.Sprintf("bazooka/build-%s-%s-%d", b.Options.ProjectID, vd.variant.JobID, vd.variant.Number)
+	tag := fmt.Sprintf("bazooka-build/%s-%s-%d", b.Options.ProjectID, vd.variant.JobID, vd.variant.Number)
 
 	err := client.Build(&docker.BuildOptions{
 		Tag:        tag,
