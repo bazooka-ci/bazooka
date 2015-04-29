@@ -63,7 +63,7 @@ func startJobCommand(cmd *cli.Cmd) {
 
 	cmd.Action = func() {
 
-		client, err := NewClient(checkServerURI(*bzkUri))
+		client, err := NewClient()
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -88,7 +88,7 @@ func listJobsCommand(cmd *cli.Cmd) {
 	})
 
 	cmd.Action = func() {
-		client, err := NewClient(checkServerURI(*bzkUri))
+		client, err := NewClient()
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -131,7 +131,7 @@ func jobLogCommand(cmd *cli.Cmd) {
 	})
 
 	cmd.Action = func() {
-		client, err := NewClient(checkServerURI(*bzkUri))
+		client, err := NewClient()
 		if err != nil {
 			log.Fatal(err)
 		}

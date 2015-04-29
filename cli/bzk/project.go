@@ -30,7 +30,7 @@ func createProjectCommand(cmd *cli.Cmd) {
 	})
 
 	cmd.Action = func() {
-		client, err := NewClient(checkServerURI(*bzkUri))
+		client, err := NewClient()
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -53,7 +53,7 @@ func createProjectCommand(cmd *cli.Cmd) {
 
 func listProjectsCommand(cmd *cli.Cmd) {
 	cmd.Action = func() {
-		client, err := NewClient(checkServerURI(*bzkUri))
+		client, err := NewClient()
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -79,7 +79,7 @@ func listProjectConfigCommand(cmd *cli.Cmd) {
 	})
 
 	cmd.Action = func() {
-		client, err := NewClient(checkServerURI(*bzkUri))
+		client, err := NewClient()
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -111,7 +111,7 @@ func getProjectConfigKeyCommand(cmd *cli.Cmd) {
 	})
 
 	cmd.Action = func() {
-		client, err := NewClient(checkServerURI(*bzkUri))
+		client, err := NewClient()
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -151,7 +151,7 @@ func setProjectConfigKeyCommand(cmd *cli.Cmd) {
 	})
 
 	cmd.Action = func() {
-		client, err := NewClient(checkServerURI(*bzkUri))
+		client, err := NewClient()
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -179,7 +179,7 @@ func unsetProjectConfigKeyCommand(cmd *cli.Cmd) {
 	})
 
 	cmd.Action = func() {
-		client, err := NewClient(checkServerURI(*bzkUri))
+		client, err := NewClient()
 		if err != nil {
 			log.Fatal(err)
 		}

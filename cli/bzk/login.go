@@ -30,7 +30,7 @@ func login(cmd *cli.Cmd) {
 			*password = string(gopass.GetPasswd())
 		}
 
-		_, err := NewClient(checkServerURI(*bzkUri))
+		_, err := NewClient()
 		if err != nil {
 			log.Fatal(err)
 		}

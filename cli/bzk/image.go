@@ -11,7 +11,7 @@ import (
 
 func listImagesCommand(cmd *cli.Cmd) {
 	cmd.Action = func() {
-		client, err := NewClient(checkServerURI(*bzkUri))
+		client, err := NewClient()
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -42,7 +42,7 @@ func setImageCommand(cmd *cli.Cmd) {
 	})
 
 	cmd.Action = func() {
-		client, err := NewClient(checkServerURI(*bzkUri))
+		client, err := NewClient()
 		if err != nil {
 			log.Fatal(err)
 		}

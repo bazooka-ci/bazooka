@@ -18,7 +18,7 @@ func encryptData(cmd *cli.Cmd) {
 	})
 
 	cmd.Action = func() {
-		client, err := NewClient(checkServerURI(*bzkUri))
+		client, err := NewClient()
 		if err != nil {
 			log.Fatal(err)
 		}
