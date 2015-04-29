@@ -2,7 +2,7 @@
 
 Bazooka is a **Continuous Integration and Continuous Delivery Server** designed to let you install it wherever you want; On your local computer, on dedicated servers within your enterprise network, or on virtualized Cloud instances.
 
-Bazooka is also technology agnostic: out of the box, it supports Go, Java, Python and Node, and can easily [be extended](internals/plugin.md) to support other languages.
+Bazooka is also technology agnostic: out of the box, it supports Go, Java, Python and Node, and can easily [be extended](internals/plugin_architecture.md) to support other languages.
 
 ## The Philosophy
 
@@ -16,4 +16,4 @@ This his why Bazooka was created.
 
 Bazooka uses Docker as a runtime and extension mechanism.
 
-In Bazooka, everything is a plugin, and every plugin is a Docker container. You can read more about our [plugin architecture here](internals/plugin.md)
+In Bazooka, everything is a plugin, and every plugin is a Docker container. You can read more about our [plugin architecture here](internals/plugin_architecture.md)
