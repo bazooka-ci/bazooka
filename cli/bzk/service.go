@@ -385,7 +385,7 @@ func getMongoRunOptions() *docker.RunOptions {
 	return &docker.RunOptions{
 		Name: "bzk_mongodb",
 		// Using the official mongo image from dockerhub, this may need a change later
-		Image:  "mongo:latest",
+		Image:  "mongo:3.0.2",
 		Detach: true,
 	}
 }
