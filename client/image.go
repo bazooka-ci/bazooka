@@ -8,11 +8,15 @@ import (
 	"github.com/racker/perigee"
 )
 
-func (c *Client) ListImages() ([]*lib.Image, error) {
+type Image struct {
+	config *Config
+}
+
+func (c *Image) List() ([]*lib.Image, error) {
 
 	var images []*lib.Image
 
-	requestURL, err := c.getRequestURL("image")
+	requestURL, err := c.config.getRequestURL("image")
 	if err != nil {
 		return nil, err
 	}
@@ -20,14 +24,14 @@ func (c *Client) ListImages() ([]*lib.Image, error) {
 	err = perigee.Get(requestURL, perigee.Options{
 		Results:    &images,
 		OkCodes:    []int{200},
-		SetHeaders: c.authenticateRequest,
+		SetHeaders: c.config.authenticateRequest,
 	})
 
 	return images, err
 }
 
-func (c *Client) SetImage(name, image string) error {
-	requestURL, err := c.getRequestURL(fmt.Sprintf("image/%s", url.QueryEscape(name)))
+func (c *Image) Set(name, image string) error {
+	requestURL, err := c.config.getRequestURL(fmt.Sprintf("image/%s", url.QueryEscape(name)))
 	if err != nil {
 		return err
 	}
@@ -37,7 +41,7 @@ func (c *Client) SetImage(name, image string) error {
 			Image string `json:"image"`
 		}{image},
 		OkCodes:    []int{200},
-		SetHeaders: c.authenticateRequest,
+		SetHeaders: c.config.authenticateRequest,
 	})
 
 	return err

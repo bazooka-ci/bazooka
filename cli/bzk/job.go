@@ -67,7 +67,7 @@ func startJobCommand(cmd *cli.Cmd) {
 		if err != nil {
 			log.Fatal(err)
 		}
-		res, err := client.StartJob(*pid, *scmRef, *envParameters)
+		res, err := client.Project.StartJob(*pid, *scmRef, *envParameters)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -94,9 +94,9 @@ func listJobsCommand(cmd *cli.Cmd) {
 		}
 		var res []lib.Job
 		if len(*pid) > 0 {
-			res, err = client.ListJobs(*pid)
+			res, err = client.Project.Jobs(*pid)
 		} else {
-			res, err = client.ListAllJobs()
+			res, err = client.Job.List()
 		}
 
 		if err != nil {
@@ -135,7 +135,7 @@ func jobLogCommand(cmd *cli.Cmd) {
 		if err != nil {
 			log.Fatal(err)
 		}
-		res, err := client.JobLog(*jid)
+		res, err := client.Job.Log(*jid)
 		if err != nil {
 			log.Fatal(err)
 		}

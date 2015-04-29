@@ -13,26 +13,34 @@ type Config struct {
 }
 
 type Client struct {
-	config Config
+	Project *Project
+	Job     *Job
+	Variant *Variant
+	Image   *Image
+	User    *User
 }
 
-func New(config Config) (*Client, error) {
+func New(config *Config) (*Client, error) {
 	return &Client{
-		config,
+		Project: &Project{config},
+		Job:     &Job{config},
+		Variant: &Variant{config},
+		Image:   &Image{config},
+		User:    &User{config},
 	}, nil
 }
 
-func (c *Client) authenticateRequest(r *http.Request) error {
-	if len(c.config.Username) > 0 {
-		r.SetBasicAuth(c.config.Username, c.config.Password)
+func (c *Config) authenticateRequest(r *http.Request) error {
+	if len(c.Username) > 0 {
+		r.SetBasicAuth(c.Username, c.Password)
 	}
 	return nil
 }
 
-func (c *Client) getRequestURL(path string) (string, error) {
-	u, err := url.Parse(c.config.URL)
+func (c *Config) getRequestURL(path string) (string, error) {
+	u, err := url.Parse(c.URL)
 	if err != nil {
-		return "", fmt.Errorf("Bazooka URL %s has an incorrect format: %v", c.config.URL, err)
+		return "", fmt.Errorf("Bazooka URL %s has an incorrect format: %v", c.URL, err)
 	}
 	u.Path = u.Path + "/" + path
 	return u.String(), nil

@@ -22,7 +22,7 @@ func encryptData(cmd *cli.Cmd) {
 		if err != nil {
 			log.Fatal(err)
 		}
-		res, err := client.EncryptData(*pid, *toEncryptData)
+		res, err := client.Project.EncryptData(*pid, *toEncryptData)
 		if err != nil {
 			log.Fatal(err)
 		}

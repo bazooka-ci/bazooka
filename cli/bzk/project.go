@@ -34,12 +34,12 @@ func createProjectCommand(cmd *cli.Cmd) {
 		if err != nil {
 			log.Fatal(err)
 		}
-		res, err := client.CreateProject(*name, *scmType, *scmUri)
+		res, err := client.Project.Create(*name, *scmType, *scmUri)
 		if err != nil {
 			log.Fatal(err)
 		}
 		if len(*scmKey) > 0 {
-			_, err = client.AddKey(res.ID, *scmKey)
+			_, err = client.Project.AddKey(res.ID, *scmKey)
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -57,7 +57,7 @@ func listProjectsCommand(cmd *cli.Cmd) {
 		if err != nil {
 			log.Fatal(err)
 		}
-		res, err := client.ListProjects()
+		res, err := client.Project.List()
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -83,7 +83,7 @@ func listProjectConfigCommand(cmd *cli.Cmd) {
 		if err != nil {
 			log.Fatal(err)
 		}
-		res, err := client.GetProjectConfig(*pid)
+		res, err := client.Project.GetConfig(*pid)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -115,7 +115,7 @@ func getProjectConfigKeyCommand(cmd *cli.Cmd) {
 		if err != nil {
 			log.Fatal(err)
 		}
-		res, err := client.GetProjectConfig(*pid)
+		res, err := client.Project.GetConfig(*pid)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -155,7 +155,7 @@ func setProjectConfigKeyCommand(cmd *cli.Cmd) {
 		if err != nil {
 			log.Fatal(err)
 		}
-		if err := client.SetProjectConfigKey(*pid, *key, *value); err != nil {
+		if err := client.Project.SetConfigKey(*pid, *key, *value); err != nil {
 			log.Fatal(err)
 		}
 		w := tabwriter.NewWriter(os.Stdout, 15, 1, 3, ' ', 0)
@@ -183,7 +183,7 @@ func unsetProjectConfigKeyCommand(cmd *cli.Cmd) {
 		if err != nil {
 			log.Fatal(err)
 		}
-		if err := client.UnsetProjectConfigKey(*pid, *key); err != nil {
+		if err := client.Project.UnsetConfigKey(*pid, *key); err != nil {
 			log.Fatal(err)
 		}
 	}

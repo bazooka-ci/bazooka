@@ -33,7 +33,7 @@ func createUserCommand(cmd *cli.Cmd) {
 			*password = string(gopass.GetPasswd())
 		}
 
-		res, err := client.CreateUser(*email, *password)
+		res, err := client.User.Create(*email, *password)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -51,7 +51,7 @@ func listUsersCommand(cmd *cli.Cmd) {
 		if err != nil {
 			log.Fatal(err)
 		}
-		res, err := client.ListUsers()
+		res, err := client.User.List()
 		if err != nil {
 			log.Fatal(err)
 		}

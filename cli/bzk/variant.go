@@ -21,7 +21,7 @@ func listVariantsCommand(cmd *cli.Cmd) {
 		if err != nil {
 			log.Fatal(err)
 		}
-		res, err := client.ListVariants(*jid)
+		res, err := client.Job.Variants(*jid)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -36,7 +36,6 @@ func listVariantsCommand(cmd *cli.Cmd) {
 }
 
 func variantLogCommand(cmd *cli.Cmd) {
-
 	cmd.Spec = "VARIANT_ID"
 	vid := cmd.String(cli.StringArg{
 		Name: "VARIANT_ID",
@@ -47,7 +46,7 @@ func variantLogCommand(cmd *cli.Cmd) {
 		if err != nil {
 			log.Fatal(err)
 		}
-		res, err := client.VariantLog(*vid)
+		res, err := client.Variant.Log(*vid)
 		if err != nil {
 			log.Fatal(err)
 		}

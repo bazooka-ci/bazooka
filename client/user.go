@@ -5,10 +5,14 @@ import (
 	"github.com/racker/perigee"
 )
 
-func (c *Client) ListUsers() ([]lib.User, error) {
+type User struct {
+	config *Config
+}
+
+func (c *User) List() ([]lib.User, error) {
 	var u []lib.User
 
-	requestURL, err := c.getRequestURL("user")
+	requestURL, err := c.config.getRequestURL("user")
 	if err != nil {
 		return nil, err
 	}
@@ -16,20 +20,20 @@ func (c *Client) ListUsers() ([]lib.User, error) {
 	err = perigee.Get(requestURL, perigee.Options{
 		Results:    &u,
 		OkCodes:    []int{200},
-		SetHeaders: c.authenticateRequest,
+		SetHeaders: c.config.authenticateRequest,
 	})
 
 	return u, err
 }
 
-func (c *Client) CreateUser(email, password string) (*lib.User, error) {
+func (c *User) Create(email, password string) (*lib.User, error) {
 	user := lib.User{
 		Email:    email,
 		Password: password,
 	}
 	createdUser := &lib.User{}
 
-	requestURL, err := c.getRequestURL("user")
+	requestURL, err := c.config.getRequestURL("user")
 	if err != nil {
 		return nil, err
 	}
@@ -38,7 +42,7 @@ func (c *Client) CreateUser(email, password string) (*lib.User, error) {
 		ReqBody:    &user,
 		Results:    &createdUser,
 		OkCodes:    []int{201},
-		SetHeaders: c.authenticateRequest,
+		SetHeaders: c.config.authenticateRequest,
 	})
 
 	return createdUser, err

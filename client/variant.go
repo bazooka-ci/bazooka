@@ -8,10 +8,14 @@ import (
 	"github.com/racker/perigee"
 )
 
-func (c *Client) VariantLog(variantID string) ([]lib.LogEntry, error) {
+type Variant struct {
+	config *Config
+}
+
+func (c *Variant) Log(variantID string) ([]lib.LogEntry, error) {
 	var log []lib.LogEntry
 
-	requestURL, err := c.getRequestURL(fmt.Sprintf("variant/%s/log", url.QueryEscape(variantID)))
+	requestURL, err := c.config.getRequestURL(fmt.Sprintf("variant/%s/log", url.QueryEscape(variantID)))
 	if err != nil {
 		return nil, err
 	}
@@ -19,7 +23,7 @@ func (c *Client) VariantLog(variantID string) ([]lib.LogEntry, error) {
 	err = perigee.Get(requestURL, perigee.Options{
 		Results:    &log,
 		OkCodes:    []int{200},
-		SetHeaders: c.authenticateRequest,
+		SetHeaders: c.config.authenticateRequest,
 	})
 	return log, err
 }

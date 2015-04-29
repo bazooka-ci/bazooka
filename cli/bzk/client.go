@@ -13,7 +13,7 @@ func NewClient() (*client.Client, error) {
 		return nil, err
 	}
 
-	return client.New(client.Config{
+	return client.New(&client.Config{
 		URL:      checkServerURI(*bzkUri, cliConfig),
 		Username: cliConfig.Username,
 		Password: cliConfig.Password,

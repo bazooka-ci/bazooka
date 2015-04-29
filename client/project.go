@@ -10,10 +10,14 @@ import (
 	"github.com/racker/perigee"
 )
 
-func (c *Client) ListProjects() ([]lib.Project, error) {
+type Project struct {
+	config *Config
+}
+
+func (c *Project) List() ([]lib.Project, error) {
 	var p []lib.Project
 
-	requestURL, err := c.getRequestURL("project")
+	requestURL, err := c.config.getRequestURL("project")
 	if err != nil {
 		return nil, err
 	}
@@ -21,16 +25,16 @@ func (c *Client) ListProjects() ([]lib.Project, error) {
 	err = perigee.Get(requestURL, perigee.Options{
 		Results:    &p,
 		OkCodes:    []int{200},
-		SetHeaders: c.authenticateRequest,
+		SetHeaders: c.config.authenticateRequest,
 	})
 
 	return p, err
 }
 
-func (c *Client) GetProjectConfig(id string) (map[string]string, error) {
+func (c *Project) GetConfig(id string) (map[string]string, error) {
 	var res map[string]string
 
-	requestURL, err := c.getRequestURL(fmt.Sprintf("project/%s/config", id))
+	requestURL, err := c.config.getRequestURL(fmt.Sprintf("project/%s/config", id))
 	if err != nil {
 		return nil, err
 	}
@@ -38,13 +42,13 @@ func (c *Client) GetProjectConfig(id string) (map[string]string, error) {
 	err = perigee.Get(requestURL, perigee.Options{
 		Results:    &res,
 		OkCodes:    []int{200},
-		SetHeaders: c.authenticateRequest,
+		SetHeaders: c.config.authenticateRequest,
 	})
 	return res, err
 }
 
-func (c *Client) SetProjectConfigKey(id, key, value string) error {
-	requestURL, err := c.getRequestURL(fmt.Sprintf("project/%s/config/%s", id, key))
+func (c *Project) SetConfigKey(id, key, value string) error {
+	requestURL, err := c.config.getRequestURL(fmt.Sprintf("project/%s/config/%s", id, key))
 	if err != nil {
 		return err
 	}
@@ -52,26 +56,26 @@ func (c *Client) SetProjectConfigKey(id, key, value string) error {
 		ContentType: "text/plain",
 		ReqBody:     strings.NewReader(value),
 		OkCodes:     []int{204},
-		SetHeaders:  c.authenticateRequest,
+		SetHeaders:  c.config.authenticateRequest,
 	})
 }
 
-func (c *Client) UnsetProjectConfigKey(id, key string) error {
+func (c *Project) UnsetConfigKey(id, key string) error {
 
-	requestURL, err := c.getRequestURL(fmt.Sprintf("project/%s/config/%s", id, key))
+	requestURL, err := c.config.getRequestURL(fmt.Sprintf("project/%s/config/%s", id, key))
 	if err != nil {
 		return err
 	}
 	return perigee.Delete(requestURL, perigee.Options{
 		OkCodes:    []int{204},
-		SetHeaders: c.authenticateRequest,
+		SetHeaders: c.config.authenticateRequest,
 	})
 }
 
-func (c *Client) ListJobs(projectID string) ([]lib.Job, error) {
+func (c *Project) Jobs(projectID string) ([]lib.Job, error) {
 	var j []lib.Job
 
-	requestURL, err := c.getRequestURL(fmt.Sprintf("project/%s/job", url.QueryEscape(projectID)))
+	requestURL, err := c.config.getRequestURL(fmt.Sprintf("project/%s/job", url.QueryEscape(projectID)))
 	if err != nil {
 		return nil, err
 	}
@@ -79,13 +83,13 @@ func (c *Client) ListJobs(projectID string) ([]lib.Job, error) {
 	err = perigee.Get(requestURL, perigee.Options{
 		Results:    &j,
 		OkCodes:    []int{200},
-		SetHeaders: c.authenticateRequest,
+		SetHeaders: c.config.authenticateRequest,
 	})
 
 	return j, err
 }
 
-func (c *Client) CreateProject(name, scm, scmUri string) (*lib.Project, error) {
+func (c *Project) Create(name, scm, scmUri string) (*lib.Project, error) {
 	project := lib.Project{
 		Name:    name,
 		ScmType: scm,
@@ -93,7 +97,7 @@ func (c *Client) CreateProject(name, scm, scmUri string) (*lib.Project, error) {
 	}
 	createdProject := &lib.Project{}
 
-	requestURL, err := c.getRequestURL("project")
+	requestURL, err := c.config.getRequestURL("project")
 	if err != nil {
 		return nil, err
 	}
@@ -101,20 +105,20 @@ func (c *Client) CreateProject(name, scm, scmUri string) (*lib.Project, error) {
 		ReqBody:    &project,
 		Results:    &createdProject,
 		OkCodes:    []int{201},
-		SetHeaders: c.authenticateRequest,
+		SetHeaders: c.config.authenticateRequest,
 	})
 
 	return createdProject, err
 }
 
-func (c *Client) StartJob(projectID, scmReference string, envParameters []string) (*lib.Job, error) {
+func (c *Project) StartJob(projectID, scmReference string, envParameters []string) (*lib.Job, error) {
 	startJob := lib.StartJob{
 		ScmReference: scmReference,
 		Parameters:   envParameters,
 	}
 	createdJob := &lib.Job{}
 
-	requestURL, err := c.getRequestURL(fmt.Sprintf("project/%s/job", url.QueryEscape(projectID)))
+	requestURL, err := c.config.getRequestURL(fmt.Sprintf("project/%s/job", url.QueryEscape(projectID)))
 	if err != nil {
 		return nil, err
 	}
@@ -123,17 +127,17 @@ func (c *Client) StartJob(projectID, scmReference string, envParameters []string
 		ReqBody:    &startJob,
 		Results:    &createdJob,
 		OkCodes:    []int{202},
-		SetHeaders: c.authenticateRequest,
+		SetHeaders: c.config.authenticateRequest,
 	})
 
 	return createdJob, err
 }
 
-func (c *Client) ListKeys(projectID string) ([]*lib.SSHKey, error) {
+func (c *Project) Keys(projectID string) ([]*lib.SSHKey, error) {
 
 	var keys []*lib.SSHKey
 
-	requestURL, err := c.getRequestURL(fmt.Sprintf("project/%s/key", url.QueryEscape(projectID)))
+	requestURL, err := c.config.getRequestURL(fmt.Sprintf("project/%s/key", url.QueryEscape(projectID)))
 	if err != nil {
 		return nil, err
 	}
@@ -141,13 +145,13 @@ func (c *Client) ListKeys(projectID string) ([]*lib.SSHKey, error) {
 	err = perigee.Get(requestURL, perigee.Options{
 		Results:    &keys,
 		OkCodes:    []int{200},
-		SetHeaders: c.authenticateRequest,
+		SetHeaders: c.config.authenticateRequest,
 	})
 
 	return keys, err
 }
 
-func (c *Client) AddKey(projectID, keyPath string) (*lib.SSHKey, error) {
+func (c *Project) AddKey(projectID, keyPath string) (*lib.SSHKey, error) {
 	fileContent, err := ioutil.ReadFile(keyPath)
 	if err != nil {
 		return nil, err
@@ -158,7 +162,7 @@ func (c *Client) AddKey(projectID, keyPath string) (*lib.SSHKey, error) {
 		Content:   string(fileContent),
 	}
 
-	requestURL, err := c.getRequestURL(fmt.Sprintf("project/%s/key", url.QueryEscape(projectID)))
+	requestURL, err := c.config.getRequestURL(fmt.Sprintf("project/%s/key", url.QueryEscape(projectID)))
 	if err != nil {
 		return nil, err
 	}
@@ -169,13 +173,13 @@ func (c *Client) AddKey(projectID, keyPath string) (*lib.SSHKey, error) {
 		ReqBody:    &sshKey,
 		Results:    &createdKey,
 		OkCodes:    []int{201},
-		SetHeaders: c.authenticateRequest,
+		SetHeaders: c.config.authenticateRequest,
 	})
 
 	return createdKey, err
 }
 
-func (c *Client) UpdateKey(projectID, keyPath string) (*lib.SSHKey, error) {
+func (c *Project) UpdateKey(projectID, keyPath string) (*lib.SSHKey, error) {
 	fileContent, err := ioutil.ReadFile(keyPath)
 	if err != nil {
 		return nil, err
@@ -186,7 +190,7 @@ func (c *Client) UpdateKey(projectID, keyPath string) (*lib.SSHKey, error) {
 		Content:   string(fileContent),
 	}
 
-	requestURL, err := c.getRequestURL(fmt.Sprintf("project/%s/key", url.QueryEscape(projectID)))
+	requestURL, err := c.config.getRequestURL(fmt.Sprintf("project/%s/key", url.QueryEscape(projectID)))
 	if err != nil {
 		return nil, err
 	}
@@ -197,18 +201,18 @@ func (c *Client) UpdateKey(projectID, keyPath string) (*lib.SSHKey, error) {
 		ReqBody:    &sshKey,
 		Results:    &updatedKey,
 		OkCodes:    []int{200},
-		SetHeaders: c.authenticateRequest,
+		SetHeaders: c.config.authenticateRequest,
 	})
 
 	return updatedKey, err
 }
 
-func (c *Client) EncryptData(projectID, toEncryptString string) (string, error) {
+func (c *Project) EncryptData(projectID, toEncryptString string) (string, error) {
 	toEncryptData := &lib.StringValue{
 		Value: toEncryptString,
 	}
 
-	requestURL, err := c.getRequestURL(fmt.Sprintf("project/%s/crypto", url.QueryEscape(projectID)))
+	requestURL, err := c.config.getRequestURL(fmt.Sprintf("project/%s/crypto", url.QueryEscape(projectID)))
 	if err != nil {
 		return "", err
 	}
@@ -219,7 +223,7 @@ func (c *Client) EncryptData(projectID, toEncryptString string) (string, error) 
 		ReqBody:    &toEncryptData,
 		Results:    &encryptedData,
 		OkCodes:    []int{200},
-		SetHeaders: c.authenticateRequest,
+		SetHeaders: c.config.authenticateRequest,
 	})
 
 	return encryptedData.Value, err
