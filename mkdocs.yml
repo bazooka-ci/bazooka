@@ -21,6 +21,7 @@ pages:
 - ['languages/java.md', 'Language guides', 'Java']
 - ['contribute/developping.md', 'Contribute', 'Developping Bazooka']
 - ['internals/dockerindocker.md', 'Bazooka Internals', 'Docker in Docker']
-- ['internals/plugin.md', 'Bazooka Internals', 'Docker as a plugin Architecture']
+- ['internals/architecture.md', 'Bazooka Internals', 'Bazooka Architecture']
+- ['internals/plugin.md', 'Bazooka Internals', 'Bazooka Plugin Architecture']
 
 copyright: Copyright &copy; 2015, The Bazooka team.
