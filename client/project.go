@@ -2,9 +2,7 @@ package client
 
 import (
 	"fmt"
-	"io/ioutil"
 	"net/url"
-	"strings"
 
 	lib "github.com/bazooka-ci/bazooka/commons"
 	"github.com/racker/perigee"
@@ -12,6 +10,8 @@ import (
 
 type Project struct {
 	config *Config
+	Key    *ProjectKey
+	Config *ProjectConfig
 }
 
 func (c *Project) List() ([]lib.Project, error) {
@@ -29,47 +29,6 @@ func (c *Project) List() ([]lib.Project, error) {
 	})
 
 	return p, err
-}
-
-func (c *Project) GetConfig(id string) (map[string]string, error) {
-	var res map[string]string
-
-	requestURL, err := c.config.getRequestURL(fmt.Sprintf("project/%s/config", id))
-	if err != nil {
-		return nil, err
-	}
-
-	err = perigee.Get(requestURL, perigee.Options{
-		Results:    &res,
-		OkCodes:    []int{200},
-		SetHeaders: c.config.authenticateRequest,
-	})
-	return res, err
-}
-
-func (c *Project) SetConfigKey(id, key, value string) error {
-	requestURL, err := c.config.getRequestURL(fmt.Sprintf("project/%s/config/%s", id, key))
-	if err != nil {
-		return err
-	}
-	return perigee.Put(requestURL, perigee.Options{
-		ContentType: "text/plain",
-		ReqBody:     strings.NewReader(value),
-		OkCodes:     []int{204},
-		SetHeaders:  c.config.authenticateRequest,
-	})
-}
-
-func (c *Project) UnsetConfigKey(id, key string) error {
-
-	requestURL, err := c.config.getRequestURL(fmt.Sprintf("project/%s/config/%s", id, key))
-	if err != nil {
-		return err
-	}
-	return perigee.Delete(requestURL, perigee.Options{
-		OkCodes:    []int{204},
-		SetHeaders: c.config.authenticateRequest,
-	})
 }
 
 func (c *Project) Jobs(projectID string) ([]lib.Job, error) {
@@ -131,80 +90,6 @@ func (c *Project) StartJob(projectID, scmReference string, envParameters []strin
 	})
 
 	return createdJob, err
-}
-
-func (c *Project) Keys(projectID string) ([]*lib.SSHKey, error) {
-
-	var keys []*lib.SSHKey
-
-	requestURL, err := c.config.getRequestURL(fmt.Sprintf("project/%s/key", url.QueryEscape(projectID)))
-	if err != nil {
-		return nil, err
-	}
-
-	err = perigee.Get(requestURL, perigee.Options{
-		Results:    &keys,
-		OkCodes:    []int{200},
-		SetHeaders: c.config.authenticateRequest,
-	})
-
-	return keys, err
-}
-
-func (c *Project) AddKey(projectID, keyPath string) (*lib.SSHKey, error) {
-	fileContent, err := ioutil.ReadFile(keyPath)
-	if err != nil {
-		return nil, err
-	}
-
-	sshKey := &lib.SSHKey{
-		ProjectID: projectID,
-		Content:   string(fileContent),
-	}
-
-	requestURL, err := c.config.getRequestURL(fmt.Sprintf("project/%s/key", url.QueryEscape(projectID)))
-	if err != nil {
-		return nil, err
-	}
-
-	createdKey := &lib.SSHKey{}
-
-	err = perigee.Post(requestURL, perigee.Options{
-		ReqBody:    &sshKey,
-		Results:    &createdKey,
-		OkCodes:    []int{201},
-		SetHeaders: c.config.authenticateRequest,
-	})
-
-	return createdKey, err
-}
-
-func (c *Project) UpdateKey(projectID, keyPath string) (*lib.SSHKey, error) {
-	fileContent, err := ioutil.ReadFile(keyPath)
-	if err != nil {
-		return nil, err
-	}
-
-	sshKey := &lib.SSHKey{
-		ProjectID: projectID,
-		Content:   string(fileContent),
-	}
-
-	requestURL, err := c.config.getRequestURL(fmt.Sprintf("project/%s/key", url.QueryEscape(projectID)))
-	if err != nil {
-		return nil, err
-	}
-
-	updatedKey := &lib.SSHKey{}
-
-	err = perigee.Put(requestURL, perigee.Options{
-		ReqBody:    &sshKey,
-		Results:    &updatedKey,
-		OkCodes:    []int{200},
-		SetHeaders: c.config.authenticateRequest,
-	})
-
-	return updatedKey, err
 }
 
 func (c *Project) EncryptData(projectID, toEncryptString string) (string, error) {

@@ -24,7 +24,7 @@ func addKeyCommand(cmd *cli.Cmd) {
 		if err != nil {
 			log.Fatal(err)
 		}
-		res, err := client.Project.AddKey(*pid, *scmKey)
+		res, err := client.Project.Key.Add(*pid, *scmKey)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -50,7 +50,7 @@ func updateKeyCommand(cmd *cli.Cmd) {
 		if err != nil {
 			log.Fatal(err)
 		}
-		res, err := client.Project.UpdateKey(*pid, *scmKey)
+		res, err := client.Project.Key.Update(*pid, *scmKey)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -72,7 +72,7 @@ func listKeysCommand(cmd *cli.Cmd) {
 		if err != nil {
 			log.Fatal(err)
 		}
-		res, err := client.Project.Keys(*pid)
+		res, err := client.Project.Key.List(*pid)
 		if err != nil {
 			log.Fatal(err)
 		}

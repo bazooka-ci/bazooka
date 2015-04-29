@@ -22,7 +22,11 @@ type Client struct {
 
 func New(config *Config) (*Client, error) {
 	return &Client{
-		Project: &Project{config},
+		Project: &Project{
+			config: config,
+			Key:    &ProjectKey{config},
+			Config: &ProjectConfig{config},
+		},
 		Job:     &Job{config},
 		Variant: &Variant{config},
 		Image:   &Image{config},
