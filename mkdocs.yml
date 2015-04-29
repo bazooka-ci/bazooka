@@ -22,6 +22,6 @@ pages:
 - ['contribute/developping.md', 'Contribute', 'Developping Bazooka']
 - ['internals/dockerindocker.md', 'Bazooka Internals', 'Docker in Docker']
 - ['internals/architecture.md', 'Bazooka Internals', 'Bazooka Architecture']
-- ['internals/plugin.md', 'Bazooka Internals', 'Bazooka Plugin Architecture']
+- ['internals/plugin_architecture.md', 'Bazooka Internals', 'Bazooka Plugin Architecture']
 
 copyright: Copyright &copy; 2015, The Bazooka team.
