@@ -49,3 +49,8 @@ code {
 .hljs {
   line-height: 18px;
 }
+
+.rst-content .section ul p {
+  margin-top: 15px;
+  margin-bottom: 5px;
+}
