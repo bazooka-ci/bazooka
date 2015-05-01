@@ -33,6 +33,11 @@ func startService(cmd *cli.Cmd) {
 		Desc:   "Location of the private SSH Key Bazooka will use for SCM Fetch",
 		EnvVar: "BZK_SCM_KEYFILE",
 	})
+	mongoURI := cmd.String(cli.StringOpt{
+		Name:   "mongo-uri",
+		Desc:   "URI of a MongoDB server",
+		EnvVar: "BZK_MONGO_URI",
+	})
 	registry := cmd.String(cli.StringOpt{
 		Name:   "registry",
 		EnvVar: "BZK_REGISTRY",
@@ -48,7 +53,7 @@ func startService(cmd *cli.Cmd) {
 	})
 
 	cmd.Action = func() {
-		config, err := getConfigWithParams(*bzkHome, *dockerSock, *registry, *scmKey)
+		config, err := getConfigWithParams(*bzkHome, *dockerSock, *registry, *scmKey, *mongoURI)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -266,7 +271,7 @@ func getContainerStatus(name string) bool {
 
 }
 
-func getConfigWithParams(bzkHome, dockerSock, registry, scmKey string) (*Config, error) {
+func getConfigWithParams(bzkHome, dockerSock, registry, scmKey, mongoURI string) (*Config, error) {
 	config, err := loadConfig()
 	if err != nil {
 		return nil, fmt.Errorf("Unable to load Bazooka config, reason is: %v\n", err)
@@ -294,6 +299,10 @@ func getConfigWithParams(bzkHome, dockerSock, registry, scmKey string) (*Config,
 		config.SCMKey = scmKey
 	}
 
+	if len(mongoURI) != 0 {
+		config.MongoURI = mongoURI
+	}
+
 	if len(registry) != 0 {
 		config.Registry = registry
 	}
@@ -307,7 +316,7 @@ func getConfigWithParams(bzkHome, dockerSock, registry, scmKey string) (*Config,
 }
 
 func getConfig() (*Config, error) {
-	return getConfigWithParams("", "", "", "")
+	return getConfigWithParams("", "", "", "", "")
 }
 
 func restartContainer(client *docker.Docker, options *docker.RunOptions) error {
