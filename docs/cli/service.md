@@ -27,6 +27,7 @@ Start bazooka
 Options:
   --home=""          Bazooka's work directory ($BZK_HOME)
   --scm-key=""       Location of the private SSH Key Bazooka will use for SCM Fetch ($BZK_SCM_KEYFILE)
+  --mongo-uri=""     URI of a MongoDB server ($BZK_MONGO_URI)
   --registry=""      ($BZK_REGISTRY)
   --docker-sock=""   Location of the Docker unix socket, usually /var/run/docker.sock ($BZK_DOCKERSOCK)
   --tag=""           The bazooka version to run
