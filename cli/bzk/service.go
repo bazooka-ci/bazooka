@@ -12,6 +12,12 @@ import (
 	dockerclient "github.com/fsouza/go-dockerclient"
 )
 
+const (
+	bzkContainerMongo  = "bzk_mongodb"
+	bzkContainerServer = "bzk_server"
+	bzkContainerWeb    = "bzk_web"
+)
+
 var allContainers []dockerclient.APIContainers
 
 func startService(cmd *cli.Cmd) {
@@ -121,7 +127,7 @@ func doRestartService() {
 }
 
 func getTagFromCurrentImages(client *docker.Docker) (string, error) {
-	container, err := getContainer(allContainers, "bzk_server")
+	container, err := getContainer(allContainers, bzkContainerServer)
 	if err != nil {
 		// Container not found, using latest by default
 		return "latest", nil
@@ -181,17 +187,17 @@ func stopService(cmd *cli.Cmd) {
 			log.Fatal(err)
 		}
 
-		err = stopContainer(client, "bzk_mongodb")
+		err = stopContainer(client, bzkContainerMongo)
 		if err != nil {
 			log.Fatal(err)
 		}
 
-		err = stopContainer(client, "bzk_server")
+		err = stopContainer(client, bzkContainerServer)
 		if err != nil {
 			log.Fatal(err)
 		}
 
-		err = stopContainer(client, "bzk_web")
+		err = stopContainer(client, bzkContainerWeb)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -212,9 +218,9 @@ func statusService(cmd *cli.Cmd) {
 			log.Fatal(err)
 		}
 
-		mongoUp := getContainerStatus("bzk_mongodb")
-		serverUp := getContainerStatus("bzk_server")
-		webUp := getContainerStatus("bzk_web")
+		mongoUp := getContainerStatus(bzkContainerMongo)
+		serverUp := getContainerStatus(bzkContainerServer)
+		webUp := getContainerStatus(bzkContainerWeb)
 
 		if mongoUp && serverUp && webUp {
 			fmt.Printf("Bazooka service is Up\n")
@@ -383,7 +389,7 @@ func contains(slice []string, item string) bool {
 
 func getMongoRunOptions() *docker.RunOptions {
 	return &docker.RunOptions{
-		Name: "bzk_mongodb",
+		Name: bzkContainerMongo,
 		// Using the official mongo image from dockerhub, this may need a change later
 		Image:  "mongo:3.0.2",
 		Detach: true,
@@ -392,7 +398,7 @@ func getMongoRunOptions() *docker.RunOptions {
 
 func getServerRunOptions(registry, bzkHome, dockerSock, scmKey, tag string) *docker.RunOptions {
 	return &docker.RunOptions{
-		Name:   "bzk_server",
+		Name:   bzkContainerServer,
 		Image:  getImageLocation(registry, "bazooka/server", tag),
 		Detach: true,
 		VolumeBinds: []string{
@@ -409,7 +415,7 @@ func getServerRunOptions(registry, bzkHome, dockerSock, scmKey, tag string) *doc
 
 func getWebRunOptions(registry, tag string) *docker.RunOptions {
 	return &docker.RunOptions{
-		Name:   "bzk_web",
+		Name:   bzkContainerWeb,
 		Image:  getImageLocation(registry, "bazooka/web", tag),
 		Detach: true,
 		Links:  []string{"bzk_server:server"},
