@@ -1,18 +1,16 @@
 default: images
 
-.PHONY: cli devimages images docs web
+.PHONY: cli devimages images docs web server orchestration parser
 
 cli:
 	cd cli && make
 
-devimages:
-	./scripts/build-devimages.sh
-
-images:
-	./scripts/build-images.sh
-
 docs:
 	mkdocs build
+
+devimages: server parser orchestration
+
+images: server parser orchestration web
 
 setup:
 	./scripts/dev-setup.sh
@@ -22,6 +20,16 @@ errcheck:
 
 web:
 	cd web && make
+
+server:
+	cd server && make
+
+orchestration:
+	cd orchestration && make
+
+parser:
+	cd parser && make
+
 
 push:
 	./scripts/push-images.sh
