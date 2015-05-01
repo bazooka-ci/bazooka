@@ -13,11 +13,11 @@ Some tools are required to develop on Bazooka
 git clone git@github.com:bazooka-ci/bazooka.git $GOPATH/src/github.com/bazooka-ci/bazooka
 ```
 
-* Run `make setup devimages` to build everything necessary to run bazooka
-* Run `bzk run --restart` to restart bazooka using the images you just built (make sure `$GOPATH/bin` is in your PATH)
+* Run `make setup all` to build everything necessary to run bazooka
+* Run `bzk service restart` to restart bazooka using the images you just built (make sure `$GOPATH/bin` is in your PATH)
 
 ## Already installed Bazooka once ?
 
-* Run `make devimages` to build docker images for go projects
+* Run `make images` to build docker images for the go projects
 * You made any changes to `runner/` or `scm/` ? Run `make scm` or `make runner` to updates those images as well
-* Run `bzk run` to start bazooka (only needed is bazooka was not already running or if you changed some code in the server)
+* Run `bzk service start` to start bazooka if it isn't already running, or `bzk service restart` to restart bazooka using the newly built images
