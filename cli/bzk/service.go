@@ -69,12 +69,14 @@ func startService(cmd *cli.Cmd) {
 			log.Fatal(err)
 		}
 
-		err = ensureContainerIsStarted(client, getMongoRunOptions())
-		if err != nil {
-			log.Fatal(err)
+		if config.MongoURI == "" {
+			err = ensureContainerIsStarted(client, getMongoRunOptions())
+			if err != nil {
+				log.Fatal(err)
+			}
 		}
 
-		err = ensureContainerIsStarted(client, getServerRunOptions(config.Registry, config.Home, config.DockerSock, config.SCMKey, *tag))
+		err = ensureContainerIsStarted(client, getServerRunOptions(config.Registry, config.Home, config.DockerSock, config.SCMKey, config.MongoURI, *tag))
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -108,14 +110,16 @@ func doRestartService() {
 		log.Fatal(err)
 	}
 
-	err = ensureContainerIsStarted(client, getMongoRunOptions())
-	if err != nil {
-		log.Fatal(err)
+	if config.MongoURI == "" {
+		err = ensureContainerIsStarted(client, getMongoRunOptions())
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
 
 	tag, err := getTagFromCurrentImages(client)
 
-	err = restartContainer(client, getServerRunOptions(config.Registry, config.Home, config.DockerSock, config.SCMKey, tag))
+	err = restartContainer(client, getServerRunOptions(config.Registry, config.Home, config.DockerSock, config.SCMKey, config.MongoURI, tag))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -180,6 +184,11 @@ func stopService(cmd *cli.Cmd) {
 			log.Fatal(err)
 		}
 
+		config, err := getConfig()
+		if err != nil {
+			log.Fatal(err)
+		}
+
 		allContainers, err = client.Ps(&docker.PsOptions{
 			All: true,
 		})
@@ -187,9 +196,11 @@ func stopService(cmd *cli.Cmd) {
 			log.Fatal(err)
 		}
 
-		err = stopContainer(client, bzkContainerMongo)
-		if err != nil {
-			log.Fatal(err)
+		if config.MongoURI == "" {
+			err = stopContainer(client, bzkContainerMongo)
+			if err != nil {
+				log.Fatal(err)
+			}
 		}
 
 		err = stopContainer(client, bzkContainerServer)
@@ -211,6 +222,11 @@ func statusService(cmd *cli.Cmd) {
 			log.Fatal(err)
 		}
 
+		config, err := getConfig()
+		if err != nil {
+			log.Fatal(err)
+		}
+
 		allContainers, err = client.Ps(&docker.PsOptions{
 			All: true,
 		})
@@ -218,7 +234,10 @@ func statusService(cmd *cli.Cmd) {
 			log.Fatal(err)
 		}
 
-		mongoUp := getContainerStatus(bzkContainerMongo)
+		mongoUp := true
+		if config.MongoURI == "" {
+			mongoUp = getContainerStatus(bzkContainerMongo)
+		}
 		serverUp := getContainerStatus(bzkContainerServer)
 		webUp := getContainerStatus(bzkContainerWeb)
 
@@ -316,13 +335,18 @@ func stopContainer(client *docker.Docker, name string) error {
 		fmt.Printf("Container %s not found, doing nothing\n", name)
 		return nil
 	}
-	fmt.Printf("Stopping Container %s\n", name)
-	err = client.Stop(&docker.StopOptions{
-		ID: container.ID,
-	})
-	if err != nil {
-		return fmt.Errorf("Error stopping container %s, reason is %v\n", name, err)
+	if strings.HasPrefix(container.Status, "Up") {
+		fmt.Printf("Stopping Container %s\n", name)
+		err = client.Stop(&docker.StopOptions{
+			ID: container.ID,
+		})
+		if err != nil {
+			return fmt.Errorf("Error stopping container %s, reason is %v\n", name, err)
+		}
+	} else {
+		fmt.Printf("Container %s not running, doing nothing\n", name)
 	}
+
 	return nil
 }
 
@@ -347,13 +371,16 @@ func ensureContainerIsStarted(client *docker.Docker, options *docker.RunOptions)
 	return restartContainer(client, options)
 }
 
-func getServerEnv(home, dockerSock, scmKey string) map[string]string {
+func getServerEnv(home, dockerSock, scmKey, mongoURI string) map[string]string {
 	envMap := map[string]string{
 		"BZK_HOME":       home,
 		"BZK_DOCKERSOCK": dockerSock,
 	}
 	if len(scmKey) > 0 {
 		envMap["BZK_SCM_KEYFILE"] = scmKey
+	}
+	if len(mongoURI) > 0 {
+		envMap["BZK_MONGO_URI"] = mongoURI
 	}
 	return envMap
 }
@@ -396,7 +423,13 @@ func getMongoRunOptions() *docker.RunOptions {
 	}
 }
 
-func getServerRunOptions(registry, bzkHome, dockerSock, scmKey, tag string) *docker.RunOptions {
+func getServerRunOptions(registry, bzkHome, dockerSock, scmKey, mongoURI, tag string) *docker.RunOptions {
+	links := []string{}
+
+	if mongoURI == "" {
+		links = append(links, fmt.Sprintf("%s:mongo", bzkContainerMongo))
+	}
+
 	return &docker.RunOptions{
 		Name:   bzkContainerServer,
 		Image:  getImageLocation(registry, "bazooka/server", tag),
@@ -405,8 +438,8 @@ func getServerRunOptions(registry, bzkHome, dockerSock, scmKey, tag string) *doc
 			fmt.Sprintf("%s:/bazooka", bzkHome),
 			fmt.Sprintf("%s:/var/run/docker.sock", dockerSock),
 		},
-		Links: []string{"bzk_mongodb:mongo"},
-		Env:   getServerEnv(bzkHome, dockerSock, scmKey),
+		Links: links,
+		Env:   getServerEnv(bzkHome, dockerSock, scmKey, mongoURI),
 		PortBindings: map[dockerclient.Port][]dockerclient.PortBinding{
 			"3000/tcp": {{HostPort: "3000"}},
 		},

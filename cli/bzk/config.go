@@ -27,6 +27,8 @@ type Config struct {
 	DockerSock string `yaml:"docker_sock"`
 	SCMKey     string `yaml:"scm_key"`
 	Registry   string `yaml:"registry"`
+
+	MongoURI string `yaml:"mongo_uri"`
 }
 
 func saveConfig(authConfig *Config) error {
