@@ -63,17 +63,17 @@ func startService(cmd *cli.Cmd) {
 			log.Fatal(err)
 		}
 
-		err = ensureContainerIsStarted(client, getMongoRunOptions())
+		err = ensureContainerIsStarted(client, getMongoRunOptions(), false)
 		if err != nil {
 			log.Fatal(err)
 		}
 
-		err = ensureContainerIsStarted(client, getServerRunOptions(config.Registry, config.Home, config.DockerSock, config.SCMKey, *tag))
+		err = ensureContainerIsStarted(client, getServerRunOptions(config.Registry, config.Home, config.DockerSock, config.SCMKey, *tag), true)
 		if err != nil {
 			log.Fatal(err)
 		}
 
-		err = ensureContainerIsStarted(client, getWebRunOptions(config.Registry, *tag))
+		err = ensureContainerIsStarted(client, getWebRunOptions(config.Registry, *tag), true)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -102,7 +102,7 @@ func doRestartService() {
 		log.Fatal(err)
 	}
 
-	err = ensureContainerIsStarted(client, getMongoRunOptions())
+	err = ensureContainerIsStarted(client, getMongoRunOptions(), false)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -320,14 +320,14 @@ func stopContainer(client *docker.Docker, name string) error {
 	return nil
 }
 
-func ensureContainerIsStarted(client *docker.Docker, options *docker.RunOptions) error {
+func ensureContainerIsStarted(client *docker.Docker, options *docker.RunOptions, checkImage bool) error {
 	container, err := getContainer(allContainers, options.Name)
 	if err != nil {
 		fmt.Printf("Container %s not found, Starting it\n", options.Name)
 		_, err := client.Run(options)
 		return err
 	}
-	if container.Image == options.Image {
+	if container.Image == options.Image || !checkImage {
 		if strings.HasPrefix(container.Status, "Up") {
 			fmt.Printf("Container %s already Up & Running, keeping on\n", options.Name)
 			return nil
