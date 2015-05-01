@@ -4,6 +4,9 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"time"
+
+	lib "github.com/bazooka-ci/bazooka/commons"
 
 	log "github.com/Sirupsen/logrus"
 	bzklog "github.com/bazooka-ci/bazooka/commons/logs"
@@ -38,6 +41,10 @@ func main() {
 	}
 
 	// Configure Mongo
+	if err := lib.WaitForTcpConnection(env[BazookaEnvMongoAddr], env[BazookaEnvMongoPort], 100*time.Millisecond, 5*time.Second); err != nil {
+		log.Fatalf("Cannot connect to the database: %v", err)
+	}
+
 	connector := mongo.NewConnector()
 	defer connector.Close()
 
