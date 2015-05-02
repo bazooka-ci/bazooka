@@ -7,12 +7,15 @@ MODULES = cli orchestration parser server web
 commons:
 	cd commons && go install ./...
 
+client: commons
+	cd client && go install ./...
+
 all: $(MODULES)
 
 $(MODULES):
 	$(MAKE) -C $@
 
-cli: commons
+cli: client commons
 orchestration: commons
 parser: commons
 server: commons
