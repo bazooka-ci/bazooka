@@ -3,10 +3,11 @@
 angular.module('bzk.job').controller('JobController', function($scope, BzkApi, $routeParams, $timeout) {
     var jId;
     var pId;
-    var refreshJobPromise;
+    var refreshJobPromise, refreshVariantsPromise;
 
     $scope.$on('$destroy', function() {
         $timeout.cancel(refreshJobPromise);
+        $timeout.cancel(refreshVariantsPromise);
     });
 
     function refresh() {
@@ -30,14 +31,6 @@ angular.module('bzk.job').controller('JobController', function($scope, BzkApi, $
 
     refresh();
 
-    $scope.$on('$routeUpdate', refresh);
-
-    var refreshPromise;
-
-    $scope.$on('$destroy', function() {
-        $timeout.cancel(refreshPromise);
-    });
-
     function refreshVariants() {
         var jId = $routeParams.jid;
         if (jId) {
@@ -49,13 +42,18 @@ angular.module('bzk.job').controller('JobController', function($scope, BzkApi, $
                 if ($scope.job.status === 'RUNNING' || _.findWhere($scope.variants, {
                     status: 'RUNNING'
                 })) {
-                    refreshPromise = $timeout(refreshVariants, 3000);
+                    refreshVariantsPromise = $timeout(refreshVariants, 3000);
                 }
             });
         }
     }
 
-    refreshVariants();
+    $scope.$watch('job', function(newValue, oldValue) {
+        if (!oldValue) {
+            // first time we finished loading a job, load the variants
+            refreshVariants();
+        }
+    });
 
     $scope.variantsStatus = function() {
         if ($scope.variants && $scope.variants.length > 0) {
@@ -66,10 +64,6 @@ angular.module('bzk.job').controller('JobController', function($scope, BzkApi, $
             return 'none';
         }
     };
-
-    $scope.$on('$routeUpdate', function() {
-        refreshVariants();
-    });
 
     function setupMeta(variants) {
         var colorsDb = ['#4a148c' /* Purple */ ,
