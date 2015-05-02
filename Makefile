@@ -1,18 +1,28 @@
 default: images
 
-.PHONY: cli devimages images docs web
+MODULES = cli orchestration parser server web
 
-cli:
-	cd cli && make
+.PHONY: commons docs modules $(MODULES)
 
-devimages:
-	./scripts/build-devimages.sh
+commons:
+	cd commons && go install ./...
 
-images:
-	./scripts/build-images.sh
+all: $(MODULES)
+
+$(MODULES):
+	$(MAKE) -C $@
+
+cli: commons
+orchestration: commons
+parser: commons
+server: commons
 
 docs:
 	mkdocs build
+
+devimages: server parser orchestration
+
+images: server parser orchestration web
 
 setup:
 	./scripts/dev-setup.sh
@@ -20,22 +30,19 @@ setup:
 errcheck:
 	./scripts/errcheck.sh
 
-web:
-	cd web && make
-
 push:
 	./scripts/push-images.sh
 
-deploy: setup devimages runner web push
+deploy: setup devimages web push
 
 updatedeps:
 	go get -u -v ./...
 
 test: errcheck devimages # Include errcheck in build phase
 
-bintray: gox
+bintray: cli-gox
 	./scripts/push-bintray.sh
 
-gox:
+cli-gox:
 	gox -os="linux" github.com/bazooka-ci/bazooka/cli/bzk
 	gox -os="darwin" github.com/bazooka-ci/bazooka/cli/bzk

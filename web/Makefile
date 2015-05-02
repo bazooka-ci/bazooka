@@ -1,10 +1,8 @@
-default: devimage
+default: docker
 
-devimage: buildapp
+docker: buildapp
 	cp conf/* build/
-	docker build --rm -t bazooka/web build/
-
-image: devimage
+	docker build -t bazooka/web build/
 
 buildapp:
 	npm install

@@ -1,7 +1,5 @@
-FROM golang:1.4
+FROM alpine:3.1
 
-ADD . /go/src/github.com/bazooka-ci/bazooka
-RUN go get -d -v ./...
-RUN go install -v github.com/bazooka-ci/bazooka/orchestration
+COPY . /bin
 
-CMD ["/go/bin/orchestration"]
+ENTRYPOINT /bin/main
