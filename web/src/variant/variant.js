@@ -48,8 +48,6 @@ angular.module('bzk.variant').controller('VariantController', function($scope, B
         }
     }
     refresh();
-
-    $scope.$on('$routeUpdate', refresh);
 });
 
 angular.module('bzk.variant').controller('VariantLogsController', function($scope, BzkApi, $routeParams, $timeout) {
