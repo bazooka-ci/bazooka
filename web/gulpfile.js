@@ -13,6 +13,7 @@ var uglify = require('gulp-uglify');
 var ngAnnotate = require('gulp-ng-annotate');
 var html2js = require('gulp-html2js');
 var runSequence = require('run-sequence');
+var connect = require('gulp-connect')
 
 var paths = {
   src: {
@@ -100,7 +101,8 @@ gulp.task('css:sass', function () {
         .pipe(sass())
         .pipe(sourcemaps.write())
         .pipe(plumber.stop())
-        .pipe(gulp.dest(paths.dest.css));
+        .pipe(gulp.dest(paths.dest.css))
+        .pipe(connect.reload());
 });
 
 gulp.task('css:app', ['clean:build'], function(){
@@ -138,10 +140,39 @@ gulp.task('build', [
   'assets:app', 'assets:vendor'
   ]);
 
+gulp.task('serve', ['css:sass'], function(){
+  connect.server({
+    root: ['src', 'vendor', 'build'],
+    port: 9000,
+    livereload: true,
+    middleware: function(connect, o) {
+        return [ (function() {
+            var url = require('url');
+            var proxy = require('proxy-middleware');
+            var options = url.parse(process.env.BZK_URI);
+            options.route = '/api';
+            return proxy(options);
+        })() ];
+    }
+})
+});
+
+gulp.task('js:reload', function () {
+    gulp.src(paths.src.js)
+      .pipe(connect.reload());
+});
+
+gulp.task('html:reload', function () {
+    gulp.src(paths.src.html)
+      .pipe(connect.reload());
+});
+
 // The default task (called when you run `gulp`)
-gulp.task('default', ['css:sass'], function() {
+gulp.task('default', ['css:sass', 'serve'], function() {
   // Watch files and run tasks if they change
 
   gulp.watch([paths.src.scss], ['css:sass']);
+  gulp.watch([paths.src.js], ['js:reload']);
+  gulp.watch([paths.src.html], ['html:reload']);
 
 });
