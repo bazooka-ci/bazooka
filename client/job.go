@@ -29,6 +29,23 @@ func (c *Job) List() ([]lib.Job, error) {
 	return j, err
 }
 
+func (c *Job) Get(jobID string) (*lib.Job, error) {
+	var j lib.Job
+
+	requestURL, err := c.config.getRequestURL(fmt.Sprintf("job/%s", url.QueryEscape(jobID)))
+	if err != nil {
+		return nil, err
+	}
+
+	err = perigee.Get(requestURL, perigee.Options{
+		Results:    &j,
+		OkCodes:    []int{200},
+		SetHeaders: c.config.authenticateRequest,
+	})
+
+	return &j, err
+}
+
 func (c *Job) Variants(jobID string) ([]lib.Variant, error) {
 	var v []lib.Variant
 
