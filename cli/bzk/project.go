@@ -30,16 +30,16 @@ func createProjectCommand(cmd *cli.Cmd) {
 	})
 
 	cmd.Action = func() {
-		client, err := NewClient(checkServerURI(*bzkUri))
+		client, err := NewClient()
 		if err != nil {
 			log.Fatal(err)
 		}
-		res, err := client.CreateProject(*name, *scmType, *scmUri)
+		res, err := client.Project.Create(*name, *scmType, *scmUri)
 		if err != nil {
 			log.Fatal(err)
 		}
 		if len(*scmKey) > 0 {
-			_, err = client.AddKey(res.ID, *scmKey)
+			_, err = client.Project.Key.Add(res.ID, *scmKey)
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -53,11 +53,11 @@ func createProjectCommand(cmd *cli.Cmd) {
 
 func listProjectsCommand(cmd *cli.Cmd) {
 	cmd.Action = func() {
-		client, err := NewClient(checkServerURI(*bzkUri))
+		client, err := NewClient()
 		if err != nil {
 			log.Fatal(err)
 		}
-		res, err := client.ListProjects()
+		res, err := client.Project.List()
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -79,11 +79,11 @@ func listProjectConfigCommand(cmd *cli.Cmd) {
 	})
 
 	cmd.Action = func() {
-		client, err := NewClient(checkServerURI(*bzkUri))
+		client, err := NewClient()
 		if err != nil {
 			log.Fatal(err)
 		}
-		res, err := client.GetProjectConfig(*pid)
+		res, err := client.Project.Config.Get(*pid)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -111,11 +111,11 @@ func getProjectConfigKeyCommand(cmd *cli.Cmd) {
 	})
 
 	cmd.Action = func() {
-		client, err := NewClient(checkServerURI(*bzkUri))
+		client, err := NewClient()
 		if err != nil {
 			log.Fatal(err)
 		}
-		res, err := client.GetProjectConfig(*pid)
+		res, err := client.Project.Config.Get(*pid)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -151,11 +151,11 @@ func setProjectConfigKeyCommand(cmd *cli.Cmd) {
 	})
 
 	cmd.Action = func() {
-		client, err := NewClient(checkServerURI(*bzkUri))
+		client, err := NewClient()
 		if err != nil {
 			log.Fatal(err)
 		}
-		if err := client.SetProjectConfigKey(*pid, *key, *value); err != nil {
+		if err := client.Project.Config.SetKey(*pid, *key, *value); err != nil {
 			log.Fatal(err)
 		}
 		w := tabwriter.NewWriter(os.Stdout, 15, 1, 3, ' ', 0)
@@ -179,11 +179,11 @@ func unsetProjectConfigKeyCommand(cmd *cli.Cmd) {
 	})
 
 	cmd.Action = func() {
-		client, err := NewClient(checkServerURI(*bzkUri))
+		client, err := NewClient()
 		if err != nil {
 			log.Fatal(err)
 		}
-		if err := client.UnsetProjectConfigKey(*pid, *key); err != nil {
+		if err := client.Project.Config.UnsetKey(*pid, *key); err != nil {
 			log.Fatal(err)
 		}
 	}

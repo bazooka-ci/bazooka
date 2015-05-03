@@ -4,7 +4,6 @@ import (
 	"encoding/base64"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"os"
 	"path"
 	"strings"
@@ -68,26 +67,6 @@ func loadConfig() (*Config, error) {
 		return &authConfig, nil
 	}
 	return &authConfig, err
-}
-
-func checkServerURI(endpoint string) string {
-	if len(endpoint) == 0 {
-		config, err := loadConfig()
-		if err != nil {
-			log.Fatal(fmt.Errorf("Unable to load Bazooka config, reason is: %v\n", err))
-		}
-		if len(config.ServerURI) == 0 {
-			endpoint = interactiveInput("Bazooka Server URI")
-			config.ServerURI = endpoint
-
-			err = saveConfig(config)
-			if err != nil {
-				log.Fatal(fmt.Errorf("Unable to save Bazooka config, reason is: %v\n", err))
-			}
-		}
-		return config.ServerURI
-	}
-	return endpoint
 }
 
 func encodeAuth(authConfig *Config) string {

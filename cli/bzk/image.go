@@ -11,11 +11,11 @@ import (
 
 func listImagesCommand(cmd *cli.Cmd) {
 	cmd.Action = func() {
-		client, err := NewClient(checkServerURI(*bzkUri))
+		client, err := NewClient()
 		if err != nil {
 			log.Fatal(err)
 		}
-		res, err := client.ListImages()
+		res, err := client.Image.List()
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -42,11 +42,11 @@ func setImageCommand(cmd *cli.Cmd) {
 	})
 
 	cmd.Action = func() {
-		client, err := NewClient(checkServerURI(*bzkUri))
+		client, err := NewClient()
 		if err != nil {
 			log.Fatal(err)
 		}
-		if err := client.SetImage(*name, *image); err != nil {
+		if err := client.Image.Set(*name, *image); err != nil {
 			log.Fatal(err)
 		}
 
