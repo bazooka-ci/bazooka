@@ -1,4 +1,4 @@
-FROM alpine:3.1
+FROM busybox:ubuntu-14.04
 
 COPY . /bin
 
