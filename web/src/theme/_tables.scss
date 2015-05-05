@@ -50,21 +50,23 @@
   td .success,
   td .failed,
   td .errored {
-    border-radius: 20px;
-    color: #fff;
-    padding: 2px 5px;
+    font-size: 18px;
+    line-height: 18px;
+    font-weight: bold;
+    display: block;
+    text-align: center;
   }
 
   td .success {
-    background: $success-bg;
+    color: $success-bg;
   }
 
   td .failed {
-    background: $failed-bg;
+    color: $failed-bg;
   }
 
   td .errored {
-    background: $errored-bg;
+    color: $errored-bg;
   }
 
 
