@@ -37,12 +37,8 @@ h3 {
   max-width: 100%;
 }
 
-#layout {
-  padding: 0;
-}
-
 .header {
-  margin: 3em auto;
+  margin: 0;
   text-align: center;
   top: auto;
 }
@@ -198,7 +194,7 @@ h3 {
   font-size: 20px;
 }
 
-@media (min-width: 48em) {
+@media (min-width: 992px) {
   .content {
     margin-left: 25%;
   }
