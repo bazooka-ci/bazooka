@@ -17,8 +17,10 @@ angular.module('bzk.projects').controller('ProjectListController', function($sco
         $scope.projectList = projectList;
     });
 
-    $scope.createProject = function(project) {
-        BzkApi.project.create(project).success(function() {
+    $scope.createProject = function() {
+        BzkApi.project.create($scope.project).success(function() {
+            $scope.project = {};
+            
             BzkApi.project.list().success(function(projectList) {
                 $scope.projectList = projectList;
                 $rootScope.$broadcast('project.new');

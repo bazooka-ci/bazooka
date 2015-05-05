@@ -7,26 +7,26 @@
         <div class="form-group">
           <label for="name" class="control-label">Project Name</label>
           
-          <input id="name" type="text" placeholder="Name" ng-model="addProject.name"
+          <input id="name" type="text" placeholder="Name" ng-model="project.name"
           class="form-control input-sm" required>
         </div>
       </div>
       <div class="col-md-3">
         <div class="form-group">
           <label for="scm_type" class="control-label">SCM Type</label>
-          <input id="scm_type" type="text" placeholder="SCM Type" ng-model="addProject.scm_type"
+          <input id="scm_type" type="text" placeholder="SCM Type" ng-model="project.scm_type"
           class="form-control input-sm" required>
         </div>
       </div>
       <div class="col-md-10 col-md-offset-1">
         <div class="form-group">
           <label for="scm_uri" class="form-label">SCM Uri</label>
-          <input id="scm_uri" type="text" placeholder="SCM Uri" ng-model="addProject.scm_uri"
+          <input id="scm_uri" type="text" placeholder="SCM Uri" ng-model="project.scm_uri"
           class="form-control  input-sm" required>
         </div>
         <div class="form-group">
           <button type="submit" class="btn btn-primary"
-          ng-click="createProject(addProject)" value="Add">Create New Project</button>
+          ng-click="createProject(project)" value="Add">Create New Project</button>
         </div>
       </div>
       
