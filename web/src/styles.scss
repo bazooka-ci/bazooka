@@ -100,14 +100,15 @@ h3 {
 
   li {
     list-style: none;
-    padding-bottom: .3em;
-    padding-left: .5em;
-    padding-right: .5em;
-    padding-top: .3em;
-
     a {
       display: block;
+      padding-bottom: .3em;
+      padding-left: .5em;
+      padding-right: .5em;
+      padding-top: .3em;
       position: relative;
+      // border-bottom: 1px solid darken($sidebar-bg, 10%);
+      border-top: 1px solid darken($sidebar-bg, 5%);
 
       h2 {
         margin: 0;
@@ -129,8 +130,8 @@ h3 {
     .last-job {
       display: block;
       position: absolute;
-      top: 0;
-      right: 0;
+      top: 5px;
+      right: 5px;
       text-align: center;
     }
 
@@ -150,6 +151,12 @@ h3 {
 
   li:hover {
     background-color: $sidebar-hover;
+  }
+
+  li.selected {
+    a {
+      background: lighten($sidebar-bg, 10%);
+    }
   }
 }
 
