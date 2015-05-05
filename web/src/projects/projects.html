@@ -1,51 +1,56 @@
 <div class="projectlist">
-<h2>Add new Project</h2>
-
-<div>
-  <form novalidate class="pure-form pure-form-aligned">
-    <fieldset>
-      <div class="pure-control-group">
-        <label for="name">Project Name</label>
-        <input id="name" type="text" placeholder="Name" ng-model="addProject.name" class="pure-input-rounded" required>
+  <h2>Add new Project</h2>
+  
+  <form novalidate class="form">
+    <div class="row">
+      <div class="col-md-7 col-md-offset-1">
+        <div class="form-group">
+          <label for="name" class="control-label">Project Name</label>
+          
+          <input id="name" type="text" placeholder="Name" ng-model="addProject.name"
+          class="form-control input-sm" required>
+        </div>
       </div>
-
-      <div class="pure-control-group">
-        <label for="scm_type">SCM Type</label>
-        <input id="scm_type" type="text" placeholder="SCM Type" ng-model="addProject.scm_type" class="pure-input-rounded" required>
+      <div class="col-md-3">
+        <div class="form-group">
+          <label for="scm_type" class="control-label">SCM Type</label>
+          <input id="scm_type" type="text" placeholder="SCM Type" ng-model="addProject.scm_type"
+          class="form-control input-sm" required>
+        </div>
       </div>
-
-      <div class="pure-control-group">
-        <label for="scm_uri">SCM Uri</label>
-        <input id="scm_uri" type="text" placeholder="SCM Uri" ng-model="addProject.scm_uri" class="pure-input-rounded" required>
+      <div class="col-md-10 col-md-offset-1">
+        <div class="form-group">
+          <label for="scm_uri" class="form-label">SCM Uri</label>
+          <input id="scm_uri" type="text" placeholder="SCM Uri" ng-model="addProject.scm_uri"
+          class="form-control  input-sm" required>
+        </div>
+        <div class="form-group">
+          <button type="submit" class="btn btn-primary"
+          ng-click="createProject(addProject)" value="Add">Create New Project</button>
+        </div>
       </div>
-      <div class="pure-controls">
-        <button type="submit" class="pure-button pure-button-primary" ng-click="createProject(addProject)" value="Add">Create New Project</button>
-      </div>
-    </fieldset>
+      
+    </div>
   </form>
-</div>
-
-<div ng-show="projectList.length > 0">
-  <table class="pure-table pure-table-horizontal">
-    <thead>
-      <tr>
-        <th>Name</th>
-        <th>SCM Type</th>
-        <th>SCM Uri</th>
-      </tr>
-    </thead>
-
-    <tbody ng-repeat="project in projectList | orderBy:'name':true">
-      <tr>
-        <td>{{project.name}}</td>
-        <td>{{project.scm_type}}</td>
-        <td>{{project.scm_uri}}</td>
-      </tr>
-    </tbody>
-  </table>
-</div>
-
-<div class="empty" ng-show="projectList.length == 0">
-  Bazooka does not know of any projects right now. You can add one with the previous form.
-</div>
+  <div ng-show="projectList.length > 0">
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>SCM Type</th>
+          <th>SCM Uri</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr ng-repeat="project in projectList | orderBy:'name':true">
+          <td>{{project.name}}</td>
+          <td>{{project.scm_type}}</td>
+          <td>{{project.scm_uri}}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="empty" ng-show="projectList.length == 0">
+    Bazooka does not know of any projects right now. You can add one with the previous form.
+  </div>
 </div>

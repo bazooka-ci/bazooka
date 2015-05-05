@@ -6,6 +6,7 @@
 @import 'job/job';
 @import 'variant/variant';
 @import 'theme/tables';
+@import 'theme/logs';
 
 * {
   box-sizing: border-box;
@@ -13,9 +14,9 @@
 
 body {
   color: $font-global;
-  font-family: 'Roboto', sans-serif;
+  font-family: sans-serif;
   -webkit-font-smoothing: antialiased;
-  font-weight: 300;
+  font-weight: 500;
 }
 
 a {
@@ -49,6 +50,11 @@ h3 {
 .sidebar {
   background: $sidebar-bg;
   color: #fff;
+  padding: 0;
+}
+
+.content {
+  padding: 0;
 }
 
 .brand-title {
@@ -85,9 +91,7 @@ h3 {
   padding-top: 2em;
 }
 
-#projects {
-  margin-left: -2em;
-  margin-right: -2em;
+.projects {
   text-align: left;
 
   ul {
@@ -101,6 +105,15 @@ h3 {
     padding-right: .5em;
     padding-top: .3em;
 
+    a {
+      display: block;
+      position: relative;
+
+      h2 {
+        margin: 0;
+        padding: 0;
+      }
+    }
     a:hover {
       text-decoration: none;
     }
@@ -113,9 +126,15 @@ h3 {
       color: $project-error;
     }
 
-    .projectnumber {
-      text-align: right;
+    .last-job {
+      display: block;
+      position: absolute;
+      top: 0;
+      right: 0;
+      text-align: center;
     }
+
+
 
     p {
       margin: .4em 0;

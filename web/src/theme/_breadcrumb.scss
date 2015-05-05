@@ -1,8 +1,9 @@
-#breadcrumb {
+.breadcrumb {
   border-bottom: 1px solid $breadcrumb-color-border;
   color: $breadcrumb-color;
   margin-bottom: 10px;
-  padding: 15px;
+  padding: 10px;
+  background: $breadcrumb-bg;
 
   .home {
     opacity: .4;
@@ -12,6 +13,8 @@
   a {
     color: $breadcrumb-color;
     text-decoration: none;
+    font-size: 16px;
+    line-height: 16px;
   }
 
   a:hover {

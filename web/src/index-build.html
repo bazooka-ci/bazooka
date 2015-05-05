@@ -9,9 +9,9 @@
 	<script src="js/vendor.js"></script>
 	<script src="js/bzk.js"></script>
 </head>
-<body ng-app="bzk" ng-controller="RootController">
-	<div id="layout" class="pure-g">
-		<div class="sidebar pure-u-1 pure-u-md-1-4">
+<body ng-app="bzk" ng-controller="RootController" class="container-fluid">
+	<div id="layout" class="row">
+		<div class="sidebar col-md-3">
 			<div class="header">
 				<h1 class="brand-title"><a href="#/">Bazooka</a></h1>
 				<h2 class="brand-tagline">A CI tool you'll come to love</h2>
@@ -19,7 +19,7 @@
 			</div>
 		</div>
 
-		<div class="content pure-u-1 pure-u-md-3-4">
+		<div class="content col-md-9">
 			<div ng-view>Bazooka</div>
 		</div>
 	</div>

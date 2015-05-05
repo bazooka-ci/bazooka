@@ -1,48 +1,51 @@
 <!DOCTYPE html>
 <html>
-<head>
-	<title>Bazooka</title>
-	<link rel=stylesheet href="pure/pure.css">
-	<link rel=stylesheet href="pure/grids-responsive-min.css">
-	<link rel=stylesheet href="fontawesome/css/font-awesome.css">
-	<link rel="stylesheet" type="text/css" href="web/css/styles.css">
-	<link href='//fonts.googleapis.com/css?family=Roboto:400,100,900,500' rel='stylesheet' type='text/css'>
-
-	<script src="jquery/dist/jquery.js"></script>
-	<script src="angular/angular.js"></script>
-	<script src="angular-route/angular-route.js"></script>
-
-	<script src="moment/moment.js"></script>
-	<script src="lodash/lodash.js"></script>
-	<script src="dev.js"></script>
-	<script src="utils/utils.js"></script>
-	<script src="utils/api.js"></script>
-	<script src="utils/jobs-list.js"></script>
-	<script src="utils/job-info.js"></script>
-	<script src="utils/breadcrumbs.js"></script>
-	<script src="app.js"></script>
-	<script src="home/home.js"></script>
-	<script src="home/homeController.js"></script>
-	<script src="job/job.js"></script>
-	<script src="job/jobController.js"></script>
-	<script src="project/project.js"></script>
-	<script src="project/projectController.js"></script>
-	<script src="variant/variant.js"></script>
-	<script src="projects/projects.js"></script>
-</head>
-<body ng-app="bzk" ng-controller="RootController">
-	<div id="layout" class="pure-g">
-		<div class="sidebar pure-u-1 pure-u-md-1-4">
-			<div class="header">
-				<h1 class="brand-title"><a href="#/">Bazooka</a></h1>
-				<h2 class="brand-tagline">A CI tool you'll come to love</h2>
+	<head>
+		<title>Bazooka</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<link rel=stylesheet href="bootstrap/dist/css/bootstrap.css">
+		<link rel=stylesheet href="fontawesome/css/font-awesome.css">
+		<link rel="stylesheet" type="text/css" href="web/css/styles.css">
+		<script src="jquery/dist/jquery.js"></script>
+		<script src="angular/angular.js"></script>
+		<script src="angular-route/angular-route.js"></script>
+		<script src="moment/moment.js"></script>
+		<script src="lodash/lodash.js"></script>
+		<script src="dev.js"></script>
+		<script src="utils/utils.js"></script>
+		<script src="utils/api.js"></script>
+		<script src="utils/jobs-list.js"></script>
+		<script src="utils/job-info.js"></script>
+		<script src="utils/breadcrumbs.js"></script>
+		<script src="app.js"></script>
+		<script src="home/home.js"></script>
+		<script src="home/homeController.js"></script>
+		<script src="job/job.js"></script>
+		<script src="job/jobController.js"></script>
+		<script src="project/project.js"></script>
+		<script src="project/projectController.js"></script>
+		<script src="variant/variant.js"></script>
+		<script src="projects/projects.js"></script>
+	</head>
+	<body ng-app="bzk" ng-controller="RootController" class="container-fluid">
+		<div id="layout" class="row">
+			<div class="sidebar col-md-3">
+				<div class="header">
+					<h1 class="brand-title"><a href="#/">Bazooka</a></h1>
+					<h2 class="brand-tagline">A CI tool you'll come to love</h2>
+					<nav class="nav">
+						<ul class="nav-list">
+							<li class="nav-item">
+								<a class="btn btn-default" href="#/p">Manage Projects</a>
+							</li>
+						</ul>
+					</nav>
+				</div>
 				<div ng-include="'projects.html'"></div>
 			</div>
+			<div class="content col-md-9">
+				<div ng-view>Bazooka</div>
+			</div>
 		</div>
-
-		<div class="content pure-u-1 pure-u-md-3-4">
-			<div ng-view>Bazooka</div>
-		</div>
-	</div>
-</body>
+	</body>
 </html>
