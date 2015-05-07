@@ -1,27 +1,32 @@
 <!DOCTYPE html>
 <html>
-<head>
-	<title>Bazooka</title>
-	<link rel=stylesheet href="css/vendor.css">
-	<link rel=stylesheet href="css/bzk.css">
-	<link href='//fonts.googleapis.com/css?family=Roboto:400,100,900,500' rel='stylesheet' type='text/css'>
-
-	<script src="js/vendor.js"></script>
-	<script src="js/bzk.js"></script>
-</head>
-<body ng-app="bzk" ng-controller="RootController" class="container-fluid">
-	<div id="layout" class="row">
-		<div class="sidebar col-md-3">
-			<div class="header">
-				<h1 class="brand-title"><a href="#/">Bazooka</a></h1>
-				<h2 class="brand-tagline">A CI tool you'll come to love</h2>
+	<head>
+		<title>Bazooka</title>
+		<link rel=stylesheet href="css/vendor.css">
+		<link rel=stylesheet href="css/bzk.css">
+		<script src="js/vendor.js"></script>
+		<script src="js/bzk.js"></script>
+	</head>
+	<body ng-app="bzk" ng-controller="RootController" class="container-fluid">
+		<div growl></div>
+		<div class="row">
+			<div class="sidebar col-md-3">
+				<div class="header">
+					<h1 class="brand-title"><a href="#/">Bazooka</a></h1>
+					<h2 class="brand-tagline">A CI tool you'll come to love</h2>
+					<nav class="nav">
+						<ul class="nav-list">
+							<li class="nav-item">
+								<a class="btn btn-default" href="#/p">Manage Projects</a>
+							</li>
+						</ul>
+					</nav>
+				</div>
 				<div ng-include="'projects.html'"></div>
 			</div>
+			<div class="content col-md-9">
+				<div ng-view>Bazooka</div>
+			</div>
 		</div>
-
-		<div class="content col-md-9">
-			<div ng-view>Bazooka</div>
-		</div>
-	</div>
-</body>
+	</body>
 </html>
