@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"strconv"
 	"time"
 
 	log "github.com/Sirupsen/logrus"
@@ -12,6 +13,13 @@ import (
 	"github.com/bazooka-ci/bazooka/commons/mongo"
 	"github.com/bazooka-ci/bazooka/commons/parallel"
 	docker "github.com/bywan/go-dockercommand"
+)
+
+var (
+	whiteListEnvVarsNames = []string{
+		"BZK_SCM_URL", "BZK_PROJECT_ID", "BZK_JOB_ID", "BZK_BUILD_DIR",
+		"BZK_JOB_PARAMETERS", "BZK_SCM", "BZK_SCM_REFERENCE", "BZK_VARIANT",
+	}
 )
 
 type Runner struct {
@@ -85,7 +93,6 @@ func (r *Runner) runContainer(logger Logger, vd *variantData) error {
 
 	artifactsFolder := fmt.Sprintf("%s/%s", r.ArtifactsFolderBase, vd.variant.ID)
 
-	// TODO link containers
 	container, err := r.client.Run(&docker.RunOptions{
 		Image: vd.imageTag,
 		Links: containerLinks,
@@ -93,6 +100,7 @@ func (r *Runner) runContainer(logger Logger, vd *variantData) error {
 			fmt.Sprintf("%s:/var/run/docker.sock", paths.host.dockerSock),
 			fmt.Sprintf("%s:/artifacts", artifactsFolder),
 		},
+		Env:    whiteListEnvVars(injectVariantInEnv(vd.variant.Number, r.Env)),
 		Detach: true,
 	})
 	if err != nil {
@@ -134,6 +142,30 @@ func (r *Runner) runContainer(logger Logger, vd *variantData) error {
 		vd.variant.Status = commons.JOB_FAILED
 	}
 	return nil
+}
+
+func whiteListEnvVars(envVars map[string]string) map[string]string {
+	res := map[string]string{}
+	for k, v := range envVars {
+		if stringInSlice(k, whiteListEnvVarsNames) {
+			res[k] = v
+		}
+	}
+	return res
+}
+
+func stringInSlice(a string, list []string) bool {
+	for _, b := range list {
+		if b == a {
+			return true
+		}
+	}
+	return false
+}
+
+func injectVariantInEnv(v int, env map[string]string) map[string]string {
+	env["BZK_VARIANT"] = strconv.Itoa(v)
+	return env
 }
 
 func listServices(servicesFile string) ([]string, error) {
