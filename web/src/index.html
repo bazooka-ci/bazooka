@@ -3,14 +3,20 @@
 	<head>
 		<title>Bazooka</title>
 		<meta name="viewport" content="width=device-width, initial-scale=1">
+		
 		<link rel=stylesheet href="bootstrap/dist/css/bootstrap.css">
 		<link rel=stylesheet href="fontawesome/css/font-awesome.css">
+		<link rel=stylesheet href="angular-growl-v2/build/angular-growl.css">
+		
 		<link rel="stylesheet" type="text/css" href="web/css/styles.css">
+		
 		<script src="jquery/dist/jquery.js"></script>
 		<script src="angular/angular.js"></script>
 		<script src="angular-route/angular-route.js"></script>
+		<script src="angular-growl-v2/build/angular-growl.js"></script>
 		<script src="moment/moment.js"></script>
 		<script src="lodash/lodash.js"></script>
+
 		<script src="dev.js"></script>
 		<script src="utils/utils.js"></script>
 		<script src="utils/api.js"></script>
@@ -29,6 +35,7 @@
 		<script src="projects/projects.js"></script>
 	</head>
 	<body ng-app="bzk" ng-controller="RootController" class="container-fluid">
+		<div growl></div>
 		<div class="row">
 			<div class="sidebar col-md-3">
 				<div class="header">
