@@ -6,9 +6,10 @@ install:
 script:
   - go test -v ./...
   - make errcheck
+  - make cli-gox
   - make images
 after_success:
-  - make bintray
+  - make push-bintray
   - make push
 env:
   - BZK_BUILD_DIR=/go/src/github.com/bazooka-ci/bazooka

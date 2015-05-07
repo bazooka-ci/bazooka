@@ -43,7 +43,7 @@ updatedeps:
 
 test: errcheck devimages # Include errcheck in build phase
 
-bintray: cli-gox
+push-bintray:
 	./scripts/push-bintray.sh
 
 cli-gox:
