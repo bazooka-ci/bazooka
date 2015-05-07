@@ -4,7 +4,7 @@ set -e
 
 docker_projects=( "parser" "orchestration" "server" "web")
 
-if [ -n "$DO_DOCKER_PUSH" ]; then
+if [ -n "$DO_PUSH" ]; then
   docker login -e "$DOCKER_EMAIL" -p "$DOCKER_PASSWORD" -u "$DOCKER_USERNAME"
 
   for project in "${docker_projects[@]}"
@@ -17,5 +17,5 @@ if [ -n "$DO_DOCKER_PUSH" ]; then
     docker push "$image"
   done
 else
-  echo "Variable DO_DOCKER_PUSH not defined, skipping docker push"
+  echo "Variable DO_PUSH not defined, skipping docker push"
 fi
