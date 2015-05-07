@@ -96,24 +96,31 @@ h3 {
 
   li {
     list-style: none;
+
     a {
+      text-decoration: none;
       display: block;
-      padding-bottom: .3em;
-      padding-left: .5em;
-      padding-right: .5em;
-      padding-top: .3em;
+      padding: .3em .5em;
       position: relative;
-      // border-bottom: 1px solid darken($sidebar-bg, 10%);
       border-top: 1px solid darken($sidebar-bg, 5%);
 
       h2 {
         margin: 0;
         padding: 0;
       }
+
+      &:hover {
+        background-color: $sidebar-hover;
+      }
     }
-    a:hover {
-      text-decoration: none;
+
+    &.selected {
+      a {
+        background: lighten($sidebar-bg, 10%);
+      }
     }
+    
+
 
     .success {
       color: $project-success;
@@ -143,17 +150,7 @@ h3 {
     .scm {
       color: $sidebar-scm;
     }
-  }
-
-  li:hover {
-    background-color: $sidebar-hover;
-  }
-
-  li.selected {
-    a {
-      background: lighten($sidebar-bg, 10%);
-    }
-  }
+  }  
 }
 
 

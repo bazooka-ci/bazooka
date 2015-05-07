@@ -11,41 +11,42 @@
     padding-right: 5px;
   }
 
-  tr {
-    border-bottom: 2px solid #fff;
-    border-top: 2px solid #fff;
+  tbody {
+    tr {
+      &.success td {
+        background-color: $success-row;
+      }
 
-    &.success {
-      background: $success-row;
+      &.success:hover td {
+        background: $success-row-hover;
+      }
+
+      &.failed td {
+        background: $failed-row;
+      }
+
+      &.failed:hover td {
+        background: $failed-row-hover;
+      }
+
+      &.errored td {
+        background: $errored-row;
+      }
+
+      &.errored:hover td {
+        background: $errored-row-hover;
+      }
+
     }
-
-    &.success:hover {
-      background: $success-row-hover;
-    }
-
-    &.failed {
-      background: $failed-row;
-    }
-
-    &.failed:hover {
-      background: $failed-row-hover;
-    }
-
-    &.errored {
-      background: $errored-row;
-    }
-
-    &.errored:hover {
-      background: $errored-row-hover;
-    }
-
   }
 
-  td,
-  th {
+  td, th {
     padding: .5em;
   }
 
+  td {
+    border-bottom: 2px solid #fff;
+  }
 
   td .success,
   td .failed,
