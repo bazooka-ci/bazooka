@@ -44,13 +44,19 @@ angular.module('bzk.utils').filter('bzkDate', function() {
 });
 
 angular.module('bzk.utils').filter('bzkDuration', function() {
+    function fmt(from, to) {
+        return moment.duration(from.diff(to), 'milliseconds').format('hh:mm:ss', {
+            trim: false
+        });
+    }
+
     return function(job) {
         if (job) {
             var m = moment(job.completed);
             if (m.year() === 1) {
-                return moment().from(moment(job.started), true);
+                return fmt(moment(), job.started);
             } else {
-                return m.from(job.started, true);
+                return fmt(m, job.started);
             }
         }
     };

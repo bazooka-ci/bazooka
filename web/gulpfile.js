@@ -38,6 +38,7 @@ var paths = {
             'vendor/angular-route/angular-route.js',
             'vendor/angular-growl-v2/build/angular-growl.js',
             'vendor/moment/moment.js',
+            'vendor/moment-duration-format/lib/moment-duration-format.js',
             'vendor/lodash/lodash.js'
         ],
         css: ['vendor/bootstrap/dist/css/bootstrap.css',
