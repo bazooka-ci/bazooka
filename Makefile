@@ -20,9 +20,6 @@ orchestration: commons
 parser: commons
 server: commons
 
-docs:
-	mkdocs build
-
 devimages: server parser orchestration
 
 images: server parser orchestration web
