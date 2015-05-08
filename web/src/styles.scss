@@ -53,6 +53,25 @@ h3 {
   padding: 0;
 }
 
+
+@media (min-width: 992px) {
+  .content {
+    margin-left: 25%;
+  }
+
+  .header {
+    margin: 2em 2em 0;
+    text-align: right;
+  }
+
+  .sidebar {
+    bottom: 0;
+    position: fixed;
+    top: 0;
+    overflow: auto;
+  }
+}
+
 .brand-title {
   text-transform: uppercase;
 
@@ -191,19 +210,3 @@ h3 {
   font-size: 20px;
 }
 
-@media (min-width: 992px) {
-  .content {
-    margin-left: 25%;
-  }
-
-  .header {
-    margin: 2em 2em 0;
-    text-align: right;
-  }
-
-  .sidebar {
-    bottom: 0;
-    position: fixed;
-    top: 0;
-  }
-}
