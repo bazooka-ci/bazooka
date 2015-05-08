@@ -215,9 +215,10 @@ func feedMatrix(extra map[string]interface{}, mx *matrix.Matrix) error {
 	for k, v := range extra {
 		switch k {
 		case "env":
-			if vs, ok := v.([]interface{}); ok {
+			switch converted:=v.(type) {
+			case []interface{}:
 				envVars := []lib.BzkString{}
-				for _, envVar := range vs {
+				for _, envVar := range converted {
 					if strEnvVar, ok := envVar.(string); ok {
 						envVars = append(envVars, lib.BzkString(strEnvVar))
 					} else {
@@ -226,10 +227,11 @@ func feedMatrix(extra map[string]interface{}, mx *matrix.Matrix) error {
 					}
 				}
 				mx.Merge(explodeProps(envVars, MX_ENV_PREFIX))
-			} else {
+			case string:
+				mx.Merge(explodeProps([]lib.BzkString{lib.BzkString(converted)}, MX_ENV_PREFIX))
+			default:
 				return fmt.Errorf("Invalid config: env should contain a sequence of strings: %v:%T", v, v)
 			}
-
 		default:
 			mx.AddVar(k, fmt.Sprintf("%v", v))
 		}
