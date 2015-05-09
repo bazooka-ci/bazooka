@@ -2,7 +2,7 @@ default: images
 
 MODULES = cli orchestration parser server web
 
-.PHONY: commons docs modules $(MODULES)
+.PHONY: commons modules $(MODULES)
 
 commons:
 	cd commons && go install ./...
