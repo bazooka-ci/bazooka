@@ -27,3 +27,20 @@ func (c *Variant) Log(variantID string) ([]lib.LogEntry, error) {
 	})
 	return log, err
 }
+
+func (c *Variant) StreamLog(variantID string) (chan lib.LogEntry, error) {
+	requestURL, err := c.config.getRequestURL(fmt.Sprintf("variant/%s/log", url.QueryEscape(variantID)), "follow=true")
+	if err != nil {
+		return nil, err
+	}
+
+	response, err := perigee.Request("GET", requestURL, perigee.Options{
+		OkCodes:    []int{200},
+		SetHeaders: c.config.authenticateRequest,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return streamLog(response.HttpResponse), nil
+}

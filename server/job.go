@@ -4,9 +4,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"net/http"
 	"os"
 	"strings"
 	"time"
+
+	"github.com/gorilla/mux"
 
 	log "github.com/Sirupsen/logrus"
 
@@ -277,17 +280,77 @@ func (c *context) getAllJobs(params map[string]string, body bodyFunc) (*response
 	return ok(&jobs)
 }
 
-func (c *context) getJobLog(params map[string]string, body bodyFunc) (*response, error) {
+func (c *context) getJobLog(w http.ResponseWriter, r *http.Request) {
+	follow := len(r.URL.Query().Get("follow")) > 0
 
-	log, err := c.Connector.GetLog(&mongo.LogExample{
-		JobID: params["id"],
-	})
+	jid := mux.Vars(r)["id"]
+
+	job, err := c.Connector.GetJobByID(jid)
+
 	if err != nil {
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		encoder := json.NewEncoder(w)
+
 		if err.Error() != "not found" {
-			return nil, err
+			w.WriteHeader(500)
+			encoder.Encode(err)
+			return
 		}
-		return notFound("log not found")
+
+		w.WriteHeader(404)
+		encoder.Encode(fmt.Errorf("job not found"))
+		return
 	}
 
-	return ok(&log)
+	w.WriteHeader(200)
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	logOutput := json.NewEncoder(w)
+
+	query := &mongo.LogExample{
+		JobID: jid,
+	}
+
+	logs, err := c.Connector.GetLog(query)
+	if !follow {
+		logOutput.Encode(logs)
+		return
+	}
+
+	for _, l := range logs {
+		logOutput.Encode(l)
+	}
+	flushResponse(w)
+	lastTime := jobLastLogTime(job, logs)
+
+	for {
+		time.Sleep(1000 * time.Millisecond)
+		query.After = lastTime
+		logs, err := c.Connector.GetLog(query)
+		if err != nil {
+			log.Errorf("Error while retrieving logs: %v", err)
+			return
+		}
+		if len(logs) > 0 {
+			lastTime = jobLastLogTime(job, logs)
+			for _, l := range logs {
+				logOutput.Encode(l)
+			}
+			flushResponse(w)
+		}
+		job, err := c.Connector.GetJobByID(jid)
+		if err != nil {
+			log.Errorf("Error while retrieving job: %v", err)
+			return
+		}
+		if job.Status != lib.JOB_RUNNING {
+			return
+		}
+	}
+}
+
+func jobLastLogTime(job *lib.Job, logs []lib.LogEntry) time.Time {
+	if len(logs) == 0 {
+		return job.Started
+	}
+	return logs[len(logs)-1].Time
 }
