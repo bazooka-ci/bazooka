@@ -282,6 +282,7 @@ func (c *context) getAllJobs(params map[string]string, body bodyFunc) (*response
 
 func (c *context) getJobLog(w http.ResponseWriter, r *http.Request) {
 	follow := len(r.URL.Query().Get("follow")) > 0
+	strictJson := len(r.URL.Query().Get("strict-json")) > 0
 
 	jid := mux.Vars(r)["id"]
 
@@ -316,8 +317,17 @@ func (c *context) getJobLog(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if strictJson {
+		w.Write([]byte("["))
+	}
+
+	writtenEntries := 0
 	for _, l := range logs {
+		if writtenEntries > 0 && strictJson {
+			w.Write([]byte(","))
+		}
 		logOutput.Encode(l)
+		writtenEntries++
 	}
 	flushResponse(w)
 	lastTime := jobLastLogTime(job, logs)
@@ -333,7 +343,11 @@ func (c *context) getJobLog(w http.ResponseWriter, r *http.Request) {
 		if len(logs) > 0 {
 			lastTime = jobLastLogTime(job, logs)
 			for _, l := range logs {
+				if writtenEntries > 0 && strictJson {
+					w.Write([]byte(","))
+				}
 				logOutput.Encode(l)
+				writtenEntries++
 			}
 			flushResponse(w)
 		}
@@ -343,6 +357,9 @@ func (c *context) getJobLog(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if job.Status != lib.JOB_RUNNING {
+			if strictJson {
+				w.Write([]byte("]"))
+			}
 			return
 		}
 	}
