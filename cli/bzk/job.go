@@ -45,7 +45,7 @@ func fmtAuthor(author lib.Person) string {
 }
 
 func startJobCommand(cmd *cli.Cmd) {
-	cmd.Spec = "PROJECT_ID [SCM_REF] [--env...]"
+	cmd.Spec = "PROJECT_ID [SCM_REF] [--env...][--follow]"
 
 	pid := cmd.String(cli.StringArg{
 		Name: "PROJECT_ID",
@@ -60,9 +60,12 @@ func startJobCommand(cmd *cli.Cmd) {
 		Name: "e env",
 		Desc: "define an environment variable for the job",
 	})
+	follow := cmd.Bool(cli.BoolOpt{
+		Name: "follow f",
+		Desc: "Stream the job logs",
+	})
 
 	cmd.Action = func() {
-
 		client, err := NewClient()
 		if err != nil {
 			log.Fatal(err)
@@ -75,6 +78,20 @@ func startJobCommand(cmd *cli.Cmd) {
 		fmt.Fprint(w, "#\tJOB ID\tPROJECT ID\tORCHESTRATION ID\n")
 		fmt.Fprintf(w, "%d\t%s\t%s\t%s\t\n", res.Number, idExcerpt(res.ID), idExcerpt(res.ProjectID), idExcerpt(res.OrchestrationID))
 		w.Flush()
+		if *follow {
+			client, err := NewClient()
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			res, err := client.Job.StreamLog(res.ID)
+			if err != nil {
+				log.Fatal(err)
+			}
+			for l := range res {
+				printLog(l)
+			}
+		}
 	}
 
 }
