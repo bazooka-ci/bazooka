@@ -10,16 +10,23 @@ angular.module('bzk.job').config(function($routeProvider) {
     });
 });
 
-angular.module('bzk.job').controller('JobLogsController', function($scope, BzkApi, DateUtils, $routeParams, $timeout) {
+angular.module('bzk.job').controller('JobLogsController', function($scope, BzkApi, DateUtils, $routeParams, $timeout, $interval) {
     var jId = $routeParams.jid;
     $scope.logger = {};
 
     function loadLogs() {
         $scope.logger.job.prepare();
+        var stream = BzkApi.job.streamLog(
+            jId,
+            function(logEntry) {
+                $scope.logger.job.append([logEntry]);
+            },
+            function() {
+                $scope.logger.job.finish([]);
+            }
+        );
 
-        BzkApi.job.log(jId).success(function(logs) {
-            $scope.logger.job.finish(logs);
-        });
+        $scope.$on('$destroy', stream.abort);
     }
 
     $timeout(loadLogs);

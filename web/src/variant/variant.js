@@ -57,11 +57,22 @@ angular.module('bzk.variant').controller('VariantLogsController', function($scop
     function loadLogs() {
         $scope.logger.variant.prepare();
 
-        BzkApi.variant.log(vId).success(function(logs) {
-            $scope.logger.variant.finish(logs);
+        var stream = BzkApi.variant.streamLog(
+            vId,
+            function(logEntry) {
+                $scope.logger.variant.append([logEntry]);
+            },
+            function() {
+                $scope.logger.variant.finish([]);
+            }
+        );
+
+        $scope.$on('$destroy', function() {
+            stream.abort();
         });
     }
 
     $timeout(loadLogs);
+
 
 });
