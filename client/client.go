@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strings"
 )
 
 type Config struct {
@@ -41,11 +42,28 @@ func (c *Config) authenticateRequest(r *http.Request) error {
 	return nil
 }
 
-func (c *Config) getRequestURL(path string) (string, error) {
+func (c *Config) getRequestURL(path string, query ...string) (string, error) {
 	u, err := url.Parse(c.URL)
 	if err != nil {
 		return "", fmt.Errorf("Bazooka URL %s has an incorrect format: %v", c.URL, err)
 	}
+
 	u.Path = u.Path + "/" + path
+
+	vals := url.Values{}
+	seen := map[string]struct{}{}
+
+	for _, q := range query {
+		kv := strings.SplitN(q, "=", 2)
+		if _, add := seen[kv[0]]; add {
+			vals.Add(kv[0], kv[1])
+		} else {
+			vals.Set(kv[0], kv[1])
+			seen[kv[0]] = struct{}{}
+		}
+	}
+
+	u.RawQuery = vals.Encode()
+
 	return u.String(), nil
 }

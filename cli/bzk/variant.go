@@ -36,22 +36,37 @@ func listVariantsCommand(cmd *cli.Cmd) {
 }
 
 func variantLogCommand(cmd *cli.Cmd) {
-	cmd.Spec = "VARIANT_ID"
+	cmd.Spec = "[--follow] VARIANT_ID"
+
+	follow := cmd.BoolOpt("follow f", false, "Follow logs")
+
 	vid := cmd.String(cli.StringArg{
 		Name: "VARIANT_ID",
 		Desc: "the variant id",
 	})
+
 	cmd.Action = func() {
 		client, err := NewClient()
 		if err != nil {
 			log.Fatal(err)
 		}
-		res, err := client.Variant.Log(*vid)
-		if err != nil {
-			log.Fatal(err)
-		}
-		for _, l := range res {
-			fmt.Printf("%s [%s] %s\n", l.Time.Format("2006/01/02 15:04:05"), l.Image, l.Message)
+
+		if *follow {
+			res, err := client.Variant.StreamLog(*vid)
+			if err != nil {
+				log.Fatal(err)
+			}
+			for l := range res {
+				printLog(l)
+			}
+		} else {
+			res, err := client.Variant.Log(*vid)
+			if err != nil {
+				log.Fatal(err)
+			}
+			for _, l := range res {
+				printLog(l)
+			}
 		}
 	}
 

@@ -188,6 +188,7 @@ type LogExample struct {
 	JobID     string
 	VariantID string
 	Images    []string
+	After     time.Time
 }
 
 func (c *MongoConnector) GetLog(like *LogExample) ([]lib.LogEntry, error) {
@@ -221,6 +222,13 @@ func (c *MongoConnector) GetLog(like *LogExample) ([]lib.LogEntry, error) {
 			"$in": like.Images,
 		}
 	}
+
+	if !like.After.IsZero() {
+		request["time"] = bson.M{
+			"$gt": like.After,
+		}
+	}
+
 	err := c.database.C("logs").Find(request).All(&result)
 	return result, err
 }

@@ -79,3 +79,20 @@ func (c *Job) Log(jobID string) ([]lib.LogEntry, error) {
 
 	return log, err
 }
+
+func (c *Job) StreamLog(jobID string) (chan lib.LogEntry, error) {
+	requestURL, err := c.config.getRequestURL(fmt.Sprintf("job/%s/log", url.QueryEscape(jobID)), "follow=true")
+	if err != nil {
+		return nil, err
+	}
+
+	response, err := perigee.Request("GET", requestURL, perigee.Options{
+		OkCodes:    []int{200},
+		SetHeaders: c.config.authenticateRequest,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return streamLog(response.HttpResponse), nil
+}

@@ -47,6 +47,12 @@ func writeError(err error, res http.ResponseWriter) {
 	})
 }
 
+func flushResponse(w http.ResponseWriter) {
+	if f, ok := w.(http.Flusher); ok {
+		f.Flush()
+	}
+}
+
 type bodyFunc func(interface{})
 
 type response struct {

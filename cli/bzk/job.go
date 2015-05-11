@@ -45,7 +45,7 @@ func fmtAuthor(author lib.Person) string {
 }
 
 func startJobCommand(cmd *cli.Cmd) {
-	cmd.Spec = "PROJECT_ID [SCM_REF] [--env...]"
+	cmd.Spec = "PROJECT_ID [SCM_REF] [--env...][--follow]"
 
 	pid := cmd.String(cli.StringArg{
 		Name: "PROJECT_ID",
@@ -60,9 +60,12 @@ func startJobCommand(cmd *cli.Cmd) {
 		Name: "e env",
 		Desc: "define an environment variable for the job",
 	})
+	follow := cmd.Bool(cli.BoolOpt{
+		Name: "follow f",
+		Desc: "Stream the job logs",
+	})
 
 	cmd.Action = func() {
-
 		client, err := NewClient()
 		if err != nil {
 			log.Fatal(err)
@@ -75,6 +78,20 @@ func startJobCommand(cmd *cli.Cmd) {
 		fmt.Fprint(w, "#\tJOB ID\tPROJECT ID\tORCHESTRATION ID\n")
 		fmt.Fprintf(w, "%d\t%s\t%s\t%s\t\n", res.Number, idExcerpt(res.ID), idExcerpt(res.ProjectID), idExcerpt(res.OrchestrationID))
 		w.Flush()
+		if *follow {
+			client, err := NewClient()
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			res, err := client.Job.StreamLog(res.ID)
+			if err != nil {
+				log.Fatal(err)
+			}
+			for l := range res {
+				printLog(l)
+			}
+		}
 	}
 
 }
@@ -124,7 +141,10 @@ func listJobsCommand(cmd *cli.Cmd) {
 }
 
 func jobLogCommand(cmd *cli.Cmd) {
-	cmd.Spec = "JOB_ID"
+	cmd.Spec = "[--follow] JOB_ID"
+
+	follow := cmd.BoolOpt("follow f", false, "Follow logs")
+
 	jid := cmd.String(cli.StringArg{
 		Name: "JOB_ID",
 		Desc: "the job id",
@@ -135,22 +155,36 @@ func jobLogCommand(cmd *cli.Cmd) {
 		if err != nil {
 			log.Fatal(err)
 		}
-		res, err := client.Job.Log(*jid)
-		if err != nil {
-			log.Fatal(err)
-		}
-		for _, l := range res {
-			fmt.Printf("%s [%s] ", l.Time.Format("2006/01/02 15:04:05"), l.Image)
-			switch {
-			case len(l.Command) > 0:
-				fmt.Printf("[Executing Command] %s\n", l.Command)
-			case len(l.Phase) > 0:
-				fmt.Printf("[Starting Phase] %s\n", l.Phase)
-			case len(l.Level) > 0:
-				fmt.Printf("[%s] %s\n", l.Level, l.Message)
-			default:
-				fmt.Printf("%s\n", l.Message)
+		if *follow {
+			res, err := client.Job.StreamLog(*jid)
+			if err != nil {
+				log.Fatal(err)
+			}
+			for l := range res {
+				printLog(l)
+			}
+		} else {
+			res, err := client.Job.Log(*jid)
+			if err != nil {
+				log.Fatal(err)
+			}
+			for _, l := range res {
+				printLog(l)
 			}
 		}
+	}
+}
+
+func printLog(l lib.LogEntry) {
+	fmt.Printf("%s [%s] ", l.Time.Format("2006/01/02 15:04:05"), l.Image)
+	switch {
+	case len(l.Command) > 0:
+		fmt.Printf("[Executing Command] %s\n", l.Command)
+	case len(l.Phase) > 0:
+		fmt.Printf("[Starting Phase] %s\n", l.Phase)
+	case len(l.Level) > 0:
+		fmt.Printf("[%s] %s\n", l.Level, l.Message)
+	default:
+		fmt.Printf("%s\n", l.Message)
 	}
 }
