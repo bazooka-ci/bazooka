@@ -11,7 +11,7 @@ if [ -n "$DO_PUSH" ]; then
   do
     image="bazooka/$project"
     if [ -n "$BZK_VERSION" ]; then
-      docker tag "bazooka/$project" "bazooka/$project:$BZK_VERSION"
+      docker tag -f "bazooka/$project" "bazooka/$project:$BZK_VERSION"
       image="bazooka/$project:$BZK_VERSION"
     fi
     docker push "$image"
