@@ -6,6 +6,7 @@
 @import 'job/job';
 @import 'variant/variant';
 @import 'theme/tables';
+@import 'theme/logs';
 
 * {
   box-sizing: border-box;
@@ -13,9 +14,9 @@
 
 body {
   color: $font-global;
-  font-family: 'Roboto', sans-serif;
+  font-family: sans-serif;
   -webkit-font-smoothing: antialiased;
-  font-weight: 300;
+  font-weight: 500;
 }
 
 a {
@@ -36,12 +37,8 @@ h3 {
   max-width: 100%;
 }
 
-#layout {
-  padding: 0;
-}
-
 .header {
-  margin: 3em auto;
+  margin: 0;
   text-align: center;
   top: auto;
 }
@@ -49,6 +46,30 @@ h3 {
 .sidebar {
   background: $sidebar-bg;
   color: #fff;
+  padding: 0;
+}
+
+.content {
+  padding: 0;
+}
+
+
+@media (min-width: 992px) {
+  .content {
+    margin-left: 25%;
+  }
+
+  .header {
+    margin: 2em 2em 0;
+    text-align: right;
+  }
+
+  .sidebar {
+    bottom: 0;
+    position: fixed;
+    top: 0;
+    overflow: auto;
+  }
 }
 
 .brand-title {
@@ -85,9 +106,7 @@ h3 {
   padding-top: 2em;
 }
 
-#projects {
-  margin-left: -2em;
-  margin-right: -2em;
+.projects {
   text-align: left;
 
   ul {
@@ -96,14 +115,31 @@ h3 {
 
   li {
     list-style: none;
-    padding-bottom: .3em;
-    padding-left: .5em;
-    padding-right: .5em;
-    padding-top: .3em;
 
-    a:hover {
+    a {
       text-decoration: none;
+      display: block;
+      padding: .3em .5em;
+      position: relative;
+      border-top: 1px solid darken($sidebar-bg, 5%);
+
+      h2 {
+        margin: 0;
+        padding: 0;
+      }
+
+      &:hover {
+        background-color: $sidebar-hover;
+      }
     }
+
+    &.selected {
+      a {
+        background: lighten($sidebar-bg, 10%);
+      }
+    }
+    
+
 
     .success {
       color: $project-success;
@@ -113,9 +149,15 @@ h3 {
       color: $project-error;
     }
 
-    .projectnumber {
-      text-align: right;
+    .last-job {
+      display: block;
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      text-align: center;
     }
+
+
 
     p {
       margin: .4em 0;
@@ -127,11 +169,7 @@ h3 {
     .scm {
       color: $sidebar-scm;
     }
-  }
-
-  li:hover {
-    background-color: $sidebar-hover;
-  }
+  }  
 }
 
 
@@ -172,19 +210,3 @@ h3 {
   font-size: 20px;
 }
 
-@media (min-width: 48em) {
-  .content {
-    margin-left: 25%;
-  }
-
-  .header {
-    margin: 2em 2em 0;
-    text-align: right;
-  }
-
-  .sidebar {
-    bottom: 0;
-    position: fixed;
-    top: 0;
-  }
-}

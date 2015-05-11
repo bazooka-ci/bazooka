@@ -1,7 +1,7 @@
-<table class="pure-table pure-table-horizontal" ng-show="jobs.length > 0">
+<table class="table" ng-show="jobs.length > 0">
 	<thead>
 		<tr>
-			<th>Status</th>
+			<th width="60">Status</th>
 			<th>Job</th>
 			<th>Revision</th>
 			<th>Author</th>
@@ -13,21 +13,25 @@
 
 	<tbody >
 		<tr ng-repeat="job in jobs() | filter:only('RUNNING') | orderBy:'started':true" class="{{job.status | lowercase}}">
-			<td><span class="{{job.status | lowercase}}">{{job.status | titleCase}}</span></td>
+			<td>
+				<span bzk-job-status="job.status"></span>
+			</td>
 			<td><a ng-href="#/p/{{job.project_id | bzkExcerpt}}/{{job | bzkId}}">{{projectName(job.project_id)}}/{{job.number}}</a></td>
 			<td>
 			<span ng-if="job.scm_metadata.reference">{{job.scm_metadata.commit_id | bzkExcerpt}} ({{job.scm_metadata.reference}})</span>
 			</td>
 			<td>{{job.scm_metadata.author.name}}</td>
 			<td>{{job.scm_metadata.message}}</td>
-			<td>-</td>
+			<td>{{job | bzkDuration}}</td>
 			<td>-</td>
 		</tr>
 	</tbody>
 
 	<tbody >
 		<tr ng-repeat="job in jobs() | filter:not('RUNNING') | orderBy:'completed':true" class="{{job.status | lowercase}}">
-			<td><span class="{{job.status | lowercase}}">{{job.status | titleCase}}</span></td>
+			<td>
+				<span bzk-job-status="job.status"></span>
+			</td>
 			<td><a ng-href="#/p/{{job.project_id | bzkExcerpt}}/{{job | bzkId}}">{{projectName(job.project_id)}}/{{job.number}}</a></td>
 			<td>
 			<span ng-if="job.scm_metadata.reference">{{job.scm_metadata.commit_id | bzkExcerpt}} ({{job.scm_metadata.reference}})</span>

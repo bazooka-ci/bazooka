@@ -1,10 +1,10 @@
 <div id="job">
 	<bzk-breadcrumbs project="project" job="job"></bzk-breadcrumbs>
 	<bzk-job-info job="job"></bzk-job-info>
-	<table class="pure-table pure-table-horizontal" ng-if="variants.length > 0">
+	<table class="table" ng-if="variants.length > 0">
 		<thead>
 			<tr>
-				<th>Status</th>
+				<th width="60">Status</th>
 				<th>Variant</th>
 				<th>Duration</th>
 				<th>Finished</th>
@@ -14,7 +14,9 @@
 
 		<tbody ng-repeat="variant in variants | orderBy:'number'">
 			<tr ng-show="variant" class="{{variant.status | lowercase}}">
-				<td><span class="{{variant.status | lowercase}}">{{variant.status | titleCase}}</span></td>
+				<td>
+					<span bzk-job-status="variant.status"></span>
+				</td>
 				<td><a ng-href="#/p/{{project | bzkId}}/{{job | bzkId}}/{{variant | bzkId}}">{{job.number}}.{{variant.number}}</a></td>
 				<td>{{variant | bzkDuration}}</td>
 				<td>{{variant | bzkFinished}}</td>

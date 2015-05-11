@@ -32,9 +32,20 @@ var paths = {
         images: 'src/images/*'
     },
     deps: {
-        js: ['vendor/jquery/dist/jquery.js', 'vendor/angular/angular.js', 'vendor/angular-route/angular-route.js', 'vendor/moment/moment.js', 'vendor/lodash/dist/lodash.js'],
-        css: ['vendor/pure/pure.css', 'vendor/pure/grids-responsive.css', 'vendor/fontawesome/css/font-awesome.css'],
-        fonts: 'vendor/fontawesome/fonts/*'
+        js: ['vendor/jquery/dist/jquery.js',
+            'vendor/bootstrap/dist/js/bootstrap.js',
+            'vendor/angular/angular.js',
+            'vendor/angular-route/angular-route.js',
+            'vendor/angular-growl-v2/build/angular-growl.js',
+            'vendor/moment/moment.js',
+            'vendor/moment-duration-format/lib/moment-duration-format.js',
+            'vendor/lodash/lodash.js'
+        ],
+        css: ['vendor/bootstrap/dist/css/bootstrap.css',
+            'vendor/angular-growl-v2/build/angular-growl.css',
+            'vendor/fontawesome/css/font-awesome.css'
+        ],
+        fonts: ['vendor/fontawesome/fonts/*', 'vendor/bootstrap/fonts/*']
     },
     dest: {
         root: 'build/web/',
