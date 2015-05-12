@@ -39,7 +39,8 @@ var paths = {
             'vendor/angular-growl-v2/build/angular-growl.js',
             'vendor/moment/moment.js',
             'vendor/moment-duration-format/lib/moment-duration-format.js',
-            'vendor/lodash/lodash.js'
+            'vendor/lodash/lodash.js',
+            'vendor/oboe/dist/oboe-browser.js'
         ],
         css: ['vendor/bootstrap/dist/css/bootstrap.css',
             'vendor/angular-growl-v2/build/angular-growl.css',
@@ -73,8 +74,9 @@ gulp.task('js:hint', function() {
     gulp.src(paths.src.js)
         .pipe(jshint({
             'lookup': false,
+            'newcap': false,
             '-W097': false,
-            'predef': ['$', '_', 'angular', 'moment', 'console']
+            'predef': ['$', '_', 'angular', 'moment', 'console', 'window', 'document', 'oboe']
         }))
         .pipe(jshint.reporter(jshintreporter))
         .pipe(jshint.reporter('fail'));

@@ -103,27 +103,39 @@ angular.module('bzk.utils').directive('bzkLog', function() {
         scope: {
             sink: '=bzkLog'
         },
-        template: '<img class="loading" src="/images/loading.gif" ng-if="loading"></img>',
+        template: '<pre></pre>',
         link: function($scope, elem, attrs) {
+
+            function isAtBottom() {
+                return $(window).scrollTop() + $(window).height() == $(document).height();
+            }
+
             var row = 1;
-            $(elem).append('<pre></pre>');
             var into = $(elem).find('pre');
+            var marker;
+
             $scope.sink = {
                 prepare: function() {
                     this.clear();
-                    $scope.loading = true;
+                    into.append('<p class="loading-marker"><span></span><img src="/images/loading.gif"></img></p>');
+                    marker = $(elem).find('.loading-marker');
                 },
                 finish: function(lines) {
                     this.append(lines);
-                    $scope.loading = false;
+                    marker.remove();
                 },
                 append: function(lines) {
+                    var scroll = isAtBottom();
                     var data = '';
                     _.each(lines, function(line) {
                         data += '<p><span>' + row + '</span>' + _.escape(line.msg) + '</p>';
                         row++;
                     });
-                    into.append(data);
+                    $(data).insertBefore(marker);
+                    
+                    if (scroll) {
+                        $('body').scrollTop(into.height());
+                    }
                 },
                 clear: function() {
                     row = 1;

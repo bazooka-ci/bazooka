@@ -1,6 +1,6 @@
 "use strict";
 
-angular.module('bzk.utils').factory('BzkApi', function($http) {
+angular.module('bzk.utils').factory('BzkApi', function($http, JsonStream) {
     return {
         project: {
             list: function() {
@@ -33,11 +33,27 @@ angular.module('bzk.utils').factory('BzkApi', function($http) {
             },
             log: function(jid) {
                 return $http.get('/api/job/' + jid + '/log');
+            },
+            streamLog: function(jid, onNode, onDone) {
+                return JsonStream({
+                    url: '/api/job/' + jid + '/log?follow=true&strict-json=true',
+                    pattern: '{id}',
+                    onNode: onNode,
+                    onDone: onDone
+                });
             }
         },
         variant: {
             log: function(vid) {
                 return $http.get('/api/variant/' + vid + '/log');
+            },
+            streamLog: function(vid, onNode, onDone) {
+                return JsonStream({
+                    url: '/api/variant/' + vid + '/log?follow=true&strict-json=true',
+                    pattern: '{id}',
+                    onNode: onNode,
+                    onDone: onDone
+                });
             }
         }
     };

@@ -17,6 +17,7 @@
     "jquery": "~2.1.4",
     "bootstrap": "~3.3.4",
     "angular-growl-v2": "~0.7.3",
-    "moment-duration-format": "~1.3.0"
+    "moment-duration-format": "~1.3.0",
+    "oboe": "2.0.0"
   }
 }
