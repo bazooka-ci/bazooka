@@ -12,6 +12,22 @@ type Variant struct {
 	config *Config
 }
 
+func (c *Variant) Get(variantID string) (*lib.Variant, error) {
+	requestURL, err := c.config.getRequestURL(fmt.Sprintf("variant/%s", url.QueryEscape(variantID)))
+	if err != nil {
+		return nil, err
+	}
+
+	var variant lib.Variant
+
+	err = perigee.Get(requestURL, perigee.Options{
+		Results:    &variant,
+		OkCodes:    []int{200},
+		SetHeaders: c.config.authenticateRequest,
+	})
+	return &variant, err
+}
+
 func (c *Variant) Log(variantID string) ([]lib.LogEntry, error) {
 	var log []lib.LogEntry
 
