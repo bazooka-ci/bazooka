@@ -1,13 +1,63 @@
 <bzk-breadcrumbs project="project"></bzk-breadcrumbs>
 <div id="project">
-	<table class="details">
-		<tbody>
-			<tr>
-				<th>SCM</th>
-				<td>{{project.scm_uri}}</td>
-			</tr>
-		</tbody>
-	</table>
-
+	<div class="row">
+		<div class="col-md-9">
+			<table class="details">
+				<tbody>
+					<tr>
+						<th>SCM</th>
+						<td>{{project.scm_uri}}</td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+		<div class="col-md-3">
+			<div class="input-group input-group-sm">
+				<input type="text"
+				ng-model="newJob.reference" required
+				class="form-control" placeholder="SCM reference">
+				<div class="input-group-btn">
+					<a href="" class="btn btn-success" ng-click="startJob()"
+						ng-disabled="!canStartJob()">
+						<i class="glyphicon glyphicon-play"></i>
+						Start job
+					</a>
+					<a href="" class="btn btn-default"
+						title="Add a job parameter"
+						ng-click="addJobParam()">
+						<i class="glyphicon glyphicon-plus-sign"></i>
+					</a>
+				</div>
+			</div>
+			<div  class="job-params" ng-if="newJob.parameters.length">
+				<table>
+					<thead >
+						<tr>
+							<th colspan="3">job parameters</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr ng-repeat="param in newJob.parameters">
+							<td>
+								<input ng-model="param.key"
+								placeholder="name" required
+								class="form-control input-sm" type="text"></input>
+							</td>
+							<td>
+								<input ng-model="param.value"
+								placeholder="key" required
+								class="form-control input-sm" type="text"></input>
+							</td>
+							<td>
+								<a href="" class="btn btn-sm" ng-click="remJobParam($index)">
+									<span class="glyphicon glyphicon-minus-sign text-danger"></span>
+								</a>
+							</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+		</div>
+	</div>
 	<bzk-jobs-list jobs="jobs"></bzk-jobs-list>
 </div>

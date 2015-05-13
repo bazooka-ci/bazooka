@@ -15,9 +15,10 @@ angular.module('bzk.utils').factory('BzkApi', function($http, JsonStream) {
             jobs: function(id) {
                 return $http.get('/api/project/' + id + '/job');
             },
-            build: function(id, reference) {
+            build: function(id, reference, parameters) {
                 return $http.post('/api/project/' + id + '/job', {
-                    reference: reference
+                    reference: reference,
+                    parameters: parameters
                 });
             }
         },

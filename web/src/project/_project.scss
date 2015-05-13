@@ -14,4 +14,20 @@
       padding-left: 10px;
     }
   }
+
+  .job-params {
+    position: absolute;
+    background: #fff;
+    padding: 4px;
+    border: 1px solid #ddd;
+    box-shadow: 1px 1px 4px #333;
+
+    td {
+      padding: 2px 2px 0 0;
+    }
+
+    input {
+      border-radius: 0;
+    }
+  }
 }
