@@ -128,7 +128,7 @@ angular.module('bzk.utils').directive('bzkLog', function() {
                     var scroll = isAtBottom();
                     var data = '';
                     _.each(lines, function(line) {
-                        data += '<p><span>' + row + '</span>' + _.escape(line.msg) + '</p>';
+                        data += '<p><span>' + row + '</span>' + (_.escape(line.msg) || '&nbsp;') + '</p>';
                         row++;
                     });
                     $(data).insertBefore(marker);
