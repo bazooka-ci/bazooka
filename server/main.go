@@ -61,43 +61,45 @@ func main() {
 	// Configure web server
 	r := mux.NewRouter()
 
-	r.HandleFunc("/project", mkHandler(ctx.createProject)).Methods("POST")
+	r.HandleFunc("/project", ctx.mkAuthHandler(ctx.createProject)).Methods("POST")
 
-	r.HandleFunc("/project", mkHandler(ctx.getProjects)).Methods("GET")
-	r.HandleFunc("/project/{id}", mkHandler(ctx.getProject)).Methods("GET")
-	r.HandleFunc("/project/{id}/job", mkHandler(ctx.startStandardJob)).Methods("POST")
-	r.HandleFunc("/project/{id}/bitbucket", mkHandler(ctx.startBitbucketJob)).Methods("POST")
-	r.HandleFunc("/project/{id}/github", mkHandler(ctx.startGithubJob)).Methods("POST")
-	r.HandleFunc("/project/{id}/job", mkHandler(ctx.getJobs)).Methods("GET")
+	r.HandleFunc("/project", ctx.mkAuthHandler(ctx.getProjects)).Methods("GET")
+	r.HandleFunc("/project/{id}", ctx.mkAuthHandler(ctx.getProject)).Methods("GET")
+	r.HandleFunc("/project/{id}/job", ctx.mkAuthHandler(ctx.startStandardJob)).Methods("POST")
+	r.HandleFunc("/project/{id}/bitbucket", ctx.mkAuthHandler(ctx.startBitbucketJob)).Methods("POST")
+	r.HandleFunc("/project/{id}/job", ctx.mkAuthHandler(ctx.getJobs)).Methods("GET")
 
-	r.HandleFunc("/project/{id}/config", mkHandler(ctx.getProjectConfig)).Methods("GET")
-	r.HandleFunc("/project/{id}/config/{key}", mkHandler(ctx.setProjectConfigKey)).Methods("PUT")
-	r.HandleFunc("/project/{id}/config/{key}", mkHandler(ctx.unsetProjectConfigKey)).Methods("DELETE")
+	r.HandleFunc("/project/{id}/config", ctx.mkAuthHandler(ctx.getProjectConfig)).Methods("GET")
+	r.HandleFunc("/project/{id}/config/{key}", ctx.mkAuthHandler(ctx.setProjectConfigKey)).Methods("PUT")
+	r.HandleFunc("/project/{id}/config/{key}", ctx.mkAuthHandler(ctx.unsetProjectConfigKey)).Methods("DELETE")
 
-	r.HandleFunc("/project/{id}/key", mkHandler(ctx.addKey)).Methods("POST")
-	r.HandleFunc("/project/{id}/key", mkHandler(ctx.updateKey)).Methods("PUT")
-	r.HandleFunc("/project/{id}/key", mkHandler(ctx.listKeys)).Methods("GET")
+	r.HandleFunc("/project/{id}/key", ctx.mkAuthHandler(ctx.addKey)).Methods("POST")
+	r.HandleFunc("/project/{id}/key", ctx.mkAuthHandler(ctx.updateKey)).Methods("PUT")
+	r.HandleFunc("/project/{id}/key", ctx.mkAuthHandler(ctx.listKeys)).Methods("GET")
 
-	r.HandleFunc("/project/{id}/crypto", mkHandler(ctx.encryptData)).Methods("PUT")
+	r.HandleFunc("/project/{id}/crypto", ctx.mkAuthHandler(ctx.encryptData)).Methods("PUT")
 
-	r.HandleFunc("/job", mkHandler(ctx.getAllJobs)).Methods("GET")
-	r.HandleFunc("/job/{id}", mkHandler(ctx.getJob)).Methods("GET")
-	r.HandleFunc("/job/{id}/log", mkHandler(ctx.getJobLog)).Methods("GET")
-	r.HandleFunc("/job/{id}/variant", mkHandler(ctx.getVariants)).Methods("GET")
+	r.HandleFunc("/job", ctx.mkAuthHandler(ctx.getAllJobs)).Methods("GET")
+	r.HandleFunc("/job/{id}", ctx.mkAuthHandler(ctx.getJob)).Methods("GET")
+	r.HandleFunc("/job/{id}/log", ctx.mkAuthHandler(ctx.getJobLog)).Methods("GET")
+	r.HandleFunc("/job/{id}/variant", ctx.mkAuthHandler(ctx.getVariants)).Methods("GET")
 
-	r.HandleFunc("/variant/{id}", mkHandler(ctx.getVariant)).Methods("GET")
-	r.HandleFunc("/variant/{id}/log", mkHandler(ctx.getVariantLog)).Methods("GET")
+	r.HandleFunc("/variant/{id}", ctx.mkAuthHandler(ctx.getVariant)).Methods("GET")
+	r.HandleFunc("/variant/{id}/log", ctx.mkAuthHandler(ctx.getVariantLog)).Methods("GET")
 	r.HandleFunc("/variant/{id}/artifacts/{path:.*}", ctx.getVariantArtifacts).Methods("GET")
 
-	r.HandleFunc("/image", mkHandler(ctx.getImages)).Methods("GET")
-	r.HandleFunc("/image/{name:.*}", mkHandler(ctx.setImage)).Methods("PUT")
-	// r.HandleFunc("/image/{name}", mkHandler(ctx.unsetImage)).Methods("DELETE")
+	r.HandleFunc("/image", ctx.mkAuthHandler(ctx.getImages)).Methods("GET")
+	r.HandleFunc("/image/{name:.*}", ctx.mkAuthHandler(ctx.setImage)).Methods("PUT")
+	// r.HandleFunc("/image/{name}", ctx.mkAuthHandler(ctx.unsetImage)).Methods("DELETE")
 
-	r.HandleFunc("/user", mkHandler(ctx.getUsers)).Methods("GET")
-	r.HandleFunc("/user", mkHandler(ctx.createUser)).Methods("POST")
-	r.HandleFunc("/user/{id}", mkHandler(ctx.getUser)).Methods("GET")
+	r.HandleFunc("/user", ctx.mkAuthHandler(ctx.getUsers)).Methods("GET")
+	r.HandleFunc("/user", ctx.mkAuthHandler(ctx.createUser)).Methods("POST")
+	r.HandleFunc("/user/{id}", ctx.mkAuthHandler(ctx.getUser)).Methods("GET")
 
-	http.Handle("/", ctx.authenticationHandler(r))
+	r.HandleFunc("/project/{id}/github", ctx.mkGithubAuthHandler(ctx.startGithubJob)).Methods("POST")
+
+	http.Handle("/", r)
+
 	log.Fatal(http.ListenAndServe(":3000", nil))
 }
 

@@ -18,6 +18,7 @@ type Project struct {
 	ScmURI     string            `bson:"scm_uri" json:"scm_uri"`
 	Name       string            `bson:"name" json:"name"`
 	ID         string            `bson:"id" json:"id"`
+	HookKey    string            `bson:"hook_key" json:"hook_key"`
 	JobCounter int               `bson:"job_counter" json:"job_counter"`
 	Config     map[string]string `bson:"config" json:"config"`
 }
