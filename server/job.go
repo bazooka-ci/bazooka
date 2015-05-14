@@ -278,8 +278,8 @@ func (c *context) getAllJobs(r *request) (*response, error) {
 }
 
 func (c *context) getJobLog(r *request) (*response, error) {
-	follow := len(r.r.URL.Query().Get("follow")) > 0
-	strictJson := len(r.r.URL.Query().Get("strict-json")) > 0
+	follow := len(r.query("follow")) > 0
+	strictJson := len(r.query("strict-json")) > 0
 
 	jid := r.vars["id"]
 

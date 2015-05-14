@@ -77,6 +77,10 @@ func (r *request) rawBody() []byte {
 	return body
 }
 
+func (r *request) query(key string) string {
+	return r.r.URL.Query().Get(key)
+}
+
 type response struct {
 	Code    int
 	Payload interface{}

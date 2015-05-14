@@ -37,7 +37,7 @@ func (c *context) getVariants(r *request) (*response, error) {
 }
 
 func (c *context) getVariantLog(r *request) (*response, error) {
-	follow := len(r.r.URL.Query().Get("follow")) > 0
+	follow := len(r.query("follow")) > 0
 
 	vid := r.vars["id"]
 
