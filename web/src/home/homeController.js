@@ -1,9 +1,10 @@
 "use strict";
 
-angular.module('bzk.home').controller('HomeController', function($scope, BzkApi, $interval) {
+angular.module('bzk.home').controller('HomeController', function($scope, BzkApi, EventBus, $interval) {
     $scope.refreshJobs = function() {
         BzkApi.job.list().success(function(jobs) {
             $scope.jobs = jobs;
+            EventBus.send('jobs.refreshed', jobs);
         });
     };
 

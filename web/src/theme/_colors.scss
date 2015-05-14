@@ -2,14 +2,14 @@
 $font-global: #3a3b3f;
 
 // Projects Sidebar
-$project-error: #df2d4f;
+$project-error: #808080;
 $project-success: #27da93;
 $project-fail: #df2d4f;
 
 $sidebar-nav: #fff;
 $sidebar-bg: #3a3b3f;
 $sidebar-hover: #303135;
-$sidebar-scm: $sidebar-nav;
+$sidebar-scm: #ccc;
 
 // Breadcrumb
 $breadcrumb-color: #898989;
@@ -24,10 +24,13 @@ $failed-row-hover: #ffdcdc;
 $failed-row: #fffafa;
 $errored-row: #fdfdfd;
 $errored-row-hover: #f2f2eb;
+$running-row: #FFFDE7;
+$running-row-hover: #FFF9C4;
 
 $success-bg: #292;
 $failed-bg: #c13737;
 $errored-bg: #808080;
+$running-bg: #FFD600;
 
 $table-thead-bg: #f0f2f3;
 $table-thead-color: #9599a3;

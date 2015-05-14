@@ -49,6 +49,48 @@ func (c *MongoConnector) GetProjects() ([]*lib.Project, error) {
 	return result, nil
 }
 
+func (c *MongoConnector) GetProjectsWithStatus() ([]*lib.ProjectWithStatus, error) {
+	projects, err := c.GetProjects()
+	if err != nil {
+		return nil, err
+	}
+
+	jobs := []*lib.Job{}
+	if err := c.database.C("jobs").
+		Pipe([]bson.M{
+		{"$sort": bson.M{"started": -1}},
+		{
+			"$group": bson.M{
+				"_id":        "$project_id",
+				"project_id": bson.M{"$first": "$project_id"},
+				"started":    bson.M{"$first": "$started"},
+				"completed":  bson.M{"$first": "$completed"},
+				"number":     bson.M{"$first": "$number"},
+				"status":     bson.M{"$first": "$status"},
+			},
+		},
+	}).All(&jobs); err != nil {
+		return nil, err
+	}
+
+	indexed := map[string]*lib.Job{}
+	for _, job := range jobs {
+		indexed[job.ProjectID] = job
+	}
+
+	result := []*lib.ProjectWithStatus{}
+	for _, project := range projects {
+		if job, found := indexed[project.ID]; found {
+			result = append(result, &lib.ProjectWithStatus{
+				Project: project,
+				LastJob: job,
+			})
+		}
+	}
+
+	return result, nil
+}
+
 func (c *MongoConnector) AddProject(project *lib.Project) error {
 	var err error
 	if project.ID, err = c.randomId(); err != nil {

@@ -17,22 +17,53 @@ angular.module('bzk').controller('RootController', function($scope, BzkApi, $rou
 
 });
 
-angular.module('bzk').controller('ProjectsController', function($scope, BzkApi, $routeParams) {
+angular.module('bzk').controller('ProjectsController', function($scope, BzkApi, EventBus, $routeParams) {
 
     function refresh() {
-        BzkApi.project.list().success(function(res) {
+        BzkApi.project.list(true).success(function(res) {
             $scope.projects = res;
         });
     }
 
-    $scope.$on('project.new', function(event) {
+
+    EventBus.on('project.new', function() {
         refresh();
+    });
+
+    EventBus.on('jobs.refreshed', function(event, jobs) {
+        var lastJobByProject = _(jobs).
+        groupBy('project_id').
+        mapValues(function(jobs) {
+            return _(jobs).filter(function(job) {
+                return job.status !== 'RUNNING';
+            }).reduce(function(latest, job) {
+                if (latest && job.number > latest.number) {
+                    return job;
+                }
+                return latest;
+            });
+        }).value();
+
+        _.forEach($scope.projects, function(project) {
+            var job = lastJobByProject[project.id];
+            if (job) {
+                if (!project.last_job || job.number >= project.last_job.number) {
+                    project.last_job = job;
+                }
+            }
+        });
     });
 
     refresh();
 
     $scope.isSelected = function(p) {
         return p.id.indexOf($routeParams.pid) === 0;
+    };
+
+    $scope.projectClass = function(project) {
+        return {
+            'SUCCESS': true
+        };
     };
 });
 

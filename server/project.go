@@ -83,6 +83,15 @@ func (p *context) getProject(r *request) (*response, error) {
 }
 
 func (c *context) getProjects(r *request) (*response, error) {
+	includeStatus := len(r.r.URL.Query().Get("include-status")) > 0
+
+	if includeStatus {
+		projects, err := c.Connector.GetProjectsWithStatus()
+		if err != nil {
+			return nil, err
+		}
+		return ok(projects)
+	}
 	projects, err := c.Connector.GetProjects()
 	if err != nil {
 		return nil, err
