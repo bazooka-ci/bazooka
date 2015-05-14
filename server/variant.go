@@ -15,8 +15,8 @@ import (
 	lib "github.com/bazooka-ci/bazooka/commons"
 )
 
-func (c *context) getVariant(params map[string]string, body bodyFunc) (*response, error) {
-	variant, err := c.Connector.GetVariantByID(params["id"])
+func (c *context) getVariant(r *request) (*response, error) {
+	variant, err := c.Connector.GetVariantByID(r.vars["id"])
 	if err != nil {
 		if err.Error() != "not found" {
 			return nil, err
@@ -27,8 +27,8 @@ func (c *context) getVariant(params map[string]string, body bodyFunc) (*response
 	return ok(&variant)
 }
 
-func (c *context) getVariants(params map[string]string, body bodyFunc) (*response, error) {
-	variants, err := c.Connector.GetVariants(params["id"])
+func (c *context) getVariants(r *request) (*response, error) {
+	variants, err := c.Connector.GetVariants(r.vars["id"])
 	if err != nil {
 		return nil, err
 	}
@@ -36,28 +36,21 @@ func (c *context) getVariants(params map[string]string, body bodyFunc) (*respons
 	return ok(&variants)
 }
 
-func (c *context) getVariantLog(w http.ResponseWriter, r *http.Request) {
-	follow := len(r.URL.Query().Get("follow")) > 0
+func (c *context) getVariantLog(r *request) (*response, error) {
+	follow := len(r.r.URL.Query().Get("follow")) > 0
 
-	vid := mux.Vars(r)["id"]
+	vid := r.vars["id"]
 
 	variant, err := c.Connector.GetVariantByID(vid)
 
 	if err != nil {
-		w.Header().Set("Content-Type", "application/json; charset=utf-8")
-		encoder := json.NewEncoder(w)
-
 		if err.Error() != "not found" {
-			w.WriteHeader(500)
-			encoder.Encode(err)
-			return
+			return nil, err
 		}
-
-		w.WriteHeader(404)
-		encoder.Encode(fmt.Errorf("variant not found"))
-		return
+		return notFound("variant not found")
 	}
 
+	w := r.w
 	w.WriteHeader(200)
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	logOutput := json.NewEncoder(w)
@@ -69,7 +62,7 @@ func (c *context) getVariantLog(w http.ResponseWriter, r *http.Request) {
 	logs, err := c.Connector.GetLog(query)
 	if !follow {
 		logOutput.Encode(logs)
-		return
+		return nil, nil
 	}
 
 	for _, l := range logs {
@@ -84,7 +77,7 @@ func (c *context) getVariantLog(w http.ResponseWriter, r *http.Request) {
 		logs, err := c.Connector.GetLog(query)
 		if err != nil {
 			log.Errorf("Error while retrieving logs: %v", err)
-			return
+			return nil, nil
 		}
 		if len(logs) > 0 {
 			lastTime = variantLastLogTime(variant, logs)
@@ -96,10 +89,10 @@ func (c *context) getVariantLog(w http.ResponseWriter, r *http.Request) {
 		variant, err := c.Connector.GetVariantByID(vid)
 		if err != nil {
 			log.Errorf("Error while retrieving variant: %v", err)
-			return
+			return nil, nil
 		}
 		if variant.Status != lib.JOB_RUNNING {
-			return
+			return nil, nil
 		}
 	}
 }

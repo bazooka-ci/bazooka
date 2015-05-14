@@ -1,7 +1,7 @@
 package main
 
-func (c *context) getImage(params map[string]string, body bodyFunc) (*response, error) {
-	image, err := c.Connector.GetImage(params["name"])
+func (c *context) getImage(r *request) (*response, error) {
+	image, err := c.Connector.GetImage(r.vars["name"])
 	if err != nil {
 		if err.Error() != "not found" {
 			return nil, err
@@ -12,7 +12,7 @@ func (c *context) getImage(params map[string]string, body bodyFunc) (*response, 
 	return ok(&image)
 }
 
-func (c *context) getImages(params map[string]string, body bodyFunc) (*response, error) {
+func (c *context) getImages(r *request) (*response, error) {
 	variants, err := c.Connector.GetImages()
 	if err != nil {
 		return nil, err
@@ -21,14 +21,14 @@ func (c *context) getImages(params map[string]string, body bodyFunc) (*response,
 	return ok(&variants)
 }
 
-func (c *context) setImage(params map[string]string, body bodyFunc) (*response, error) {
+func (c *context) setImage(r *request) (*response, error) {
 	b := map[string]string{}
-	body(&b)
+	r.parseBody(&b)
 	image, ex := b["image"]
 	if !ex {
 		return badRequest("image is required")
 	}
-	err := c.Connector.SetImage(params["name"], image)
+	err := c.Connector.SetImage(r.vars["name"], image)
 	if err != nil {
 		return nil, err
 	}

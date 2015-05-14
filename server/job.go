@@ -4,12 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"net/http"
 	"os"
 	"strings"
 	"time"
-
-	"github.com/gorilla/mux"
 
 	log "github.com/Sirupsen/logrus"
 
@@ -23,10 +20,10 @@ const (
 	logFolderPattern   = "%s/build/%s/%s/log" // $bzk_home/build/$projectId/$buildId/log
 )
 
-func (c *context) startBitbucketJob(params map[string]string, body bodyFunc) (*response, error) {
+func (c *context) startBitbucketJob(r *request) (*response, error) {
 	var bitbucketPayload BitbucketPayload
 
-	body(&bitbucketPayload)
+	r.parseBody(&bitbucketPayload)
 
 	if len(bitbucketPayload.Commits) == 0 {
 		return badRequest("no commit found in Bitbucket payload")
@@ -39,38 +36,38 @@ func (c *context) startBitbucketJob(params map[string]string, body bodyFunc) (*r
 		return badRequest("RawNode is empty in Bitbucket payload")
 	}
 
-	return c.startJob(params, lib.StartJob{
+	return c.startJob(r.vars, lib.StartJob{
 		ScmReference: bitbucketPayload.Commits[0].RawNode,
 	})
 
 }
 
-func (c *context) startGithubJob(params map[string]string, body bodyFunc) (*response, error) {
+func (c *context) startGithubJob(r *request) (*response, error) {
 	var githubPayload GithubPayload
 
-	body(&githubPayload)
+	r.parseBody(&githubPayload)
 
 	if len(githubPayload.HeadCommit.ID) == 0 {
 		return badRequest("HeadCommit is empty in Github payload")
 	}
 
-	return c.startJob(params, lib.StartJob{
+	return c.startJob(r.vars, lib.StartJob{
 		ScmReference: githubPayload.HeadCommit.ID,
 	})
 
 }
 
-func (c *context) startStandardJob(params map[string]string, body bodyFunc) (*response, error) {
+func (c *context) startStandardJob(r *request) (*response, error) {
 
 	var startJob lib.StartJob
 
-	body(&startJob)
+	r.parseBody(&startJob)
 
 	if len(startJob.ScmReference) == 0 {
 		return badRequest("reference is mandatory")
 	}
 
-	return c.startJob(params, startJob)
+	return c.startJob(r.vars, startJob)
 }
 
 func (c *context) startJob(params map[string]string, startJob lib.StartJob) (*response, error) {
@@ -247,9 +244,9 @@ func (c *context) startJob(params map[string]string, startJob lib.StartJob) (*re
 	return accepted(runningJob, "/job/"+runningJob.ID)
 }
 
-func (c *context) getJob(params map[string]string, body bodyFunc) (*response, error) {
+func (c *context) getJob(r *request) (*response, error) {
 
-	job, err := c.Connector.GetJobByID(params["id"])
+	job, err := c.Connector.GetJobByID(r.vars["id"])
 	if err != nil {
 		if err.Error() != "not found" {
 			return nil, err
@@ -260,9 +257,9 @@ func (c *context) getJob(params map[string]string, body bodyFunc) (*response, er
 	return ok(&job)
 }
 
-func (c *context) getJobs(params map[string]string, body bodyFunc) (*response, error) {
+func (c *context) getJobs(r *request) (*response, error) {
 
-	jobs, err := c.Connector.GetJobs(params["id"])
+	jobs, err := c.Connector.GetJobs(r.vars["id"])
 	if err != nil {
 		return nil, err
 	}
@@ -270,7 +267,7 @@ func (c *context) getJobs(params map[string]string, body bodyFunc) (*response, e
 	return ok(&jobs)
 }
 
-func (c *context) getAllJobs(params map[string]string, body bodyFunc) (*response, error) {
+func (c *context) getAllJobs(r *request) (*response, error) {
 
 	jobs, err := c.Connector.GetAllJobs()
 	if err != nil {
@@ -280,29 +277,22 @@ func (c *context) getAllJobs(params map[string]string, body bodyFunc) (*response
 	return ok(&jobs)
 }
 
-func (c *context) getJobLog(w http.ResponseWriter, r *http.Request) {
-	follow := len(r.URL.Query().Get("follow")) > 0
-	strictJson := len(r.URL.Query().Get("strict-json")) > 0
+func (c *context) getJobLog(r *request) (*response, error) {
+	follow := len(r.r.URL.Query().Get("follow")) > 0
+	strictJson := len(r.r.URL.Query().Get("strict-json")) > 0
 
-	jid := mux.Vars(r)["id"]
+	jid := r.vars["id"]
 
 	job, err := c.Connector.GetJobByID(jid)
 
 	if err != nil {
-		w.Header().Set("Content-Type", "application/json; charset=utf-8")
-		encoder := json.NewEncoder(w)
-
 		if err.Error() != "not found" {
-			w.WriteHeader(500)
-			encoder.Encode(err)
-			return
+			return nil, err
 		}
-
-		w.WriteHeader(404)
-		encoder.Encode(fmt.Errorf("job not found"))
-		return
+		return notFound("job not found")
 	}
 
+	w := r.w
 	w.WriteHeader(200)
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	logOutput := json.NewEncoder(w)
@@ -314,7 +304,7 @@ func (c *context) getJobLog(w http.ResponseWriter, r *http.Request) {
 	logs, err := c.Connector.GetLog(query)
 	if !follow {
 		logOutput.Encode(logs)
-		return
+		return nil, nil
 	}
 
 	if strictJson {
@@ -338,7 +328,7 @@ func (c *context) getJobLog(w http.ResponseWriter, r *http.Request) {
 		logs, err := c.Connector.GetLog(query)
 		if err != nil {
 			log.Errorf("Error while retrieving logs: %v", err)
-			return
+			return nil, nil
 		}
 		if len(logs) > 0 {
 			lastTime = jobLastLogTime(job, logs)
@@ -354,13 +344,13 @@ func (c *context) getJobLog(w http.ResponseWriter, r *http.Request) {
 		job, err := c.Connector.GetJobByID(jid)
 		if err != nil {
 			log.Errorf("Error while retrieving job: %v", err)
-			return
+			return nil, nil
 		}
 		if job.Status != lib.JOB_RUNNING {
 			if strictJson {
 				w.Write([]byte("]"))
 			}
-			return
+			return nil, nil
 		}
 	}
 }

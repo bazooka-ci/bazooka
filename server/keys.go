@@ -5,16 +5,16 @@ import (
 	lib "github.com/bazooka-ci/bazooka/commons"
 )
 
-func (c *context) addKey(params map[string]string, body bodyFunc) (*response, error) {
+func (c *context) addKey(r *request) (*response, error) {
 	var key lib.SSHKey
 
-	body(&key)
+	r.parseBody(&key)
 
 	if len(key.Content) == 0 {
 		return badRequest("content is mandatory")
 	}
 
-	project, err := c.Connector.GetProjectById(params["id"])
+	project, err := c.Connector.GetProjectById(r.vars["id"])
 	if err != nil {
 		if err.Error() != "not found" {
 			return nil, err
@@ -22,7 +22,7 @@ func (c *context) addKey(params map[string]string, body bodyFunc) (*response, er
 		return notFound("project not found")
 	}
 
-	keys, err := c.Connector.GetKeys(params["id"])
+	keys, err := c.Connector.GetKeys(r.vars["id"])
 	if err != nil {
 		return nil, err
 	}
@@ -45,19 +45,19 @@ func (c *context) addKey(params map[string]string, body bodyFunc) (*response, er
 		ProjectID: key.ProjectID,
 	}
 
-	return created(&createdKey, "/project/"+params["id"]+"/key")
+	return created(&createdKey, "/project/"+r.vars["id"]+"/key")
 }
 
-func (c *context) updateKey(params map[string]string, body bodyFunc) (*response, error) {
+func (c *context) updateKey(r *request) (*response, error) {
 	var key lib.SSHKey
 
-	body(&key)
+	r.parseBody(&key)
 
 	if len(key.Content) == 0 {
 		return badRequest("content is mandatory")
 	}
 
-	project, err := c.Connector.GetProjectById(params["id"])
+	project, err := c.Connector.GetProjectById(r.vars["id"])
 	if err != nil {
 		if err.Error() != "not found" {
 			return nil, err
@@ -82,13 +82,12 @@ func (c *context) updateKey(params map[string]string, body bodyFunc) (*response,
 	return ok(&updateKey)
 }
 
-func (c *context) listKeys(params map[string]string, body bodyFunc) (*response, error) {
+func (c *context) listKeys(r *request) (*response, error) {
 
-	keys, err := c.Connector.GetKeys(params["id"])
+	keys, err := c.Connector.GetKeys(r.vars["id"])
 	if err != nil {
 		return nil, err
 	}
 
 	return ok(&keys)
-
 }

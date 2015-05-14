@@ -2,10 +2,10 @@ package main
 
 import lib "github.com/bazooka-ci/bazooka/commons"
 
-func (p *context) createUser(params map[string]string, body bodyFunc) (*response, error) {
+func (p *context) createUser(r *request) (*response, error) {
 	var user lib.User
 
-	body(&user)
+	r.parseBody(&user)
 
 	switch {
 	case len(user.Email) == 0:
@@ -28,8 +28,8 @@ func (p *context) createUser(params map[string]string, body bodyFunc) (*response
 	return created(&user, "/user/"+user.ID)
 }
 
-func (p *context) getUser(params map[string]string, body bodyFunc) (*response, error) {
-	user, err := p.Connector.GetUserByEmail(params["email"])
+func (p *context) getUser(r *request) (*response, error) {
+	user, err := p.Connector.GetUserByEmail(r.vars["email"])
 	if err != nil {
 		if err.Error() != "not found" {
 			return nil, err
@@ -40,7 +40,7 @@ func (p *context) getUser(params map[string]string, body bodyFunc) (*response, e
 	return ok(&user)
 }
 
-func (p *context) getUsers(params map[string]string, body bodyFunc) (*response, error) {
+func (p *context) getUsers(r *request) (*response, error) {
 	users, err := p.Connector.GetUsers()
 	if err != nil {
 		return nil, err

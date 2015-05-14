@@ -71,7 +71,7 @@ func main() {
 	r.HandleFunc("/project/{id}/job", mkHandler(ctx.getJobs)).Methods("GET")
 
 	r.HandleFunc("/project/{id}/config", mkHandler(ctx.getProjectConfig)).Methods("GET")
-	r.HandleFunc("/project/{id}/config/{key}", ctx.setProjectConfigKey).Methods("PUT")
+	r.HandleFunc("/project/{id}/config/{key}", mkHandler(ctx.setProjectConfigKey)).Methods("PUT")
 	r.HandleFunc("/project/{id}/config/{key}", mkHandler(ctx.unsetProjectConfigKey)).Methods("DELETE")
 
 	r.HandleFunc("/project/{id}/key", mkHandler(ctx.addKey)).Methods("POST")
@@ -82,11 +82,11 @@ func main() {
 
 	r.HandleFunc("/job", mkHandler(ctx.getAllJobs)).Methods("GET")
 	r.HandleFunc("/job/{id}", mkHandler(ctx.getJob)).Methods("GET")
-	r.HandleFunc("/job/{id}/log", ctx.getJobLog).Methods("GET")
+	r.HandleFunc("/job/{id}/log", mkHandler(ctx.getJobLog)).Methods("GET")
 	r.HandleFunc("/job/{id}/variant", mkHandler(ctx.getVariants)).Methods("GET")
 
 	r.HandleFunc("/variant/{id}", mkHandler(ctx.getVariant)).Methods("GET")
-	r.HandleFunc("/variant/{id}/log", ctx.getVariantLog).Methods("GET")
+	r.HandleFunc("/variant/{id}/log", mkHandler(ctx.getVariantLog)).Methods("GET")
 	r.HandleFunc("/variant/{id}/artifacts/{path:.*}", ctx.getVariantArtifacts).Methods("GET")
 
 	r.HandleFunc("/image", mkHandler(ctx.getImages)).Methods("GET")
