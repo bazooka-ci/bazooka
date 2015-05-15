@@ -14,15 +14,6 @@ func (p *context) createProject(r *request) (*response, error) {
 
 	r.parseBody(&project)
 
-	switch {
-	case len(project.ScmURI) == 0:
-		return badRequest("scm_uri is mandatory")
-	case len(project.ScmType) == 0:
-		return badRequest("scm_type is mandatory")
-	case len(project.Name) == 0:
-		return badRequest("name is mandatory")
-	}
-
 	exists, err := p.Connector.HasProject(project.Name)
 	switch {
 	case err != nil:
