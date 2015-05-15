@@ -210,3 +210,16 @@ h3 {
   font-size: 20px;
 }
 
+input.ng-invalid {
+  border: 1px solid #a94442;
+}
+
+
+.growl-title {
+  font-weight: bold;
+  font-size: 18px;
+}
+
+.growl-item.icon > .growl-title {
+  margin-bottom: 10px;
+}
