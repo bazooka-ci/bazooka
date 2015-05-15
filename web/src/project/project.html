@@ -12,23 +12,23 @@
 			</table>
 		</div>
 		<div class="col-md-3">
-			<div class="input-group input-group-sm">
+			<form class="input-group input-group-sm">
 				<input type="text"
 				ng-model="newJob.reference" required
 				class="form-control" placeholder="SCM reference">
 				<div class="input-group-btn">
-					<a href="" class="btn btn-success" ng-click="startJob()"
-						ng-disabled="!canStartJob()">
-						<i class="glyphicon glyphicon-play"></i>
-						Start job
-					</a>
+					<button type="submit" class="btn btn-success" ng-click="startJob()"
+					ng-disabled="!canStartJob()">
+					<i class="glyphicon glyphicon-play"></i>
+					Start job
+					</button>
 					<a href="" class="btn btn-default"
 						title="Add a job parameter"
 						ng-click="addJobParam()">
 						<i class="glyphicon glyphicon-plus-sign"></i>
 					</a>
 				</div>
-			</div>
+			</form>
 			<div  class="job-params" ng-if="newJob.parameters.length">
 				<table>
 					<thead >
