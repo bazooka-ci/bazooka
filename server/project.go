@@ -1,23 +1,18 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"math/rand"
-	"net/http"
 	"time"
-
-	"github.com/gorilla/mux"
 
 	log "github.com/Sirupsen/logrus"
 	lib "github.com/bazooka-ci/bazooka/commons"
 )
 
-func (p *context) createProject(params map[string]string, body bodyFunc) (*response, error) {
+func (p *context) createProject(r *request) (*response, error) {
 	var project lib.Project
 
-	body(&project)
+	r.parseBody(&project)
 
 	switch {
 	case len(project.ScmURI) == 0:
@@ -75,8 +70,8 @@ func randSeq(n int) string {
 	return string(b)
 }
 
-func (p *context) getProject(params map[string]string, body bodyFunc) (*response, error) {
-	project, err := p.Connector.GetProjectById(params["id"])
+func (p *context) getProject(r *request) (*response, error) {
+	project, err := p.Connector.GetProjectById(r.vars["id"])
 	if err != nil {
 		if err.Error() != "not found" {
 			return nil, err
@@ -87,20 +82,17 @@ func (p *context) getProject(params map[string]string, body bodyFunc) (*response
 	return ok(&project)
 }
 
-func (p *context) getProjects(params map[string]string, body bodyFunc) (*response, error) {
-	projects, err := p.Connector.GetProjects()
-	log.WithFields(log.Fields{
-		"projects": projects,
-	}).Info("Retrieving projects")
+func (c *context) getProjects(r *request) (*response, error) {
+	projects, err := c.Connector.GetProjects()
 	if err != nil {
 		return nil, err
 	}
+	return ok(projects)
 
-	return ok(&projects)
 }
 
-func (p *context) getProjectConfig(params map[string]string, body bodyFunc) (*response, error) {
-	project, err := p.Connector.GetProjectById(params["id"])
+func (p *context) getProjectConfig(r *request) (*response, error) {
+	project, err := p.Connector.GetProjectById(r.vars["id"])
 	if err != nil {
 		if err.Error() != "not found" {
 			return nil, err
@@ -111,33 +103,19 @@ func (p *context) getProjectConfig(params map[string]string, body bodyFunc) (*re
 	return ok(project.Config)
 }
 
-func (p *context) setProjectConfigKey(w http.ResponseWriter, r *http.Request) {
-	id, key := mux.Vars(r)["id"], mux.Vars(r)["key"]
-	body, err := ioutil.ReadAll(r.Body)
-	r.Body.Close()
-	if err != nil {
-		w.Header().Set("Content-Type", "application/json; charset=utf-8")
-		encoder := json.NewEncoder(w)
-
-		w.WriteHeader(400)
-		encoder.Encode(fmt.Errorf("cannot read value: %s", err))
-		return
-	}
+func (p *context) setProjectConfigKey(r *request) (*response, error) {
+	id, key := r.vars["id"], r.vars["key"]
+	body := r.rawBody()
 
 	if err := p.Connector.SetProjectConfigKey(id, key, string(body)); err != nil {
-		w.Header().Set("Content-Type", "application/json; charset=utf-8")
-		encoder := json.NewEncoder(w)
-
-		w.WriteHeader(500)
-		encoder.Encode(fmt.Errorf("cannot set configuration key: %s", err))
-		return
+		return nil, err
 	}
 
-	w.WriteHeader(204)
+	return noContent()
 }
 
-func (p *context) unsetProjectConfigKey(params map[string]string, body bodyFunc) (*response, error) {
-	if err := p.Connector.UnsetProjectConfigKey(params["id"], params["key"]); err != nil {
+func (p *context) unsetProjectConfigKey(r *request) (*response, error) {
+	if err := p.Connector.UnsetProjectConfigKey(r.vars["id"], r.vars["key"]); err != nil {
 		if err.Error() != "not found" {
 			return nil, err
 		}

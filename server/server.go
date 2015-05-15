@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 
@@ -53,7 +54,32 @@ func flushResponse(w http.ResponseWriter) {
 	}
 }
 
-type bodyFunc func(interface{})
+type request struct {
+	w    http.ResponseWriter
+	r    *http.Request
+	vars map[string]string
+}
+
+func (r *request) parseBody(into interface{}) {
+	defer r.r.Body.Close()
+	decoder := json.NewDecoder(r.r.Body)
+	if err := decoder.Decode(into); err != nil {
+		panic(errorResponse{400, "Unable to decode your json : " + err.Error()})
+	}
+}
+
+func (r *request) rawBody() []byte {
+	defer r.r.Body.Close()
+	body, err := ioutil.ReadAll(r.r.Body)
+	if err != nil {
+		panic(errorResponse{400, "Unable to read request payload : " + err.Error()})
+	}
+	return body
+}
+
+func (r *request) query(key string) string {
+	return r.r.URL.Query().Get(key)
+}
 
 type response struct {
 	Code    int
@@ -104,17 +130,8 @@ func unauthorized() (*response, error) {
 	return nil, &errorResponse{401, "Unauthorized"}
 }
 
-func mkHandler(f func(map[string]string, bodyFunc) (*response, error)) func(http.ResponseWriter, *http.Request) {
+func mkHandler(f func(*request) (*response, error)) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-
-		bf := func(b interface{}) {
-			defer r.Body.Close()
-			decoder := json.NewDecoder(r.Body)
-			if err := decoder.Decode(b); err != nil {
-				panic(errorResponse{400, "Unable to decode your json : " + err.Error()})
-			}
-		}
-
 		encoder := json.NewEncoder(w)
 
 		dispatchError := func(err error) {
@@ -142,7 +159,13 @@ func mkHandler(f func(map[string]string, bodyFunc) (*response, error)) func(http
 			}
 		}()
 
-		rb, err := f(mux.Vars(r), bf)
+		wrapped := &request{
+			w:    w,
+			r:    r,
+			vars: mux.Vars(r),
+		}
+
+		rb, err := f(wrapped)
 
 		if err != nil {
 			dispatchError(err)
@@ -162,7 +185,6 @@ func mkHandler(f func(map[string]string, bodyFunc) (*response, error)) func(http
 				w.WriteHeader(rb.Code)
 			}
 		}
-
 	}
 }
 

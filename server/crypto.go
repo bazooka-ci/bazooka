@@ -7,16 +7,16 @@ import (
 	"github.com/bazooka-ci/bazooka/commons"
 )
 
-func (c *context) encryptData(params map[string]string, body bodyFunc) (*response, error) {
+func (c *context) encryptData(r *request) (*response, error) {
 	var v bazooka.StringValue
 
-	body(&v)
+	r.parseBody(&v)
 
 	if len(v.Value) == 0 {
 		return badRequest("value is mandatory")
 	}
 
-	_, err := c.Connector.GetProjectById(params["id"])
+	_, err := c.Connector.GetProjectById(r.vars["id"])
 	if err != nil {
 		if err.Error() != "not found" {
 			return nil, err
@@ -24,7 +24,7 @@ func (c *context) encryptData(params map[string]string, body bodyFunc) (*respons
 		return notFound("project not found")
 	}
 
-	keys, err := c.Connector.GetCryptoKeys(params["id"])
+	keys, err := c.Connector.GetCryptoKeys(r.vars["id"])
 	if err != nil {
 		return nil, err
 	}
