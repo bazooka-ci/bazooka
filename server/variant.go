@@ -38,6 +38,7 @@ func (c *context) getVariants(r *request) (*response, error) {
 
 func (c *context) getVariantLog(r *request) (*response, error) {
 	follow := len(r.query("follow")) > 0
+	strictJson := len(r.query("strict-json")) > 0
 
 	vid := r.vars["id"]
 
@@ -65,8 +66,17 @@ func (c *context) getVariantLog(r *request) (*response, error) {
 		return nil, nil
 	}
 
+	if strictJson {
+		w.Write([]byte("["))
+	}
+
+	writtenEntries := 0
 	for _, l := range logs {
+		if writtenEntries > 0 && strictJson {
+			w.Write([]byte(","))
+		}
 		logOutput.Encode(l)
+		writtenEntries++
 	}
 	flushResponse(w)
 	lastTime := variantLastLogTime(variant, logs)
@@ -82,7 +92,11 @@ func (c *context) getVariantLog(r *request) (*response, error) {
 		if len(logs) > 0 {
 			lastTime = variantLastLogTime(variant, logs)
 			for _, l := range logs {
+				if writtenEntries > 0 && strictJson {
+					w.Write([]byte(","))
+				}
 				logOutput.Encode(l)
+				writtenEntries++
 			}
 			flushResponse(w)
 		}
@@ -92,6 +106,9 @@ func (c *context) getVariantLog(r *request) (*response, error) {
 			return nil, nil
 		}
 		if variant.Status != lib.JOB_RUNNING {
+			if strictJson {
+				w.Write([]byte("]"))
+			}
 			return nil, nil
 		}
 	}
