@@ -10,7 +10,7 @@ angular.module('bzk.variant').config(function($routeProvider) {
     });
 });
 
-angular.module('bzk.variant').controller('VariantController', function($scope, BzkApi, DateUtils, $routeParams, $timeout) {
+angular.module('bzk.variant').controller('VariantController', function($scope, BzkApi, EventBus, DateUtils, $routeParams, $timeout) {
     var jId;
     var pId;
     var vId;
@@ -31,6 +31,7 @@ angular.module('bzk.variant').controller('VariantController', function($scope, B
         if (jId) {
             BzkApi.job.get(jId).success(function(job) {
                 $scope.job = job;
+                EventBus.send('jobs.refreshed', [job]);
 
                 if (job.status === 'RUNNING') {
                     refreshPromise = $timeout(refresh, 3000);

@@ -1,6 +1,6 @@
 "use strict";
 
-angular.module('bzk.project').controller('ProjectController', function($scope, BzkApi, $routeParams, $interval, $location, growl) {
+angular.module('bzk.project').controller('ProjectController', function($scope, BzkApi, EventBus, $routeParams, $interval, growl) {
     var pId = $routeParams.pid;
 
     BzkApi.project.get(pId).success(function(project) {
@@ -10,6 +10,7 @@ angular.module('bzk.project').controller('ProjectController', function($scope, B
     $scope.refreshJobs = function() {
         BzkApi.project.jobs(pId).success(function(jobs) {
             $scope.jobs = jobs;
+            EventBus.send('jobs.refreshed', jobs);
         });
     };
 

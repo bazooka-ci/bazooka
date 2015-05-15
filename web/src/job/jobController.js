@@ -1,6 +1,6 @@
 "use strict";
 
-angular.module('bzk.job').controller('JobController', function($scope, BzkApi, $routeParams, $timeout) {
+angular.module('bzk.job').controller('JobController', function($scope, BzkApi, EventBus, $routeParams, $timeout) {
     var jId;
     var pId;
     var refreshJobPromise, refreshVariantsPromise;
@@ -21,6 +21,7 @@ angular.module('bzk.job').controller('JobController', function($scope, BzkApi, $
         if (jId) {
             BzkApi.job.get(jId).success(function(job) {
                 $scope.job = job;
+                EventBus.send('jobs.refreshed', [job]);
 
                 if (job.status === 'RUNNING') {
                     refreshJobPromise = $timeout(refresh, 3000);

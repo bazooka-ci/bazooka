@@ -139,25 +139,41 @@ h3 {
       }
     }
     
+    h2 {
+      color: #fff;
+      font-size: 24px;
 
-
-    .success {
-      color: $project-success;
+      .job-status {
+        font-size: 16px;
+        line-height: 100%;
+      }
     }
 
-    .error {
-      color: $project-error;
+    &.success {
+      .last-job, .job-status {
+        color: $project-success;
+      }
+    }
+
+    &.errored {
+      .last-job, .job-status {
+        color: $project-error;
+      }
+    }
+
+    &.failed {
+      .last-job, .job-status {
+        color: $project-fail;
+      }
     }
 
     .last-job {
-      display: block;
-      position: absolute;
-      top: 5px;
-      right: 5px;
-      text-align: center;
+      float: right;
+      right: 0;
+      text-align: right;
+      line-height: 26px;
+      font-size: 16px;
     }
-
-
 
     p {
       margin: .4em 0;
@@ -168,6 +184,7 @@ h3 {
 
     .scm {
       color: $sidebar-scm;
+      font-style: italic;
     }
   }  
 }

@@ -2,6 +2,19 @@
 
 angular.module('bzk.utils', []);
 
+angular.module('bzk.utils').factory('EventBus', function($rootScope) {
+    return {
+        send: function(key, value) {
+            $rootScope.$emit(key, value);
+        },
+        on: function(key, callback) {
+            return $rootScope.$on(key, function(event, args){
+                callback(event.name, args);
+            });
+        }
+    };
+});
+
 angular.module('bzk.utils').filter('bzkStatus', function() {
     var st2class = {
         'RUNNING': 'running',
@@ -13,7 +26,6 @@ angular.module('bzk.utils').filter('bzkStatus', function() {
     return function(job) {
         return st2class[job.status];
     };
-
 });
 
 angular.module('bzk.utils').factory('DateUtils', function() {

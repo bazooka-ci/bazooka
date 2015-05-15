@@ -3,8 +3,14 @@
 angular.module('bzk.utils').factory('BzkApi', function($http, JsonStream) {
     return {
         project: {
-            list: function() {
-                return $http.get('/api/project');
+            list: function(includeStatus) {
+                return includeStatus ?
+                 $http.get('/api/project', {
+                    params: {
+                        'include-status': 'true'
+                    }
+                 }):
+                 $http.get('/api/project');
             },
             get: function(id) {
                 return $http.get('/api/project/' + id);

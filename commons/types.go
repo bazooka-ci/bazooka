@@ -22,6 +22,11 @@ type Project struct {
 	Config     map[string]string `bson:"config" json:"config"`
 }
 
+type ProjectWithStatus struct {
+	*Project
+	LastJob *Job `json:"last_job"`
+}
+
 type Variant struct {
 	Status     JobStatus     `bson:"status" json:"status"`
 	Started    time.Time     `bson:"started" json:"started"`

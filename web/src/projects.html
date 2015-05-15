@@ -1,9 +1,14 @@
 <div class="projects" ng-controller="ProjectsController">
 	<ul>
-		<li ng-repeat="project in projects | filter:filter"  ng-class="{selected: isSelected(project)}">
+		<li ng-repeat="project in projects | filter:filter" 
+		class="{{project.last_job.status|lowercase}}" ng-class="{selected: isSelected(project)}">
 			<a ng-href="#/p/{{project | bzkId}}">
-				<h2 class="success">{{project.name}}</h2>
-				<span class="last-job success">41</span>
+				<h2>
+				<span bzk-job-status="project.last_job.status"></span>
+				{{project.name}}
+				<span class="last-job">#{{project.last_job.number}}</span>
+				</h2>
+
 				<p class="scm">{{project.scm_uri}}</p>
 			</a>
 		</li>
