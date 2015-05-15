@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"strings"
 
 	yaml "gopkg.in/yaml.v2"
 )
@@ -14,10 +13,10 @@ const (
 	travisConfigFile  = ".travis.yml"
 )
 
-func FlattenEnvMap(mapp map[BzkString]BzkString) []BzkString {
+func FlattenEnvMap(mapp map[string][]BzkString) []BzkString {
 	res := []BzkString{}
-	for key, value := range mapp {
-		res = append(res, BzkString(fmt.Sprintf("%s=%s", key, value)))
+	for _, value := range mapp {
+		res = append(res, value...)
 	}
 	return res
 }
@@ -61,15 +60,10 @@ func Flush(object interface{}, outputFile string) error {
 	return ioutil.WriteFile(outputFile, d, 0644)
 }
 
-func GetEnvMap(envArray []BzkString) map[string][]string {
-	envKeyMap := make(map[string][]string)
+func GetEnvMap(envArray []BzkString) map[string][]BzkString {
+	envKeyMap := make(map[string][]BzkString)
 	for _, env := range envArray {
-		envSplit := strings.SplitN(string(env), "=", 2)
-		value := ""
-		if len(envSplit) == 2 {
-			value = envSplit[1]
-		}
-		envKeyMap[envSplit[0]] = append(envKeyMap[envSplit[0]], value)
+		envKeyMap[env.Name] = append(envKeyMap[env.Name], env)
 	}
 	return envKeyMap
 }

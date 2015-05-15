@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -44,7 +45,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	jobParameters := explodeProps(envParams, MX_ENV_PREFIX)
+	jobParameters := groupByName(envParams, MX_ENV_PREFIX)
 
 	// parse the configuration
 	config := &lib.Config{}
@@ -86,29 +87,29 @@ func main() {
 		// create a matrix from the environment variables
 		// a matrix has N variables (dimensions) where each variable has M values
 		// config.Env is a list of key=value strings
-		// explodeProps transforms that into a map[string][]string
+		// groupByName transforms that into a map[string][]string
 		// for example ["A=1", "A=2", B="3"]
-		// when exploded gets transformed into
+		// when grouped by name gets transformed into
 		// {A: [1, 2], B: [3]}
 		// this matches the matrix layout, so we could store them directly into the matrix
 		// but since we would like to be able to extract them later, and to avoid mixing them with a language specific variables (like jdk, go, etc.)
 		// explode prefixes the env variables names with a prefix defined in the constant MX_ENV_PREFIX
 		// Hence, our matrix is more like: {"env::A": [1, 2], "env::B": [3]}
-		explodedProps := explodeProps(variant.config.Env, MX_ENV_PREFIX)
+		variantVariables := groupByName(variant.config.Env, MX_ENV_PREFIX)
 
 		// insert or replace environment variables defined by the job parameters
 		for k, v := range jobParameters {
-			explodedProps[k] = v
+			variantVariables[k] = v
 		}
 
 		// check if all environment variables are defined
-		for k, v := range explodedProps {
+		for k, v := range variantVariables {
 			if len(v) == 1 && len(v[0]) == 0 {
 				log.Fatalf("Missing required parameter %v", k)
 			}
 		}
 
-		mx := matrix.Matrix(explodedProps)
+		mx := matrix.Matrix(variantVariables)
 
 		// and then add the new language specific variables parsed from the meta file to the build matrix (which already contains the env variables)
 		err = feedMatrix(variant.meta, &mx)
@@ -171,14 +172,14 @@ func handlePermutation(permutation map[string]string, config *lib.Config, meta m
 	newConfig := *config
 
 	// and replace its env variables with this unique permutation
-	envMap := extractPrefixedKeysMap(permutation, MX_ENV_PREFIX)
+	envMap := extractEnv(permutation, config.Env)
 
 	// Insert BZK_BUILD_DIR if not present
 	if _, ok := envMap["BZK_BUILD_DIR"]; !ok {
-		envMap["BZK_BUILD_DIR"] = "/bazooka"
+		envMap["BZK_BUILD_DIR"] = lib.BzkString{"BZK_BUILD_DIR", "/bazooka", false}
 	}
 
-	newConfig.Env = lib.FlattenEnvMap(envMap)
+	newConfig.Env = mapValues(envMap)
 	if err := lib.Flush(newConfig, fmt.Sprintf("%s/.bazooka.%s%s.yml", paths.container.output, rootCounter, counter)); err != nil {
 		return err
 	}
@@ -186,7 +187,12 @@ func handlePermutation(permutation map[string]string, config *lib.Config, meta m
 	// do the same for the meta file
 	// start from the language specific permutation meta file
 	// and add this permutation's env map
-	meta["env"] = newConfig.Env
+	metaEnv, err:=generateEnvForMeta(newConfig.Env)
+	if err != nil {
+		return err
+	}
+	
+	meta["env"] = metaEnv
 	metaFile := fmt.Sprintf("%s/%s%s", paths.container.meta, rootCounter, counter)
 	lib.Flush(meta, metaFile)
 
@@ -220,15 +226,17 @@ func feedMatrix(extra map[string]interface{}, mx *matrix.Matrix) error {
 				envVars := []lib.BzkString{}
 				for _, envVar := range converted {
 					if strEnvVar, ok := envVar.(string); ok {
-						envVars = append(envVars, lib.BzkString(strEnvVar))
+						n, v:=lib.SplitNameValue(strEnvVar)
+						envVars = append(envVars, lib.BzkString{n, v, false})
 					} else {
 						return fmt.Errorf("Invalid config: env should contain a sequence of strings: found a non string value %v:%T", envVar, envVar)
 
 					}
 				}
-				mx.Merge(explodeProps(envVars, MX_ENV_PREFIX))
+				mx.Merge(groupByName(envVars, MX_ENV_PREFIX))
 			case string:
-				mx.Merge(explodeProps([]lib.BzkString{lib.BzkString(converted)}, MX_ENV_PREFIX))
+						n, v:=lib.SplitNameValue(converted)
+				mx.Merge(groupByName([]lib.BzkString{lib.BzkString{n, v, false}}, MX_ENV_PREFIX))
 			default:
 				return fmt.Errorf("Invalid config: env should contain a sequence of strings: %v:%T", v, v)
 			}
@@ -258,19 +266,14 @@ func parseCounter(filePath string) string {
 	return strings.Split(file, ".")[2]
 }
 
-// explodeProps starts from a list of key=valye strings and stores them into a map
+// groupByName starts from a list of key=valye strings and stores them into a map
 // it also handles repeated values, so ["A=1", "A=2", B="3"] gets transformed into {A: [1, 2], B: [3]}
-func explodeProps(props []lib.BzkString, keyPrefix string) map[string][]string {
-	envKeyMap := make(map[string][]string)
+func groupByName(props []lib.BzkString, keyPrefix string) map[string][]string {
+	res := make(map[string][]string)
 	for _, env := range props {
-		envSplit := strings.SplitN(string(env), "=", 2)
-		value := ""
-		if len(envSplit) == 2 {
-			value = envSplit[1]
-		}
-		envKeyMap[keyPrefix+envSplit[0]] = append(envKeyMap[keyPrefix+envSplit[0]], value)
+		res[keyPrefix+env.Name] = append(res[keyPrefix+env.Name], env.Value)
 	}
-	return envKeyMap
+	return res
 }
 
 // prefixMapKeys returns a new map where all keys are prefixed with prefix
@@ -282,18 +285,55 @@ func prefixMapKeys(m map[string][]string, prefix string) map[string][]string {
 	return res
 }
 
-// extractPrefixedKeysMap returns a new map containing only the values whose keys have the specified prefix, removing the latter in the process
-// Given {xA: 1, B: 2, xC: 3}, it returns {A: 1, C: 3} if given a prefix x
-func extractPrefixedKeysMap(m map[string]string, prefix string) map[lib.BzkString]lib.BzkString {
-	res := make(map[lib.BzkString]lib.BzkString)
-	for k, v := range m {
-		if strings.HasPrefix(k, prefix) {
-			res[lib.BzkString(k[len(prefix):])] = lib.BzkString(v)
+// extractEnv extracts back the env variables from the permutation values
+func extractEnv(from map[string]string, originalEnv []lib.BzkString) map[string]lib.BzkString {
+	res := make(map[string]lib.BzkString)
+	for k, v := range from {
+		if strings.HasPrefix(k, MX_ENV_PREFIX) {
+			name:=strings.TrimPrefix(k, MX_ENV_PREFIX)
+			res[name] = findOrCreateBzkString(name, v, originalEnv)
 		}
 	}
 	return res
 }
 
+func findOrCreateBzkString(name, value string, env []lib.BzkString) lib.BzkString {
+	for _, e:=range env {
+		if name==e.Name && value==e.Value {
+			return e
+		}
+	}
+	return lib.BzkString{name, value, false}
+}
+
+func mapValues(m map[string]lib.BzkString) []lib.BzkString {
+	res :=make([]lib.BzkString, 0, len(m))
+	for _, v:=range m {
+		res=append(res, v)
+	}
+	return res
+}
+
+func generateEnvForMeta(env []lib.BzkString) ([]string, error) {
+	key, err:=lib.ReadCryptoKey(paths.container.cryptoKey)
+	if err != nil {
+		return nil, err
+	}
+	
+	res := make([]string, 0, len(env))
+	for _, e:=range env {
+		value := e.Value
+		if e.Secured {
+			eValue, err:= lib.Encrypt(key, []byte(value))
+			if err != nil {
+				return nil, err
+			}
+			value = hex.EncodeToString(eValue)
+		}
+		res = append(res, fmt.Sprintf("%s=%s", e.Name, value))
+	}
+	return res, nil
+}
 func resolveLanguageParser(language string) (string, error) {
 	parserMap := map[string]string{
 		"golang":  "bazooka/parser-golang",

@@ -3,7 +3,10 @@ package bazooka
 import (
 	"encoding/hex"
 	"fmt"
+	"strings"
 	"time"
+
+	"gopkg.in/yaml.v2"
 )
 
 var (
@@ -227,7 +230,11 @@ func (g *Globs) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	}
 }
 
-type BzkString string
+type BzkString struct {
+	Name    string
+	Value   string
+	Secured bool
+}
 
 func (c *BzkString) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	var raw interface{}
@@ -243,26 +250,50 @@ func (c *BzkString) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return nil
 }
 
+var (
+	_ yaml.Marshaler = BzkString{}
+)
+
+func (c BzkString) MarshalYAML() (interface{}, error) {
+	merged := c.Name
+	if len(c.Value) > 0 {
+		merged = fmt.Sprintf("%s=%s", merged, c.Value)
+	}
+	if !c.Secured {
+		return merged, nil
+	}
+
+	encrypted, err := encryptBzkString(merged)
+	if err != nil {
+		return nil, err
+	}
+	return map[string]string{
+		"secure": encrypted,
+	}, nil
+
+}
+
 func extractBzkString(raw interface{}) (BzkString, error) {
 	switch convCmd := raw.(type) {
 	case string:
-		return BzkString(convCmd), nil
+		n, v := SplitNameValue(convCmd)
+		return BzkString{n, v, false}, nil
 	case map[interface{}]interface{}:
 		if len(convCmd) > 1 {
-			return "", fmt.Errorf("BzkString should either be a go string or 'secure: <string>'")
+			return BzkString{}, fmt.Errorf("BzkString should either be a go string or 'secure: <string>'")
 		}
 		if _, ok := convCmd["secure"]; !ok {
-			return "", fmt.Errorf("BzkString should either be a go string or 'secure: <string>'")
+			return BzkString{}, fmt.Errorf("BzkString should either be a go string or 'secure: <string>'")
 		}
 
 		decrypted, err := decryptBzkString(convCmd["secure"].(string))
 		if err != nil {
-			return "", fmt.Errorf("Error while trying to decrypt data, reason is: %v\n", err)
+			return BzkString{}, fmt.Errorf("Error while trying to decrypt data, reason is: %v\n", err)
 		}
-
-		return BzkString(decrypted), nil
+		n, v := SplitNameValue(string(decrypted))
+		return BzkString{n, v, true}, nil
 	default:
-		return "", fmt.Errorf("BzkString should either be a go string or 'secure: <string>'")
+		return BzkString{}, fmt.Errorf("BzkString should either be a go string or 'secure: <string>'")
 	}
 }
 
@@ -281,6 +312,28 @@ func decryptBzkString(str string) ([]byte, error) {
 		return nil, fmt.Errorf("Error while trying to decrypt data, reason is: %v\n", err)
 	}
 	return decrypted, nil
+}
+
+func encryptBzkString(str string) (string, error) {
+	if PrivateKey == nil {
+		return "", fmt.Errorf("PrivateKey is not set")
+	}
+
+	encrypted, err := Encrypt(PrivateKey, []byte(str))
+	if err != nil {
+		return "", fmt.Errorf("Error while trying to encrypt data, reason is: %v\n", err)
+	}
+
+	return hex.EncodeToString(encrypted), nil
+}
+
+func SplitNameValue(s string) (string, string) {
+	split := strings.SplitN(string(s), "=", 2)
+	value := ""
+	if len(split) == 2 {
+		value = split[1]
+	}
+	return split[0], value
 }
 
 type ConfigMatrix struct {

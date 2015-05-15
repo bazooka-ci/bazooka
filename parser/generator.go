@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 	"os"
 	"strconv"
-	"strings"
 
 	lib "github.com/bazooka-ci/bazooka/commons"
 )
@@ -29,10 +28,12 @@ func (g *Generator) GenerateDockerfile() error {
 
 	envMap := lib.GetEnvMap(g.Config.Env)
 
-	dockerBuffer.WriteString(fmt.Sprintf("COPY source %s/\n\n", envMap["BZK_BUILD_DIR"][0]))
+	bzkBuildDir := envMap["BZK_BUILD_DIR"][0].Value
 
-	dockerBuffer.WriteString(fmt.Sprintf("COPY work/%s/bazooka_run.sh %s/\n", g.Index, envMap["BZK_BUILD_DIR"][0]))
-	dockerBuffer.WriteString(fmt.Sprintf("RUN  chmod +x %s/bazooka_run.sh\n\n", envMap["BZK_BUILD_DIR"][0]))
+	dockerBuffer.WriteString(fmt.Sprintf("COPY source %s/\n\n", bzkBuildDir))
+
+	dockerBuffer.WriteString(fmt.Sprintf("COPY work/%s/bazooka_run.sh %s/\n", g.Index, bzkBuildDir))
+	dockerBuffer.WriteString(fmt.Sprintf("RUN  chmod +x %s/bazooka_run.sh\n\n", bzkBuildDir))
 
 	type buildPhase struct {
 		name      string
@@ -176,8 +177,8 @@ func (g *Generator) GenerateDockerfile() error {
 				return fmt.Errorf("Phase [%d/%s]: writing file failed: %v", g.Index, phase.name, err)
 			}
 
-			dockerBuffer.WriteString(fmt.Sprintf("COPY work/%s/bazooka_%s.sh %s/\n", g.Index, phase.name, envMap["BZK_BUILD_DIR"][0]))
-			dockerBuffer.WriteString(fmt.Sprintf("RUN  chmod +x %s/bazooka_%s.sh\n\n", envMap["BZK_BUILD_DIR"][0], phase.name))
+			dockerBuffer.WriteString(fmt.Sprintf("COPY work/%s/bazooka_%s.sh %s/\n", g.Index, phase.name, bzkBuildDir))
+			dockerBuffer.WriteString(fmt.Sprintf("RUN  chmod +x %s/bazooka_%s.sh\n\n", bzkBuildDir, phase.name))
 
 			if len(phase.runCmd) == 0 {
 				bufferRun.WriteString(fmt.Sprintf("./bazooka_%s.sh\n", phase.name))
@@ -199,11 +200,10 @@ func (g *Generator) GenerateDockerfile() error {
 	}
 
 	for _, env := range g.Config.Env {
-		envSplit := strings.SplitN(string(env), "=", 2)
-		dockerBuffer.WriteString(fmt.Sprintf("ENV  %s %s\n", envSplit[0], envSplit[1]))
+		dockerBuffer.WriteString(fmt.Sprintf("ENV  %s %s\n", env.Name, env.Value))
 	}
 
-	dockerBuffer.WriteString(fmt.Sprintf("WORKDIR %s\n\n", envMap["BZK_BUILD_DIR"][0]))
+	dockerBuffer.WriteString(fmt.Sprintf("WORKDIR %s\n\n", bzkBuildDir))
 
 	dockerBuffer.WriteString("CMD  ./bazooka_run.sh\n")
 
