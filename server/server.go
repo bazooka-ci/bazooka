@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 
+	log "github.com/Sirupsen/logrus"
 	"github.com/gorilla/mux"
 
 	"github.com/bazooka-ci/bazooka/commons/mongo"
@@ -130,8 +130,12 @@ func unauthorized() (*response, error) {
 	return nil, &errorResponse{401, "Unauthorized"}
 }
 
-func mkHandler(f func(*request) (*response, error)) func(http.ResponseWriter, *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
+func (ctx *context) mkAuthHandler(f func(*request) (*response, error)) func(http.ResponseWriter, *http.Request) {
+	return ctx.authenticationHandler(mkHandler(f))
+}
+
+func mkHandler(f func(*request) (*response, error)) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		encoder := json.NewEncoder(w)
 
 		dispatchError := func(err error) {
@@ -185,26 +189,24 @@ func mkHandler(f func(*request) (*response, error)) func(http.ResponseWriter, *h
 				w.WriteHeader(rb.Code)
 			}
 		}
-	}
+	})
 }
 
-func (ctx *context) authenticationHandler(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+func (ctx *context) authenticationHandler(next http.Handler) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
 		users, err := ctx.Connector.GetUsers()
 		if err != nil {
-			// TODO error
+			// TODO handle error properly
 			log.Fatal(err)
 		}
 
 		if len(users) > 0 {
 			authenticator := basic.NewAuthenticator(ctx.userAuthentication, "bazooka")
-
 			authenticator.Wrap(next).ServeHTTP(w, r)
 		} else {
 			next.ServeHTTP(w, r)
 		}
-	})
-
+	}
 }
 
 func (ctx *context) userAuthentication(email string, password string) bool {

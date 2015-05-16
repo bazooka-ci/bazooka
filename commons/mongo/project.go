@@ -97,6 +97,10 @@ func (c *MongoConnector) AddProject(project *lib.Project) error {
 		return err
 	}
 
+	if project.HookKey, err = c.randomId(); err != nil {
+		return err
+	}
+
 	project.Config = escapeDotsInMap(project.Config)
 	return c.database.C("projects").Insert(project)
 }
