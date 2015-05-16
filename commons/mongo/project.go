@@ -80,12 +80,13 @@ func (c *MongoConnector) GetProjectsWithStatus() ([]*lib.ProjectWithStatus, erro
 
 	result := []*lib.ProjectWithStatus{}
 	for _, project := range projects {
-		if job, found := indexed[project.ID]; found {
-			result = append(result, &lib.ProjectWithStatus{
-				Project: project,
-				LastJob: job,
-			})
+		s := &lib.ProjectWithStatus{
+			Project: project,
 		}
+		if job, found := indexed[project.ID]; found {
+			s.LastJob = job
+		}
+		result = append(result, s)
 	}
 
 	return result, nil
