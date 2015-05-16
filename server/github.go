@@ -7,9 +7,25 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"regexp"
 
 	log "github.com/Sirupsen/logrus"
+	"github.com/bazooka-ci/bazooka/commons"
 	"github.com/gorilla/mux"
+)
+
+type githubPayload struct {
+	Ref        string       `json:"ref"`
+	HeadCommit githubCommit `json:"head_commit"`
+}
+
+type githubCommit struct {
+	ID string `json:"id"`
+}
+
+var (
+	branchRegexp = regexp.MustCompile(`refs\/heads\/(.*)`)
+	tagRegexp    = regexp.MustCompile(`refs\/tags\/(.*)`)
 )
 
 func (ctx *context) mkGithubAuthHandler(f func(*request) (*response, error)) func(http.ResponseWriter, *http.Request) {
@@ -47,4 +63,31 @@ func (ctx *context) githubAuth(req *http.Request) bool {
 	mac.Write(body)
 	expectedMAC := mac.Sum(nil)
 	return hmac.Equal([]byte(sign), []byte(fmt.Sprintf("sha1=%x", expectedMAC)))
+}
+
+func (ctx *context) startGithubJob(r *request) (*response, error) {
+	var payload githubPayload
+
+	r.parseBody(&payload)
+
+	var ref string
+	if branchRegexp.MatchString(payload.Ref) {
+		submatch := branchRegexp.FindStringSubmatch(payload.Ref)
+		if len(submatch) != 2 {
+			return badRequest("Impossible to find submatch in regexp for branches")
+		}
+		ref = submatch[1]
+	} else if tagRegexp.MatchString(payload.Ref) {
+		submatch := tagRegexp.FindStringSubmatch(payload.Ref)
+		if len(submatch) != 2 {
+			return badRequest("Impossible to find submatch in regexp for tags")
+		}
+		ref = submatch[1]
+	} else {
+		return badRequest("ref doesn't match any know regexp for tags or branch")
+	}
+
+	return ctx.startJob(r.vars, bazooka.StartJob{
+		ScmReference: ref,
+	}, payload.HeadCommit.ID)
 }

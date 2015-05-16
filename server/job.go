@@ -38,22 +38,7 @@ func (c *context) startBitbucketJob(r *request) (*response, error) {
 
 	return c.startJob(r.vars, lib.StartJob{
 		ScmReference: bitbucketPayload.Commits[0].RawNode,
-	})
-
-}
-
-func (c *context) startGithubJob(r *request) (*response, error) {
-	var githubPayload GithubPayload
-
-	r.parseBody(&githubPayload)
-
-	if len(githubPayload.HeadCommit.ID) == 0 {
-		return badRequest("HeadCommit is empty in Github payload")
-	}
-
-	return c.startJob(r.vars, lib.StartJob{
-		ScmReference: githubPayload.HeadCommit.ID,
-	})
+	}, "")
 
 }
 
@@ -67,10 +52,10 @@ func (c *context) startStandardJob(r *request) (*response, error) {
 		return badRequest("reference is mandatory")
 	}
 
-	return c.startJob(r.vars, startJob)
+	return c.startJob(r.vars, startJob, "")
 }
 
-func (c *context) startJob(params map[string]string, startJob lib.StartJob) (*response, error) {
+func (c *context) startJob(params map[string]string, startJob lib.StartJob, commitID string) (*response, error) {
 
 	project, err := c.Connector.GetProjectById(params["id"])
 	if err != nil {
@@ -94,6 +79,9 @@ func (c *context) startJob(params map[string]string, startJob lib.StartJob) (*re
 		ProjectID:  project.ID,
 		Started:    time.Now(),
 		Parameters: startJob.Parameters,
+		SCMMetadata: lib.SCMMetadata{
+			Reference: startJob.ScmReference,
+		},
 	}
 
 	if err := c.Connector.AddJob(runningJob); err != nil {
@@ -115,11 +103,18 @@ func (c *context) startJob(params map[string]string, startJob lib.StartJob) (*re
 		return nil, err
 	}
 
+	var refToBuild string
+	if len(commitID) > 0 {
+		refToBuild = commitID
+	} else {
+		refToBuild = startJob.ScmReference
+	}
+
 	buildFolder := fmt.Sprintf(buildFolderPattern, c.Env[BazookaEnvHome], runningJob.ProjectID, runningJob.ID)
 	orchestrationEnv := map[string]string{
 		"BZK_SCM":            project.ScmType,
 		"BZK_SCM_URL":        project.ScmURI,
-		"BZK_SCM_REFERENCE":  startJob.ScmReference,
+		"BZK_SCM_REFERENCE":  refToBuild,
 		"BZK_HOME":           buildFolder,
 		"BZK_SRC":            buildFolder + "/source",
 		"BZK_PROJECT_ID":     project.ID,

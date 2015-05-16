@@ -346,6 +346,16 @@ func (c *MongoConnector) FinishJob(id string, status lib.JobStatus, completed ti
 }
 
 func (c *MongoConnector) AddJobSCMMetadata(id string, metadata *lib.SCMMetadata) error {
+	job, err := c.GetJobByID(id)
+	if err != nil {
+		return err
+	}
+
+	// Do not override SCMMetadata reference if present in database
+	if len(job.SCMMetadata.Reference) > 0 {
+		metadata.Reference = job.SCMMetadata.Reference
+	}
+
 	selector := bson.M{
 		"id": id,
 	}
@@ -354,7 +364,7 @@ func (c *MongoConnector) AddJobSCMMetadata(id string, metadata *lib.SCMMetadata)
 			"scm_metadata": metadata,
 		},
 	}
-	err := c.database.C("jobs").Update(selector, request)
+	err = c.database.C("jobs").Update(selector, request)
 
 	return err
 }
