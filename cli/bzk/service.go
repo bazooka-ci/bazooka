@@ -18,8 +18,6 @@ const (
 	bzkContainerWeb    = "bzk_web"
 )
 
-var allContainers []dockerclient.APIContainers
-
 func startService(cmd *cli.Cmd) {
 	cmd.Spec = "[OPTIONS]"
 
@@ -67,7 +65,7 @@ func startService(cmd *cli.Cmd) {
 			log.Fatal(err)
 		}
 
-		allContainers, err = client.Ps(&docker.PsOptions{
+		allContainers, err := client.Ps(&docker.PsOptions{
 			All: true,
 		})
 		if err != nil {
@@ -75,18 +73,18 @@ func startService(cmd *cli.Cmd) {
 		}
 
 		if config.MongoURI == "" {
-			err = ensureContainerIsStarted(client, getMongoRunOptions())
+			err = ensureContainerIsStarted(client, getMongoRunOptions(), allContainers)
 			if err != nil {
 				log.Fatal(err)
 			}
 		}
 
-		err = ensureContainerIsStarted(client, getServerRunOptions(config.Registry, config.Home, config.DockerSock, config.SCMKey, config.MongoURI, *tag))
+		err = ensureContainerIsStarted(client, getServerRunOptions(config.Registry, config.Home, config.DockerSock, config.SCMKey, config.MongoURI, *tag), allContainers)
 		if err != nil {
 			log.Fatal(err)
 		}
 
-		err = ensureContainerIsStarted(client, getWebRunOptions(config.Registry, *tag))
+		err = ensureContainerIsStarted(client, getWebRunOptions(config.Registry, *tag), allContainers)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -103,7 +101,7 @@ func doRestartService() {
 		log.Fatal(err)
 	}
 
-	allContainers, err = client.Ps(&docker.PsOptions{
+	allContainers, err := client.Ps(&docker.PsOptions{
 		All: true,
 	})
 	if err != nil {
@@ -116,26 +114,26 @@ func doRestartService() {
 	}
 
 	if config.MongoURI == "" {
-		err = ensureContainerIsStarted(client, getMongoRunOptions())
+		err = ensureContainerIsStarted(client, getMongoRunOptions(), allContainers)
 		if err != nil {
 			log.Fatal(err)
 		}
 	}
 
-	tag, err := getTagFromCurrentImages(client)
+	tag, err := getTagFromCurrentImages(client, allContainers)
 
-	err = restartContainer(client, getServerRunOptions(config.Registry, config.Home, config.DockerSock, config.SCMKey, config.MongoURI, tag))
+	err = restartContainer(client, getServerRunOptions(config.Registry, config.Home, config.DockerSock, config.SCMKey, config.MongoURI, tag), allContainers)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	err = restartContainer(client, getWebRunOptions(config.Registry, tag))
+	err = restartContainer(client, getWebRunOptions(config.Registry, tag), allContainers)
 	if err != nil {
 		log.Fatal(err)
 	}
 }
 
-func getTagFromCurrentImages(client *docker.Docker) (string, error) {
+func getTagFromCurrentImages(client *docker.Docker, allContainers []dockerclient.APIContainers) (string, error) {
 	container, err := getContainer(allContainers, bzkContainerServer)
 	if err != nil {
 		// Container not found, using latest by default
@@ -194,7 +192,7 @@ func stopService(cmd *cli.Cmd) {
 			log.Fatal(err)
 		}
 
-		allContainers, err = client.Ps(&docker.PsOptions{
+		allContainers, err := client.Ps(&docker.PsOptions{
 			All: true,
 		})
 		if err != nil {
@@ -202,18 +200,18 @@ func stopService(cmd *cli.Cmd) {
 		}
 
 		if config.MongoURI == "" {
-			err = stopContainer(client, bzkContainerMongo)
+			err = stopContainer(client, bzkContainerMongo, allContainers)
 			if err != nil {
 				log.Fatal(err)
 			}
 		}
 
-		err = stopContainer(client, bzkContainerServer)
+		err = stopContainer(client, bzkContainerServer, allContainers)
 		if err != nil {
 			log.Fatal(err)
 		}
 
-		err = stopContainer(client, bzkContainerWeb)
+		err = stopContainer(client, bzkContainerWeb, allContainers)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -232,7 +230,7 @@ func statusService(cmd *cli.Cmd) {
 			log.Fatal(err)
 		}
 
-		allContainers, err = client.Ps(&docker.PsOptions{
+		allContainers, err := client.Ps(&docker.PsOptions{
 			All: true,
 		})
 		if err != nil {
@@ -241,10 +239,10 @@ func statusService(cmd *cli.Cmd) {
 
 		mongoUp := true
 		if config.MongoURI == "" {
-			mongoUp = getContainerStatus(bzkContainerMongo)
+			mongoUp = getContainerStatus(bzkContainerMongo, allContainers)
 		}
-		serverUp := getContainerStatus(bzkContainerServer)
-		webUp := getContainerStatus(bzkContainerWeb)
+		serverUp := getContainerStatus(bzkContainerServer, allContainers)
+		webUp := getContainerStatus(bzkContainerWeb, allContainers)
 
 		if mongoUp && serverUp && webUp {
 			fmt.Printf("Bazooka service is Up\n")
@@ -255,7 +253,7 @@ func statusService(cmd *cli.Cmd) {
 	}
 }
 
-func getContainerStatus(name string) bool {
+func getContainerStatus(name string, allContainers []dockerclient.APIContainers) bool {
 	container, err := getContainer(allContainers, name)
 	if err != nil {
 		fmt.Printf("Container %s not started\n", name)
@@ -319,7 +317,7 @@ func getConfig() (*Config, error) {
 	return getConfigWithParams("", "", "", "", "")
 }
 
-func restartContainer(client *docker.Docker, options *docker.RunOptions) error {
+func restartContainer(client *docker.Docker, options *docker.RunOptions, allContainers []dockerclient.APIContainers) error {
 	container, err := getContainer(allContainers, options.Name)
 	if err != nil {
 		fmt.Printf("Container %s not found, Starting it\n", options.Name)
@@ -338,7 +336,7 @@ func restartContainer(client *docker.Docker, options *docker.RunOptions) error {
 	return err
 }
 
-func stopContainer(client *docker.Docker, name string) error {
+func stopContainer(client *docker.Docker, name string, allContainers []dockerclient.APIContainers) error {
 	container, err := getContainer(allContainers, name)
 	if err != nil {
 		fmt.Printf("Container %s not found, doing nothing\n", name)
@@ -359,7 +357,7 @@ func stopContainer(client *docker.Docker, name string) error {
 	return nil
 }
 
-func ensureContainerIsStarted(client *docker.Docker, options *docker.RunOptions) error {
+func ensureContainerIsStarted(client *docker.Docker, options *docker.RunOptions, allContainers []dockerclient.APIContainers) error {
 	container, err := getContainer(allContainers, options.Name)
 	if err != nil {
 		fmt.Printf("Container %s not found, Starting it\n", options.Name)
@@ -377,7 +375,7 @@ func ensureContainerIsStarted(client *docker.Docker, options *docker.RunOptions)
 		})
 	}
 	fmt.Printf("Container %s found, but not in the right version, recreating it\n", options.Name)
-	return restartContainer(client, options)
+	return restartContainer(client, options, allContainers)
 }
 
 func getServerEnv(home, dockerSock, scmKey, mongoURI string) map[string]string {
