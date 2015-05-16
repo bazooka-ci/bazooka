@@ -100,12 +100,17 @@ func (c *context) startJob(params map[string]string, startJob lib.StartJob) (*re
 		return nil, err
 	}
 
+	var parametersAsBzkString []lib.BzkString
 	for _, v := range startJob.Parameters {
 		if !strings.Contains(v, "=") {
 			return nil, &errorResponse{400, fmt.Sprintf("Environment variable %v is empty", v)}
 		}
+		name, value := lib.SplitNameValue(v)
+		parametersAsBzkString = append(parametersAsBzkString, lib.BzkString{
+			Name: name, Value: value, Secured: false,
+		})
 	}
-	jobParameters, err := json.Marshal(startJob.Parameters)
+	jobParameters, err := json.Marshal(parametersAsBzkString)
 	if err != nil {
 		return nil, err
 	}
