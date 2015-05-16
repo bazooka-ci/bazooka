@@ -68,6 +68,7 @@ func (c *context) getVariantLog(r *request) (*response, error) {
 
 	if strictJson {
 		w.Write([]byte("["))
+		defer w.Write([]byte("]"))
 	}
 
 	writtenEntries := 0
@@ -79,6 +80,11 @@ func (c *context) getVariantLog(r *request) (*response, error) {
 		writtenEntries++
 	}
 	flushResponse(w)
+
+	if variant.Status != lib.JOB_RUNNING {
+		return nil, nil
+	}
+
 	lastTime := variantLastLogTime(variant, logs)
 
 	for {
@@ -106,9 +112,6 @@ func (c *context) getVariantLog(r *request) (*response, error) {
 			return nil, nil
 		}
 		if variant.Status != lib.JOB_RUNNING {
-			if strictJson {
-				w.Write([]byte("]"))
-			}
 			return nil, nil
 		}
 	}
