@@ -87,12 +87,13 @@ func main() {
 			LocalFolder: paths.host.source,
 			MetaFolder:  paths.host.meta,
 			KeyFile:     paths.host.key,
-			Update: reuseScmCheckout,
+			Update:      reuseScmCheckout,
 			Env:         env,
 		},
 	}
 	err := f.Fetch(containerLogger)
-	if err!= nil {
+	if err != nil && reuseScmCheckout {
+		log.Info("First SCM fetch with bzk.scm.reuse true failed, retrying with a clean SCM fetch")
 		f.Options.Update = false
 		err = f.Fetch(containerLogger)
 	}
