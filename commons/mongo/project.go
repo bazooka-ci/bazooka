@@ -340,9 +340,7 @@ func (c *MongoConnector) FinishJob(id string, status lib.JobStatus, completed ti
 			"completed": completed,
 		},
 	}
-	err := c.database.C("jobs").Update(c.idLike(id), request)
-
-	return err
+	return c.database.C("jobs").Update(c.idLike(id), request)
 }
 
 func (c *MongoConnector) AddJobSCMMetadata(id string, metadata *lib.SCMMetadata) error {
@@ -364,9 +362,7 @@ func (c *MongoConnector) AddJobSCMMetadata(id string, metadata *lib.SCMMetadata)
 			"scm_metadata": metadata,
 		},
 	}
-	err = c.database.C("jobs").Update(selector, request)
-
-	return err
+	return c.database.C("jobs").Update(selector, request)
 }
 
 func (c *MongoConnector) FinishVariant(id string, status lib.JobStatus, completed time.Time) error {
@@ -376,9 +372,7 @@ func (c *MongoConnector) FinishVariant(id string, status lib.JobStatus, complete
 			"completed": completed,
 		},
 	}
-	err := c.database.C("variants").Update(c.idLike(id), request)
-
-	return err
+	return c.database.C("variants").Update(c.idLike(id), request)
 }
 
 func (c *MongoConnector) GetJobByID(id string) (*lib.Job, error) {
