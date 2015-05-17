@@ -11,9 +11,10 @@ angular.module('bzk.variant').config(function($routeProvider) {
 });
 
 angular.module('bzk.variant').controller('VariantController', function($scope, BzkApi, EventBus, DateUtils, $routeParams, $timeout) {
-    var jId;
-    var pId;
-    var vId;
+    var pId = $routeParams.pid,
+        jId = $routeParams.jid,
+        vId = $routeParams.vid;
+
     var refreshPromise;
 
     $scope.$on('$destroy', function() {
@@ -21,32 +22,22 @@ angular.module('bzk.variant').controller('VariantController', function($scope, B
     });
 
     function refresh() {
-        pId = $routeParams.pid;
-        if (pId) {
-            BzkApi.project.get(pId).success(function(project) {
-                $scope.project = project;
-            });
-        }
-        jId = $routeParams.jid;
-        if (jId) {
-            BzkApi.job.get(jId).success(function(job) {
-                $scope.job = job;
-                EventBus.send('jobs.refreshed', [job]);
+        BzkApi.project.get(pId).success(function(project) {
+            $scope.project = project;
+        });
 
-                if (job.status === 'RUNNING') {
-                    refreshPromise = $timeout(refresh, 3000);
-                }
-            });
+        BzkApi.job.get(jId).success(function(job) {
+            $scope.job = job;
+            EventBus.send('jobs.refreshed', [job]);
 
-            BzkApi.job.variants(jId).success(function(variants) {
-                var result = $.grep(variants, function(e) {
-                    return e.id.indexOf($routeParams.vid) === 0;
-                });
-                if (result) {
-                    $scope.variant = result[0];
-                }
-            });
-        }
+            if (job.status === 'RUNNING') {
+                refreshPromise = $timeout(refresh, 3000);
+            }
+        });
+
+        BzkApi.variant.get(vId).success(function(variant) {
+            $scope.variant = variant;
+        });
     }
     refresh();
 });
@@ -74,6 +65,4 @@ angular.module('bzk.variant').controller('VariantLogsController', function($scop
     }
 
     $timeout(loadLogs);
-
-
 });

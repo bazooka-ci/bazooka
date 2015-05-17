@@ -51,6 +51,9 @@ angular.module('bzk.utils').factory('BzkApi', function($http, JsonStream) {
             }
         },
         variant: {
+            get: function(id) {
+                return $http.get('/api/variant/' + id);
+            },
             log: function(vid) {
                 return $http.get('/api/variant/' + vid + '/log');
             },
