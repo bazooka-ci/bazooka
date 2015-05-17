@@ -13,6 +13,10 @@ import (
 	"os"
 )
 
+var (
+	PrivateKey []byte
+)
+
 // Encrypt encrypts some data with the key
 func Encrypt(key, text []byte) ([]byte, error) {
 	block, err := aes.NewCipher(key)
