@@ -1,0 +1,21 @@
+.artifacts {
+	h3 {
+		font-size: 14px;
+		font-weight: bold;
+		margin: 0 0 5px 0;
+	}
+
+	ul {
+		margin: 0;
+		padding: 0;
+		max-height: 100px;
+		overflow: auto;
+		list-style-type: none;
+
+		li {
+			a {
+				display: block;
+			}
+		}
+	}
+}

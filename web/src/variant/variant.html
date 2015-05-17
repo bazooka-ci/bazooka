@@ -1,8 +1,23 @@
 <div id="job">
 	<bzk-breadcrumbs project="project" job="job" variant="variant"></bzk-breadcrumbs>
-
-	<bzk-job-info job="job"></bzk-job-info>
-
+	<div class="container-fluid">
+		<div class="row">
+			<div class="col-md-8">
+				<bzk-job-info job="job"></bzk-job-info>
+			</div>
+			<div class="col-md-4 artifacts" ng-if="variant.artifacts.length">
+				<h3>Artifacts</h3>
+				<ul>
+					<li ng-repeat="artifact in variant.artifacts">
+						<a ng-href="/api/variant/{{variant.id}}/artifacts/{{artifact}}">
+							<span class='glyphicon glyphicon-download'></span>
+							{{artifact}}
+						</a>
+					</li>
+				</ul>
+			</div>
+		</div>
+	</div>
 	<div ng-controller="VariantLogsController">
 		<div class="logs" bzk-log="logger.variant"></div>
 	</div>
