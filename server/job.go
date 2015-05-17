@@ -314,6 +314,7 @@ func (c *context) getJobLog(r *request) (*response, error) {
 
 	if strictJson {
 		w.Write([]byte("["))
+		defer w.Write([]byte("]"))
 	}
 
 	writtenEntries := 0
@@ -325,6 +326,11 @@ func (c *context) getJobLog(r *request) (*response, error) {
 		writtenEntries++
 	}
 	flushResponse(w)
+
+	if job.Status != lib.JOB_RUNNING {
+		return nil, nil
+	}
+
 	lastTime := jobLastLogTime(job, logs)
 
 	for {
@@ -352,9 +358,6 @@ func (c *context) getJobLog(r *request) (*response, error) {
 			return nil, nil
 		}
 		if job.Status != lib.JOB_RUNNING {
-			if strictJson {
-				w.Write([]byte("]"))
-			}
 			return nil, nil
 		}
 	}
