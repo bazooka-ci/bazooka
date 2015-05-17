@@ -8,7 +8,6 @@ script:
   - make errcheck
   - make cli-gox
   - make images
-after_success:
   - make push-bintray
   - make push
 env:
