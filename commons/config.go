@@ -3,9 +3,6 @@ package bazooka
 import (
 	"errors"
 	"fmt"
-	"io/ioutil"
-
-	yaml "gopkg.in/yaml.v2"
 )
 
 const (
@@ -13,12 +10,34 @@ const (
 	travisConfigFile  = ".travis.yml"
 )
 
-func FlattenEnvMap(mapp map[string][]BzkString) []BzkString {
-	res := []BzkString{}
-	for _, value := range mapp {
-		res = append(res, value...)
-	}
-	return res
+type Config struct {
+	Language       string       `yaml:"language,omitempty"`
+	Image          Images       `yaml:"image,omitempty"`
+	Setup          Commands     `yaml:"setup,omitempty"`
+	BeforeInstall  Commands     `yaml:"before_install,omitempty"`
+	Install        Commands     `yaml:"install,omitempty"`
+	BeforeScript   Commands     `yaml:"before_script,omitempty"`
+	Script         Commands     `yaml:"script,omitempty"`
+	AfterScript    Commands     `yaml:"after_script,omitempty"`
+	AfterSuccess   Commands     `yaml:"after_success,omitempty"`
+	AfterFailure   Commands     `yaml:"after_failure,omitempty"`
+	Services       []string     `yaml:"services,omitempty"`
+	Env            []BzkString  `yaml:"env,omitempty"`
+	FromImage      string       `yaml:"from"`
+	Matrix         ConfigMatrix `yaml:"matrix,omitempty"`
+	Archive        Globs        `yaml:"archive,omitempty"`
+	ArchiveSuccess Globs        `yaml:"archive_success,omitempty"`
+	ArchiveFailure Globs        `yaml:"archive_failure,omitempty"`
+}
+
+type Images []string
+
+type Commands []string
+
+type Globs []string
+
+type ConfigMatrix struct {
+	Exclude []map[string]interface{} `yaml:"exclude,omitempty"`
 }
 
 func ResolveConfigFile(source string) (string, error) {
@@ -42,28 +61,17 @@ func ResolveConfigFile(source string) (string, error) {
 	return "", errors.New("Unable to find either .bazooka.yml or .travis.yml at the root of the project")
 }
 
-func Parse(file string, object interface{}) error {
-	b, err := ioutil.ReadFile(file)
-	if err != nil {
-		return err
-	}
-
-	// TODO Add validation
-	return yaml.Unmarshal(b, object)
+func (im *Images) UnmarshalYAML(unmarshal func(interface{}) error) (err error) {
+	*im, err = unmarshalOneOrMany(unmarshal, "Image")
+	return err
 }
 
-func Flush(object interface{}, outputFile string) error {
-	d, err := yaml.Marshal(object)
-	if err != nil {
-		return err
-	}
-	return ioutil.WriteFile(outputFile, d, 0644)
+func (c *Commands) UnmarshalYAML(unmarshal func(interface{}) error) (err error) {
+	*c, err = unmarshalOneOrMany(unmarshal, "Command list (install, script, ...)")
+	return err
 }
 
-func GetEnvMap(envArray []BzkString) map[string][]BzkString {
-	envKeyMap := make(map[string][]BzkString)
-	for _, env := range envArray {
-		envKeyMap[env.Name] = append(envKeyMap[env.Name], env)
-	}
-	return envKeyMap
+func (g *Globs) UnmarshalYAML(unmarshal func(interface{}) error) (err error) {
+	*g, err = unmarshalOneOrMany(unmarshal, "Globs (archive, archive_success, archive_failure)")
+	return err
 }
