@@ -14,9 +14,9 @@ var (
 )
 
 type Project struct {
-	ScmType    string            `bson:"scm_type" json:"scm_type"`
-	ScmURI     string            `bson:"scm_uri" json:"scm_uri"`
-	Name       string            `bson:"name" json:"name"`
+	ScmType    string            `bson:"scm_type" json:"scm_type" validate:"required"`
+	ScmURI     string            `bson:"scm_uri" json:"scm_uri" validate:"required"`
+	Name       string            `bson:"name" json:"name" validate:"required"`
 	ID         string            `bson:"id" json:"id"`
 	HookKey    string            `bson:"hook_key" json:"hook_key"`
 	JobCounter int               `bson:"job_counter" json:"job_counter"`
@@ -405,5 +405,5 @@ type CryptoKey struct {
 }
 
 type StringValue struct {
-	Value string `bson:"value" json:"value"`
+	Value string `bson:"value" json:"value" validate:"required"`
 }

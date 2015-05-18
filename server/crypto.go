@@ -12,10 +12,6 @@ func (c *context) encryptData(r *request) (*response, error) {
 
 	r.parseBody(&v)
 
-	if len(v.Value) == 0 {
-		return badRequest("value is mandatory")
-	}
-
 	_, err := c.Connector.GetProjectById(r.vars["id"])
 	if err != nil {
 		if err.Error() != "not found" {

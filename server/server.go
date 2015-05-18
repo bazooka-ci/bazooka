@@ -5,12 +5,14 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"reflect"
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/gorilla/mux"
 
 	"github.com/bazooka-ci/bazooka/commons/mongo"
 	basic "github.com/haklop/go-http-basic-auth"
+	validator "gopkg.in/bluesuncorp/validator.v5"
 )
 
 const (
@@ -55,9 +57,10 @@ func flushResponse(w http.ResponseWriter) {
 }
 
 type request struct {
-	w    http.ResponseWriter
-	r    *http.Request
-	vars map[string]string
+	w        http.ResponseWriter
+	r        *http.Request
+	vars     map[string]string
+	validate *validator.Validate
 }
 
 func (r *request) parseBody(into interface{}) {
@@ -66,6 +69,26 @@ func (r *request) parseBody(into interface{}) {
 	if err := decoder.Decode(into); err != nil {
 		panic(errorResponse{400, "Unable to decode your json : " + err.Error()})
 	}
+	if err := r.validate.Struct(into); err != nil {
+		for k, v := range err.Errors {
+			switch v.Tag {
+			case "required":
+				pointerValue := reflect.ValueOf(into)
+				structType := reflect.TypeOf(pointerValue.Elem().Interface())
+
+				if fieldData, ok := structType.FieldByName(k); ok {
+					panic(errorResponse{400, fmt.Sprintf("%s is required", fieldData.Tag.Get("json"))})
+				} else {
+					panic(errorResponse{400, fmt.Sprintf("%s is required", v.Field)})
+				}
+
+			default:
+				panic(errorResponse{400, v.Error()})
+			}
+
+		}
+	}
+
 }
 
 func (r *request) rawBody() []byte {
@@ -136,6 +159,8 @@ func (ctx *context) mkAuthHandler(f func(*request) (*response, error)) func(http
 
 func mkHandler(f func(*request) (*response, error)) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		validate := validator.New("validate", validator.BakedInValidators)
+
 		encoder := json.NewEncoder(w)
 
 		dispatchError := func(err error) {
@@ -164,9 +189,10 @@ func mkHandler(f func(*request) (*response, error)) http.Handler {
 		}()
 
 		wrapped := &request{
-			w:    w,
-			r:    r,
-			vars: mux.Vars(r),
+			w:        w,
+			r:        r,
+			vars:     mux.Vars(r),
+			validate: validate,
 		}
 
 		rb, err := f(wrapped)
