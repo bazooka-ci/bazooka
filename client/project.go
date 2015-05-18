@@ -48,6 +48,23 @@ func (c *Project) Jobs(projectID string) ([]lib.Job, error) {
 	return j, err
 }
 
+func (c *Project) Get(projectID string) (*lib.Project, error) {
+	var p lib.Project
+
+	requestURL, err := c.config.getRequestURL(fmt.Sprintf("project/%s", url.QueryEscape(projectID)))
+	if err != nil {
+		return nil, err
+	}
+
+	err = perigee.Get(requestURL, perigee.Options{
+		Results:    &p,
+		OkCodes:    []int{200},
+		SetHeaders: c.config.authenticateRequest,
+	})
+
+	return &p, err
+}
+
 func (c *Project) Create(name, scm, scmUri string) (*lib.Project, error) {
 	project := lib.Project{
 		Name:    name,
