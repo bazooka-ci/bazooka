@@ -70,6 +70,36 @@ func listProjectsCommand(cmd *cli.Cmd) {
 	}
 }
 
+func showProjectCommand(cmd *cli.Cmd) {
+	cmd.Spec = "PROJECT_ID"
+
+	projectID := cmd.String(cli.StringArg{
+		Name: "PROJECT_ID",
+		Desc: "the project id or name",
+	})
+
+	cmd.Action = func() {
+		client, err := NewClient()
+		if err != nil {
+			log.Fatal(err)
+		}
+		res, err := client.Project.Get(*projectID)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		fmt.Printf("Project information:\n")
+		w := tabwriter.NewWriter(os.Stdout, 15, 1, 3, ' ', 0)
+
+		fmt.Fprintf(w, "NAME\t%s\n", res.Name)
+		fmt.Fprintf(w, "ID\t%s\n", res.ID)
+		fmt.Fprintf(w, "SCM TYPE\t%s\n", res.ScmType)
+		fmt.Fprintf(w, "SCM URI\t%s\n", res.ScmURI)
+		fmt.Fprintf(w, "HOOK KEY\t%s\n", res.HookKey)
+		w.Flush()
+	}
+}
+
 func listProjectConfigCommand(cmd *cli.Cmd) {
 	cmd.Spec = "PROJECT_ID"
 
