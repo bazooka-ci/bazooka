@@ -21,7 +21,7 @@
 			<span ng-if="job.scm_metadata.reference">{{job.scm_metadata.commit_id | bzkExcerpt}} ({{job.scm_metadata.reference}})</span>
 			</td>
 			<td>{{job.scm_metadata.author.name}}</td>
-			<td>{{job.scm_metadata.message}}</td>
+			<td><p class="multiline">{{job.scm_metadata.message}}</p></td>
 			<td>{{job | bzkDuration}}</td>
 			<td>-</td>
 		</tr>
@@ -37,7 +37,7 @@
 			<span ng-if="job.scm_metadata.reference">{{job.scm_metadata.commit_id | bzkExcerpt}} ({{job.scm_metadata.reference}})</span>
 			</td>
 			<td>{{job.scm_metadata.author.name}}</td>
-			<td>{{job.scm_metadata.message}}</td>
+			<td><p class="multiline">{{job.scm_metadata.message}}</p></td>
 			<td>{{job | bzkDuration}}</td>
 			<td>{{job | bzkFinished}}</td>
 		</tr>
