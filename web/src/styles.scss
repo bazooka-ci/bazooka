@@ -7,6 +7,7 @@
 @import 'variant/variant';
 @import 'theme/tables';
 @import 'theme/logs';
+@import 'theme/jobs';
 
 * {
   box-sizing: border-box;
@@ -138,7 +139,7 @@ h3 {
         background: lighten($sidebar-bg, 10%);
       }
     }
-    
+
     h2 {
       color: #fff;
       font-size: 24px;
@@ -186,7 +187,7 @@ h3 {
       color: $sidebar-scm;
       font-style: italic;
     }
-  }  
+  }
 }
 
 
