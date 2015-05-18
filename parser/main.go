@@ -342,6 +342,7 @@ func resolveLanguageParser(language string) (string, error) {
 		"python":  "bazooka/parser-python",
 		"node_js": "bazooka/parser-nodejs",
 		"nodejs":  "bazooka/parser-nodejs",
+		"php":     "bazooka/parser-php",
 	}
 	if val, ok := parserMap[language]; ok {
 		return val, nil
