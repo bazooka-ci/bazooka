@@ -17,6 +17,7 @@ import (
 type githubPayload struct {
 	Ref        string       `json:"ref"`
 	HeadCommit githubCommit `json:"head_commit"`
+	Deleted    bool         `json:"deleted"`
 }
 
 type githubCommit struct {
@@ -69,6 +70,10 @@ func (ctx *context) startGithubJob(r *request) (*response, error) {
 	var payload githubPayload
 
 	r.parseBody(&payload)
+
+	if payload.Deleted {
+		return noContent()
+	}
 
 	var ref string
 	if branchRegexp.MatchString(payload.Ref) {
