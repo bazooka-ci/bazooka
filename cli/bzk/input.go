@@ -7,8 +7,8 @@ import (
 	"os"
 )
 
-func interactiveInput(name string) string {
-	fmt.Printf("%s: ", name)
+func interactiveInput(name, defaultValue string) string {
+	fmt.Printf("%s [%s]:", name, defaultValue)
 	bio := bufio.NewReader(os.Stdin)
 	input, isPrefix, err := bio.ReadLine()
 
@@ -18,6 +18,10 @@ func interactiveInput(name string) string {
 
 	if isPrefix {
 		log.Fatalf("%s is too long", name)
+	}
+
+	if len(input) == 0 {
+		return defaultValue
 	}
 
 	return string(input[:])

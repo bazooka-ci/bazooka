@@ -22,7 +22,7 @@ func login(cmd *cli.Cmd) {
 
 	cmd.Action = func() {
 		if len(*email) == 0 {
-			*email = interactiveInput("Email")
+			*email = interactiveInput("Email", "")
 		}
 
 		if len(*password) == 0 {
