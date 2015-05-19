@@ -48,6 +48,7 @@ type Variant struct {
 	Number     int           `bson:"number" json:"number"`
 	ID         string        `bson:"id" json:"id"`
 	Metas      *VariantMetas `bson:"metas" json:"metas"`
+	Artifacts  []string      `bson:"artifacts" json:"artifacts"`
 }
 
 type VariantMetas []*VariantMeta

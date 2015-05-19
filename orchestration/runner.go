@@ -1,6 +1,7 @@
 package main
 
 import (
+	"path/filepath"
 	"bufio"
 	"fmt"
 	"os"
@@ -24,7 +25,6 @@ var (
 
 type Runner struct {
 	Variants            []*variantData
-	ArtifactsFolderBase string
 	Env                 map[string]string
 	Mongo               *mongo.MongoConnector
 	client              *docker.Docker
@@ -91,14 +91,15 @@ func (r *Runner) runContainer(logger Logger, vd *variantData) error {
 		serviceContainers = append(serviceContainers, serviceContainer)
 	}
 
-	artifactsFolder := fmt.Sprintf("%s/%s", r.ArtifactsFolderBase, vd.variant.ID)
+	hostArtifactsFolder := fmt.Sprintf("%s/%s", paths.host.artifacts, vd.variant.ID)
+	containerArtifactsFolder := fmt.Sprintf("%s/%s", paths.container.artifacts, vd.variant.ID)
 
 	container, err := r.client.Run(&docker.RunOptions{
 		Image: vd.imageTag,
 		Links: containerLinks,
 		VolumeBinds: []string{
 			fmt.Sprintf("%s:/var/run/docker.sock", paths.host.dockerSock),
-			fmt.Sprintf("%s:/artifacts", artifactsFolder),
+			fmt.Sprintf("%s:/artifacts", hostArtifactsFolder),
 		},
 		Env:    whiteListEnvVars(injectVariantInEnv(vd.variant.Number, r.Env)),
 		Detach: true,
@@ -141,6 +142,30 @@ func (r *Runner) runContainer(logger Logger, vd *variantData) error {
 	} else {
 		vd.variant.Status = commons.JOB_FAILED
 	}
+
+	// Capture the artifacts list
+	if err := filepath.Walk(containerArtifactsFolder, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		switch {
+		case path == containerArtifactsFolder:
+			return nil
+		case info.IsDir():
+			// nop
+		default:
+			relPath, err:=filepath.Rel(containerArtifactsFolder, path)
+			if err != nil {
+				return err
+			}
+			vd.variant.Artifacts = append(vd.variant.Artifacts, relPath)
+		}
+		return nil
+	}); err != nil {
+		return fmt.Errorf("Error while walking the artifacts: %v",err)
+	}
+
 	return nil
 }
 

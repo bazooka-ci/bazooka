@@ -365,11 +365,12 @@ func (c *MongoConnector) AddJobSCMMetadata(id string, metadata *lib.SCMMetadata)
 	return c.database.C("jobs").Update(selector, request)
 }
 
-func (c *MongoConnector) FinishVariant(id string, status lib.JobStatus, completed time.Time) error {
+func (c *MongoConnector) FinishVariant(id string, status lib.JobStatus, completed time.Time, artifacts []string) error {
 	request := bson.M{
 		"$set": bson.M{
 			"status":    status,
 			"completed": completed,
+			"artifacts": artifacts,
 		},
 	}
 	return c.database.C("variants").Update(c.idLike(id), request)

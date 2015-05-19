@@ -6,8 +6,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/gorilla/mux"
-
 	"github.com/bazooka-ci/bazooka/commons/mongo"
 
 	log "github.com/Sirupsen/logrus"
@@ -124,26 +122,20 @@ func variantLastLogTime(variant *lib.Variant, logs []lib.LogEntry) time.Time {
 	return logs[len(logs)-1].Time
 }
 
-func (c *context) getVariantArtifacts(w http.ResponseWriter, r *http.Request) {
-	vid := mux.Vars(r)["id"]
+func (c *context) getVariantArtifact(r *request) (*response, error) {
+	vid := r.vars["id"]
+
 	variant, err := c.Connector.GetVariantByID(vid)
 
 	if err != nil {
-		w.Header().Set("Content-Type", "application/json; charset=utf-8")
-		encoder := json.NewEncoder(w)
-
 		if err.Error() != "not found" {
-			w.WriteHeader(500)
-			encoder.Encode(err)
-			return
+			return nil, err
 		}
-
-		w.WriteHeader(404)
-		encoder.Encode(fmt.Errorf("variant not found"))
-		return
+		return notFound("variant not found")
 	}
 
 	buildFolder := fmt.Sprintf("/bazooka/build/%s/%s/artifacts/%s", variant.ProjectID, variant.JobID, variant.ID)
 	prefix := fmt.Sprintf("/variant/%s/artifacts/", vid)
-	http.StripPrefix(prefix, http.FileServer(http.Dir(buildFolder))).ServeHTTP(w, r)
+	http.StripPrefix(prefix, http.FileServer(http.Dir(buildFolder))).ServeHTTP(r.w, r.r)
+	return nil, nil
 }

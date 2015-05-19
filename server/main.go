@@ -86,7 +86,7 @@ func main() {
 
 	r.HandleFunc("/variant/{id}", ctx.mkAuthHandler(ctx.getVariant)).Methods("GET")
 	r.HandleFunc("/variant/{id}/log", ctx.mkAuthHandler(ctx.getVariantLog)).Methods("GET")
-	r.HandleFunc("/variant/{id}/artifacts/{path:.*}", ctx.getVariantArtifacts).Methods("GET")
+	r.HandleFunc("/variant/{id}/artifacts/{path:.*}", ctx.mkAuthHandler(ctx.getVariantArtifact)).Methods("GET")
 
 	r.HandleFunc("/image", ctx.mkAuthHandler(ctx.getImages)).Methods("GET")
 	r.HandleFunc("/image/{name:.*}", ctx.mkAuthHandler(ctx.setImage)).Methods("PUT")

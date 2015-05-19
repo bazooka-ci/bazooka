@@ -167,7 +167,7 @@ func main() {
 	for _, vd := range parsedVariants {
 		switch vd.variant.Status {
 		case lib.JOB_ERRORED:
-			if err := connector.FinishVariant(vd.variant.ID, lib.JOB_ERRORED, vd.variant.Completed); err != nil {
+			if err := connector.FinishVariant(vd.variant.ID, lib.JOB_ERRORED, vd.variant.Completed, nil); err != nil {
 				log.Fatal(err)
 			}
 		default:
@@ -177,7 +177,6 @@ func main() {
 
 	r := &Runner{
 		Variants:            variantsToBuild,
-		ArtifactsFolderBase: paths.host.artifacts,
 		Env:                 env,
 		Mongo:               connector,
 	}
@@ -192,7 +191,7 @@ func main() {
 	}
 
 	for _, vd := range variantsToBuild {
-		if err := connector.FinishVariant(vd.variant.ID, vd.variant.Status, vd.variant.Completed); err != nil {
+		if err := connector.FinishVariant(vd.variant.ID, vd.variant.Status, vd.variant.Completed, vd.variant.Artifacts); err != nil {
 			log.Fatal(err)
 		}
 	}
