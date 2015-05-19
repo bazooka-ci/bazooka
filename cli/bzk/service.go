@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"os/user"
 	"strings"
 
 	"github.com/jawher/mow.cli"
@@ -274,16 +275,23 @@ func getConfigWithParams(bzkHome, dockerSock, registry, scmKey, mongoURI string)
 	if err != nil {
 		return nil, fmt.Errorf("Unable to load Bazooka config, reason is: %v\n", err)
 	}
+	currentUser, errCurrentUser := user.Current()
+
 	if len(bzkHome) == 0 {
 		if len(config.Home) == 0 {
-			config.Home = interactiveInput("Bazooka Home Folder")
+			defaultHome := ""
+			if errCurrentUser == nil {
+				defaultHome = currentUser.HomeDir + "/bazooka"
+			}
+
+			config.Home = interactiveInput("Bazooka Home Folder", defaultHome)
 		}
 	} else {
 		config.Home = bzkHome
 	}
 	if len(dockerSock) == 0 {
 		if len(config.DockerSock) == 0 {
-			config.DockerSock = interactiveInput("Docker Socket path")
+			config.DockerSock = interactiveInput("Docker Socket path", "/var/run/docker.sock")
 		}
 	} else {
 		config.DockerSock = dockerSock
@@ -291,7 +299,12 @@ func getConfigWithParams(bzkHome, dockerSock, registry, scmKey, mongoURI string)
 
 	if len(scmKey) == 0 {
 		if len(config.SCMKey) == 0 {
-			config.SCMKey = interactiveInput("Bazooka Default SCM private key")
+			defaultSCMKey := ""
+			if errCurrentUser == nil {
+				defaultSCMKey = currentUser.HomeDir + "/.ssh/id_rsa"
+			}
+
+			config.SCMKey = interactiveInput("Bazooka Default SCM private key", defaultSCMKey)
 		}
 	} else {
 		config.SCMKey = scmKey

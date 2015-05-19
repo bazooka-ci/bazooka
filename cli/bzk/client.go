@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"runtime"
 
 	"github.com/bazooka-ci/bazooka/client"
 )
@@ -23,7 +24,11 @@ func NewClient() (*client.Client, error) {
 func checkServerURI(endpoint string, cliConfig *Config) string {
 	if len(endpoint) == 0 {
 		if len(cliConfig.ServerURI) == 0 {
-			endpoint = interactiveInput("Bazooka Server URI")
+			var defaultURI = "http://localhost:3000"
+			if runtime.GOOS == "darwin" {
+				defaultURI = "http://192.168.59.103:3000"
+			}
+			endpoint = interactiveInput("Bazooka Server URI", defaultURI)
 			cliConfig.ServerURI = endpoint
 
 			if err := saveConfig(cliConfig); err != nil {
