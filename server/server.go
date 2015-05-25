@@ -8,8 +8,8 @@ import (
 	"reflect"
 
 	log "github.com/Sirupsen/logrus"
+	"github.com/bazooka-ci/bazooka/server/db"
 	"github.com/gorilla/mux"
-
 	basic "github.com/haklop/go-http-basic-auth"
 	validator "gopkg.in/bluesuncorp/validator.v5"
 )
@@ -91,6 +91,15 @@ type response struct {
 	Headers map[string]string
 }
 
+func translateError(err error) (*response, error) {
+	switch err.(type) {
+	case *db.NotFoundError:
+		return nil, &errorResponse{404, err.Error()}
+	default:
+		return nil, err
+	}
+}
+
 func ok(payload interface{}) (*response, error) {
 	return &response{
 		Code:    200,
@@ -111,6 +120,7 @@ func created(payload interface{}, location string) (*response, error) {
 		map[string]string{"Location": location},
 	}, nil
 }
+
 func accepted(payload interface{}, location string) (*response, error) {
 	return &response{
 		202,
@@ -118,6 +128,7 @@ func accepted(payload interface{}, location string) (*response, error) {
 		map[string]string{"Location": location},
 	}, nil
 }
+
 func badRequest(msg string) (*response, error) {
 	return nil, &errorResponse{400, msg}
 }
@@ -136,6 +147,12 @@ func unauthorized() (*response, error) {
 
 func (ctx *context) mkAuthHandler(f func(*request) (*response, error)) func(http.ResponseWriter, *http.Request) {
 	return ctx.authenticationHandler(mkHandler(f))
+}
+
+func (ctx *context) mkInternalApiHandler(f func(*request) (*response, error)) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		mkHandler(f).ServeHTTP(w, r)
+	}
 }
 
 func mkHandler(f func(*request) (*response, error)) http.Handler {
@@ -213,12 +230,6 @@ func (ctx *context) authenticationHandler(next http.Handler) func(http.ResponseW
 		} else {
 			next.ServeHTTP(w, r)
 		}
-	}
-}
-
-func (ctx *context) mkInternalApiHandler(f func(*request) (*response, error)) func(http.ResponseWriter, *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
-		mkHandler(f).ServeHTTP(w, r)
 	}
 }
 

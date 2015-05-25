@@ -3,7 +3,7 @@ package main
 import (
 	log "github.com/Sirupsen/logrus"
 	lib "github.com/bazooka-ci/bazooka/commons"
-	"github.com/bazooka-ci/bazooka/commons/mongo"
+	"github.com/bazooka-ci/bazooka/server/db"
 )
 
 func (c *context) setKey(r *request) (*response, error) {
@@ -39,7 +39,7 @@ func (c *context) setKey(r *request) (*response, error) {
 func (c *context) getKey(r *request) (*response, error) {
 	key, err := c.connector.GetProjectKey(r.vars["id"])
 	if err != nil {
-		if _, ok := err.(*mongo.NotFoundError); ok {
+		if _, ok := err.(*db.NotFoundError); ok {
 			return notFound("key not found")
 		}
 		return nil, err

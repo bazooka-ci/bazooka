@@ -6,63 +6,40 @@ import (
 	"time"
 
 	lib "github.com/bazooka-ci/bazooka/commons"
-	"github.com/bazooka-ci/bazooka/commons/mongo"
+	"github.com/bazooka-ci/bazooka/server/db"
+	"github.com/iwanbk/gobeanstalk"
 )
 
 const (
-	BazookaEnvApiUrl     = "BZK_API_URL"
-	BazookaEnvSyslogUrl  = "BZK_SYSLOG_URL"
-	BazookaEnvDbUrl      = "BZK_DB_URL"
-	BazookaEnvNetwork    = "BZK_NETWORK"
-	BazookaEnvSCMKeyfile = "BZK_SCM_KEYFILE"
-	BazookaEnvHome       = "BZK_HOME"
-	BazookaEnvDockerSock = "BZK_DOCKERSOCK"
-
-	DockerSock     = "/var/run/docker.sock"
-	DockerEndpoint = "unix://" + DockerSock
-	BazookaHome    = "/bazooka"
+	BazookaEnvQueueUrl = "BZK_QUEUE_URL"
+	BazookaEnvDbUrl    = "BZK_DB_URL"
 )
 
 type context struct {
-	apiUrl    string
-	syslogUrl string
-	dbUrl     string
-	network   string
-	connector *mongo.MongoConnector
-	paths     paths
-}
-
-type paths struct {
-	home           path
-	scmKey         path
-	cryptoKey      path
-	dockerSock     path
-	dockerEndpoint path
-}
-
-type path struct {
-	container string
-	host      string
+	queue     *gobeanstalk.Conn
+	connector *db.MongoConnector
 }
 
 func initContext() *context {
-	c := &context{
-		apiUrl:    os.Getenv(BazookaEnvApiUrl),
-		syslogUrl: os.Getenv(BazookaEnvSyslogUrl),
-		dbUrl:     os.Getenv(BazookaEnvDbUrl),
-		network:   os.Getenv(BazookaEnvNetwork),
-		paths: paths{
-			home:           path{BazookaHome, os.Getenv(BazookaEnvHome)},
-			scmKey:         path{"", os.Getenv(BazookaEnvSCMKeyfile)},
-			dockerSock:     path{DockerSock, os.Getenv(BazookaEnvDockerSock)},
-			dockerEndpoint: path{DockerEndpoint, "unix://" + os.Getenv(BazookaEnvDockerSock)},
-		},
+	queueUrl := os.Getenv(BazookaEnvQueueUrl)
+	if err := lib.WaitForTcpConnection(queueUrl, 500*time.Millisecond, 30*time.Second); err != nil {
+		log.Fatalf("Cannot connect to the queue (%s): %v", queueUrl, err)
+	}
+	queue, err := gobeanstalk.Dial(queueUrl)
+	if err != nil {
+		log.Fatalf("Cannot connect to the queue: %v", err)
 	}
 
-	if err := lib.WaitForTcpConnection(c.dbUrl, 100*time.Millisecond, 5*time.Second); err != nil {
-		log.Fatalf("Cannot connect to the database: %v", err)
+	dbUrl := os.Getenv(BazookaEnvDbUrl)
+	if err := lib.WaitForTcpConnection(dbUrl, 500*time.Millisecond, 30*time.Second); err != nil {
+		log.Fatalf("Cannot connect to the database (%s): %v", dbUrl, err)
 	}
-	c.connector = mongo.NewConnector(c.dbUrl)
+
+	c := &context{
+		queue:     queue,
+		connector: db.NewConnector(dbUrl),
+	}
+
 	return c
 }
 

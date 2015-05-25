@@ -8,14 +8,11 @@ import (
 	log "github.com/Sirupsen/logrus"
 	lib "github.com/bazooka-ci/bazooka/commons"
 	bzklog "github.com/bazooka-ci/bazooka/commons/logs"
-	docker "github.com/bywan/go-dockercommand"
 )
 
 func init() {
 	log.SetFormatter(&bzklog.BzkFormatter{})
 }
-
-type Logger func(image string, variant string, container *docker.Container)
 
 func main() {
 	// TODO add validation

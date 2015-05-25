@@ -8,20 +8,36 @@ import (
 	"time"
 )
 
-func (c *context) finishJob(r *request) (*response, error) {
-	var f lib.FinishData
-	r.parseBody(&f)
-	if f.Time.IsZero() {
-		f.Time = time.Now()
-	}
-	if err := c.connector.FinishJob(r.vars["id"], f.Status, f.Time); err != nil {
+func (c *context) jobStarted(r *request) (*response, error) {
+	if err := c.connector.MarkJobAsStarted(r.vars["id"], time.Now()); err != nil {
 		return nil, err
 	}
 
 	return noContent()
 }
 
-func (c *context) finishVariant(r *request) (*response, error) {
+func (c *context) jobFinished(r *request) (*response, error) {
+	var f lib.FinishData
+	r.parseBody(&f)
+	if f.Time.IsZero() {
+		f.Time = time.Now()
+	}
+	if err := c.connector.MarkJobAsFinished(r.vars["id"], f.Status, f.Time); err != nil {
+		return nil, err
+	}
+
+	return noContent()
+}
+
+func (c *context) jobReset(r *request) (*response, error) {
+	if err := c.connector.ResetJob(r.vars["id"]); err != nil {
+		return nil, err
+	}
+
+	return noContent()
+}
+
+func (c *context) variantFinished(r *request) (*response, error) {
 	var f lib.FinishData
 	r.parseBody(&f)
 	if f.Time.IsZero() {

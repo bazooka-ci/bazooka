@@ -14,10 +14,9 @@ import (
 )
 
 const (
-	BazookaConfigFile       = ".bazooka.yml"
-	TravisConfigFile        = ".travis.yml"
-	MX_ENV_PREFIX           = "env::"
-	BazookaEnvJobParameters = "BZK_JOB_PARAMETERS"
+	BazookaConfigFile = ".bazooka.yml"
+	TravisConfigFile  = ".travis.yml"
+	MX_ENV_PREFIX     = "env::"
 )
 
 func init() {
@@ -27,7 +26,6 @@ func init() {
 	if err != nil {
 		log.Fatal(err)
 	}
-
 }
 
 func main() {

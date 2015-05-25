@@ -27,6 +27,21 @@ func (in *Internal) GetProjectCryptoKey(projectID string) (*lib.CryptoKey, error
 	return &cryptoKey, err
 }
 
+func (in *Internal) MarkJobAsStarted(jobID string) error {
+	requestURL, err := in.config.getRequestURL(fmt.Sprintf("_/job/%s/start", url.QueryEscape(jobID)))
+	if err != nil {
+		return err
+	}
+
+	return perigee.Post(requestURL, perigee.Options{
+		ReqBody: lib.FinishData{
+			Status: lib.JOB_RUNNING,
+		},
+		OkCodes:    []int{204},
+		SetHeaders: in.config.authenticateRequest,
+	})
+}
+
 func (in *Internal) MarkJobAsFinished(jobID string, status lib.JobStatus) error {
 	requestURL, err := in.config.getRequestURL(fmt.Sprintf("_/job/%s/finish", url.QueryEscape(jobID)))
 	if err != nil {
@@ -37,6 +52,18 @@ func (in *Internal) MarkJobAsFinished(jobID string, status lib.JobStatus) error 
 		ReqBody: lib.FinishData{
 			Status: status,
 		},
+		OkCodes:    []int{204},
+		SetHeaders: in.config.authenticateRequest,
+	})
+}
+
+func (in *Internal) ResetJob(jobID string) error {
+	requestURL, err := in.config.getRequestURL(fmt.Sprintf("_/job/%s/reset", url.QueryEscape(jobID)))
+	if err != nil {
+		return err
+	}
+
+	return perigee.Post(requestURL, perigee.Options{
 		OkCodes:    []int{204},
 		SetHeaders: in.config.authenticateRequest,
 	})
@@ -85,4 +112,8 @@ func (in *Internal) AddVariant(variant *lib.Variant) (*lib.Variant, error) {
 		SetHeaders: in.config.authenticateRequest,
 	})
 	return &createdVariant, err
+}
+
+func (in *Internal) Heartbeat() {
+
 }

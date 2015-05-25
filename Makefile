@@ -1,6 +1,6 @@
 default: images
 
-MODULES = cli orchestration parser server web
+MODULES = cli orchestration parser server worker web
 
 .PHONY: commons modules $(MODULES)
 
@@ -16,13 +16,14 @@ $(MODULES):
 	$(MAKE) -C $@
 
 cli: client commons
-orchestration: commons
+orchestration: client commons
 parser: commons
 server: commons
+worker: client commons
 
-devimages: server parser orchestration
+devimages: server parser orchestration worker
 
-images: server parser orchestration web
+images: server parser orchestration worker web
 
 setup:
 	./scripts/dev-setup.sh
@@ -46,3 +47,7 @@ push-bintray:
 cli-gox:
 	gox -os="linux" github.com/bazooka-ci/bazooka/cli/bzk
 	gox -os="darwin" github.com/bazooka-ci/bazooka/cli/bzk
+
+git-server:
+	-docker rm -vf bzk_git_server
+	docker run -d --name bzk_git_server -p 9418:9418 -v /Users/jawher/temp/bzk-example:/repo bazooka/e2e-git

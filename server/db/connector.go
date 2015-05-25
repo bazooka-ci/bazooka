@@ -1,4 +1,4 @@
-package mongo
+package db
 
 import (
 	"crypto/rand"
@@ -9,10 +9,7 @@ import (
 )
 
 const (
-	bazookaEnvMongoAddr = "MONGO_PORT_27017_TCP_ADDR"
-	bazookaEnvMongoPort = "MONGO_PORT_27017_TCP_PORT"
-	bazookaEnvMongoURL  = "BZK_MONGO_URL"
-	bazookaMongoBase    = "bazooka"
+	bazookaMongoBase = "bazooka"
 )
 
 type MongoConnector struct {

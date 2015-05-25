@@ -1,4 +1,4 @@
-package mongo
+package db
 
 import (
 	lib "github.com/bazooka-ci/bazooka/commons"

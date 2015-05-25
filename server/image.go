@@ -15,12 +15,12 @@ func (c *context) getImage(r *request) (*response, error) {
 }
 
 func (c *context) getImages(r *request) (*response, error) {
-	variants, err := c.connector.GetImages()
+	images, err := c.connector.GetImages()
 	if err != nil {
 		return nil, err
 	}
 
-	return ok(&variants)
+	return ok(&images)
 }
 
 func (c *context) setImage(r *request) (*response, error) {

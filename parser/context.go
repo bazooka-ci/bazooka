@@ -21,6 +21,7 @@ const (
 	BazookaEnvDockerSock    = "BZK_DOCKERSOCK"
 	BazookaEnvProjectID     = "BZK_PROJECT_ID"
 	BazookaEnvJobID         = "BZK_JOB_ID"
+	BazookaEnvJobParameters = "BZK_JOB_PARAMETERS"
 )
 
 type context struct {

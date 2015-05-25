@@ -4,17 +4,9 @@ server:
   ports:
   - "3000:3000"
   - "3001:3001"
-  volumes:
-  - "${BZK_HOME}:/bazooka"
-  - "/var/run/docker.sock:/var/run/docker.sock"
   environment:
-  - "BZK_DOCKERSOCK=/var/run/docker.sock"
-  - "BZK_API_URL=http://bzk_server:3000"
-  - "BZK_SYSLOG_URL=${BZK_SYSLOG_URL}"
   - "BZK_DB_URL=bzk_db:27017"
-  - "BZK_NETWORK=bazookacompose"
-  - "BZK_SCM_KEYFILE=${BZK_SCM_KEYFILE}"
-  - "BZK_HOME=${BZK_HOME}"
+  - "BZK_QUEUE_URL=bzk_queue:11300"
 
 web:
   container_name: bzk_web
@@ -24,6 +16,24 @@ web:
   environment:
   - "BZK_SERVER_HOST=bzk_server"
 
+worker:
+  image: bazooka/worker
+  volumes:
+  - "/Users/jawher/temp/bazooka-home:/bazooka"
+  - "/var/run/docker.sock:/var/run/docker.sock"
+  environment:
+  - "BZK_DOCKERSOCK=/var/run/docker.sock"
+  - "BZK_QUEUE_URL=bzk_queue:11300"
+  - "BZK_API_URL=http://bzk_server:3000"
+  - "BZK_SYSLOG_URL=${BZK_SYSLOG_URL}"
+  - "BZK_NETWORK=bazookacompose"
+  - "BZK_SCM_KEYFILE=/Users/jawher/.ssh/id_rsa"
+  - "BZK_HOME=/Users/jawher/temp/bazooka-home/"
+
 db:
   container_name: bzk_db
   image: "mongo:3.1"
+
+queue:
+  container_name: bzk_queue
+  image: "jawher/beanstalkd"

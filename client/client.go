@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+
+	"github.com/racker/perigee"
 )
 
 type Config struct {
@@ -35,6 +37,15 @@ func New(config *Config) (*Client, error) {
 		User:     &User{config},
 		Internal: &Internal{config},
 	}, nil
+}
+
+func IsNotFound(err error) bool {
+	switch err := err.(type) {
+	case *perigee.UnexpectedResponseCodeError:
+		return err.Actual == http.StatusNotFound
+	default:
+		return false
+	}
 }
 
 func (c *Config) authenticateRequest(r *http.Request) error {

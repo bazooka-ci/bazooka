@@ -1,4 +1,4 @@
-package mongo
+package db
 
 import (
 	"fmt"
@@ -288,11 +288,35 @@ func (c *MongoConnector) SetJobOrchestrationId(id string, orchestrationId string
 	return err
 }
 
-func (c *MongoConnector) FinishJob(id string, status lib.JobStatus, completed time.Time) error {
+func (c *MongoConnector) MarkJobAsStarted(id string, started time.Time) error {
+	request := bson.M{
+		"$set": bson.M{
+			"status":  lib.JOB_RUNNING,
+			"started": started,
+		},
+	}
+	return c.database.C("jobs").Update(c.fieldStartsWith("id", id), request)
+}
+
+func (c *MongoConnector) MarkJobAsFinished(id string, status lib.JobStatus, completed time.Time) error {
 	request := bson.M{
 		"$set": bson.M{
 			"status":    status,
 			"completed": completed,
+		},
+	}
+	return c.database.C("jobs").Update(c.fieldStartsWith("id", id), request)
+}
+
+func (c *MongoConnector) ResetJob(id string) error {
+	request := bson.M{
+		"$set": bson.M{
+			"status": lib.JOB_PENDING,
+		},
+		"$unset": bson.M{
+			"started":      "",
+			"completed":    "",
+			"scm_metadata": "",
 		},
 	}
 	return c.database.C("jobs").Update(c.fieldStartsWith("id", id), request)

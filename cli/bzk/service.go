@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"log"
-	"os/user"
 	"strings"
 
 	"github.com/jawher/mow.cli"
@@ -18,53 +17,39 @@ const (
 	bzkContainerMongo  = "bzk_db"
 	bzkContainerServer = "bzk_server"
 	bzkContainerWeb    = "bzk_web"
+	bzkContainerQueue  = "bzk_queue"
 )
 
 func startService(cmd *cli.Cmd) {
 	cmd.Spec = "[OPTIONS]"
 
-	bzkHome := cmd.String(cli.StringOpt{
-		Name:   "home",
-		Desc:   "Bazooka's work directory",
-		EnvVar: "BZK_HOME",
-	})
-	scmKey := cmd.String(cli.StringOpt{
-		Name:   "scm-key",
-		Desc:   "Location of the private SSH Key Bazooka will use for SCM Fetch",
-		EnvVar: "BZK_SCM_KEYFILE",
-	})
-	syslogURL := cmd.String(cli.StringOpt{
-		Name:   "syslog-url",
-		Desc:   "URL of the bazooka server syslog endpoint",
-		EnvVar: "BZK_SYSLOG_URL",
-	})
 	dbURL := cmd.String(cli.StringOpt{
 		Name:   "db-url",
 		Desc:   "URL of a MongoDB server",
 		EnvVar: "BZK_DB_URL",
 	})
+	queueURL := cmd.String(cli.StringOpt{
+		Name:   "queue-url",
+		Desc:   "URL of the job queue",
+		EnvVar: "BZK_QUEUE_URL",
+	})
 	registry := cmd.String(cli.StringOpt{
 		Name:   "registry",
 		EnvVar: "BZK_REGISTRY",
-	})
-	dockerSock := cmd.String(cli.StringOpt{
-		Name:   "docker-sock",
-		Desc:   "Location of the Docker unix socket, usually /var/run/docker.sock",
-		EnvVar: "BZK_DOCKERSOCK",
 	})
 	tag := cmd.String(cli.StringOpt{
 		Name: "tag",
 		Desc: "The bazooka version to run",
 	})
 
-	cmd.Action = doStartService(tag, bzkHome, dockerSock, registry, scmKey, syslogURL, dbURL)
+	cmd.Action = doStartService(tag, registry, dbURL, queueURL)
 }
 
-func doStartService(version, bzkHome, dockerSock, registry, scmKey, syslogURL, dbURL *string) func() {
+func doStartService(version, registry, dbURL, queueURL *string) func() {
 	return func() {
 		ensureNetworkExists()
 
-		config, err := getConfigWithParams(*version, *bzkHome, *dockerSock, *registry, *scmKey, *syslogURL, *dbURL)
+		config, err := getConfigWithParams(*version, *registry, *dbURL, *queueURL)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -83,6 +68,13 @@ func doStartService(version, bzkHome, dockerSock, registry, scmKey, syslogURL, d
 
 		if config.DbURL == "" {
 			err = startContainer(client, getMongoRunOptions(), allContainers)
+			if err != nil {
+				log.Fatal(err)
+			}
+		}
+
+		if config.QueueURL == "" {
+			err = startContainer(client, getQueueRunOptions(), allContainers)
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -168,7 +160,7 @@ func doStopService() func() {
 }
 
 func restartService(cmd *cli.Cmd) {
-	cmd.Spec = "[-x [-swd]]"
+	cmd.Spec = "[-x [-swdq]]"
 
 	recreate := cmd.Bool(cli.BoolOpt{
 		Name:      "x recreate",
@@ -194,11 +186,17 @@ func restartService(cmd *cli.Cmd) {
 		Value:     false,
 		HideValue: true,
 	})
+	recreateQueue := cmd.Bool(cli.BoolOpt{
+		Name:      "q queue",
+		Desc:      "Recreate existing queue container",
+		Value:     false,
+		HideValue: true,
+	})
 
-	cmd.Action = doRestartService(recreate, recreateServer, recreateWeb, recreateDatabase)
+	cmd.Action = doRestartService(recreate, recreateServer, recreateWeb, recreateDatabase, recreateQueue)
 }
 
-func doRestartService(recreate, recreateServer, recreateWeb, recreateDatabase *bool) func() {
+func doRestartService(recreate, recreateServer, recreateWeb, recreateDatabase, recreateQueue *bool) func() {
 	return func() {
 		doStopService()()
 
@@ -220,7 +218,7 @@ func doRestartService(recreate, recreateServer, recreateWeb, recreateDatabase *b
 		}
 
 		if *recreate {
-			if !*recreateDatabase && !*recreateServer && !*recreateWeb {
+			if !*recreateQueue && !*recreateDatabase && !*recreateServer && !*recreateWeb {
 				*recreateServer = true
 				*recreateWeb = true
 			}
@@ -245,8 +243,15 @@ func doRestartService(recreate, recreateServer, recreateWeb, recreateDatabase *b
 					log.Fatal(err)
 				}
 			}
+
+			if *recreateQueue {
+				err := destroyContainer(client, bzkContainerQueue, allContainers)
+				if err != nil {
+					log.Fatal(err)
+				}
+			}
 		}
-		doStartService(&config.Tag, &config.Home, &config.DockerSock, &config.Registry, &config.SCMKey, &config.SyslogURL, &config.DbURL)()
+		doStartService(&config.Tag, &config.Registry, &config.DbURL, &config.QueueURL)()
 	}
 }
 
@@ -273,10 +278,14 @@ func statusService(cmd *cli.Cmd) {
 		if config.DbURL == "" {
 			mongoUp = getContainerStatus(bzkContainerMongo, allContainers)
 		}
+		queueUp := true
+		if config.QueueURL == "" {
+			queueUp = getContainerStatus(bzkContainerQueue, allContainers)
+		}
 		serverUp := getContainerStatus(bzkContainerServer, allContainers)
 		webUp := getContainerStatus(bzkContainerWeb, allContainers)
 
-		if mongoUp && serverUp && webUp {
+		if queueUp && mongoUp && serverUp && webUp {
 			fmt.Printf("Bazooka service is Up\n")
 		} else {
 			fmt.Printf("Bazooka service is Down\n")
@@ -319,9 +328,9 @@ func upgradeService(cmd *cli.Cmd) {
 
 		fmt.Printf("Bazooka Images have been upgraded, let's restart bazooka\n")
 
-		// Recreate containers except database
-		recreate, recreateServer, recreateWeb, recreateDatabase := true, true, true, false
-		doRestartService(&recreate, &recreateServer, &recreateWeb, &recreateDatabase)()
+		// Recreate containers except database and queue
+		recreate, recreateServer, recreateWeb, recreateDatabase, recreateQueue := true, true, true, false, false
+		doRestartService(&recreate, &recreateServer, &recreateWeb, &recreateDatabase, &recreateQueue)()
 	}
 }
 
@@ -341,48 +350,18 @@ func getContainerStatus(name string, allContainers []dockerclient.APIContainers)
 
 }
 
-func getConfigWithParams(tag, bzkHome, dockerSock, registry, scmKey, syslogURL, dbURL string) (*Config, error) {
+func getConfigWithParams(tag, registry, dbURL, queueURL string) (*Config, error) {
 	config, err := loadConfig()
 	if err != nil {
 		return nil, fmt.Errorf("Unable to load Bazooka config, reason is: %v\n", err)
 	}
-	currentUser, errCurrentUser := user.Current()
-
-	if len(bzkHome) == 0 {
-		if len(config.Home) == 0 {
-			defaultHome := ""
-			if errCurrentUser == nil {
-				defaultHome = currentUser.HomeDir + "/bazooka"
-			}
-
-			config.Home = interactiveInput("Bazooka Home Folder", defaultHome)
-		}
-	} else {
-		config.Home = bzkHome
-	}
-
-	if len(dockerSock) == 0 {
-		if len(config.DockerSock) == 0 {
-			config.DockerSock = interactiveInput("Docker Socket path", "/var/run/docker.sock")
-		}
-	} else {
-		config.DockerSock = dockerSock
-	}
-
-	if len(scmKey) != 0 {
-		config.SCMKey = scmKey
-	}
-
-	if len(*bzkApiUrl) != 0 {
-		config.ApiURL = *bzkApiUrl
-	}
-
-	if len(syslogURL) != 0 {
-		config.SyslogURL = syslogURL
-	}
 
 	if len(dbURL) != 0 {
 		config.DbURL = dbURL
+	}
+
+	if len(queueURL) != 0 {
+		config.QueueURL = queueURL
 	}
 
 	if len(registry) != 0 {
@@ -406,7 +385,7 @@ func getConfigWithParams(tag, bzkHome, dockerSock, registry, scmKey, syslogURL, 
 }
 
 func getConfig() (*Config, error) {
-	return getConfigWithParams("", "", "", "", "", "", "")
+	return getConfigWithParams("", "", "", "")
 }
 
 func destroyContainer(client *docker.Docker, name string, allContainers []dockerclient.APIContainers) error {
@@ -481,16 +460,9 @@ func startContainer(client *docker.Docker, options *docker.RunOptions, allContai
 
 }
 
-func getServerEnv(home, dockerSock, scmKey, syslogURL, dbURL string) map[string]string {
+func getServerEnv(dbURL, queueURL string) map[string]string {
 	envMap := map[string]string{
-		"BZK_HOME":       home,
-		"BZK_DOCKERSOCK": dockerSock,
-		"BZK_API_URL":    fmt.Sprintf("http://%s:3000", bzkContainerServer),
-		"BZK_SYSLOG_URL": syslogURL,
-		"BZK_NETWORK":    bzkNetwork,
-	}
-	if len(scmKey) > 0 {
-		envMap["BZK_SCM_KEYFILE"] = scmKey
+		"BZK_QUEUE_URL": queueURL,
 	}
 	if len(dbURL) == 0 {
 		dbURL = fmt.Sprintf("%s:27017", bzkContainerMongo)
@@ -538,6 +510,17 @@ func getMongoRunOptions() *docker.RunOptions {
 	}
 }
 
+func getQueueRunOptions() *docker.RunOptions {
+	return &docker.RunOptions{
+		Name:   bzkContainerQueue,
+		Image:  "jawher/beanstalkd",
+		Detach: true,
+		PortBindings: map[dockerclient.Port][]dockerclient.PortBinding{
+			"11300/tcp": {{HostPort: "11300"}},
+		},
+	}
+}
+
 func getServerRunOptions(config *Config) *docker.RunOptions {
 	links := []string{}
 
@@ -546,15 +529,11 @@ func getServerRunOptions(config *Config) *docker.RunOptions {
 	}
 
 	return &docker.RunOptions{
-		Name:   bzkContainerServer,
-		Image:  getImageLocation(config.Registry, "bazooka/server", config.Tag),
-		Detach: true,
-		VolumeBinds: []string{
-			fmt.Sprintf("%s:/bazooka", config.Home),
-			fmt.Sprintf("%s:/var/run/docker.sock", config.DockerSock),
-		},
+		Name:        bzkContainerServer,
+		Image:       getImageLocation(config.Registry, "bazooka/server", config.Tag),
+		Detach:      true,
 		NetworkMode: bzkNetwork,
-		Env:         getServerEnv(config.Home, config.DockerSock, config.SCMKey, config.SyslogURL, config.DbURL),
+		Env:         getServerEnv(config.DbURL, config.QueueURL),
 		PortBindings: map[dockerclient.Port][]dockerclient.PortBinding{
 			"3000/tcp": {{HostPort: "3000"}},
 			"3001/tcp": {{HostPort: "3001"}},

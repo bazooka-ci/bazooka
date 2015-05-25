@@ -24,6 +24,7 @@ const (
 	JOB_FAILED            = "FAILED"
 	JOB_ERRORED           = "ERRORED"
 	JOB_RUNNING           = "RUNNING"
+	JOB_PENDING           = "PENDING"
 )
 
 type Job struct {
@@ -31,6 +32,7 @@ type Job struct {
 	Number          int         `bson:"number" json:"number"`
 	ProjectID       string      `bson:"project_id" json:"project_id"`
 	OrchestrationID string      `bson:"orchestration_id" json:"orchestration_id"`
+	Submitted       time.Time   `bson:"submitted" json:"submitted"`
 	Started         time.Time   `bson:"started" json:"started"`
 	Completed       time.Time   `bson:"completed" json:"completed"`
 	Status          JobStatus   `bson:"status" json:"status"`

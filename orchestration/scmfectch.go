@@ -63,7 +63,7 @@ func (f *SCMFetcher) Fetch() error {
 		LoggingDriverConfig: f.context.loggerConfig(image, ""),
 	})
 	if err != nil {
-		return err
+		return fmt.Errorf("Failed to run the scm container: %v", err)
 	}
 
 	defer lib.RemoveContainer(container)
@@ -73,7 +73,8 @@ func (f *SCMFetcher) Fetch() error {
 		return err
 	}
 	if exitCode != 0 {
-		return fmt.Errorf("Error during execution of SCM container %s\n Check Docker container logs, id is %s\n", image, container.ID())
+		return fmt.Errorf("Error during execution of SCM container %s, exit code %d\n Check Docker container logs, id is %s\n",
+			image, exitCode, container.ID())
 	}
 
 	log.WithFields(log.Fields{

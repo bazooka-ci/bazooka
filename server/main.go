@@ -11,7 +11,7 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 	bzklog "github.com/bazooka-ci/bazooka/commons/logs"
-	"github.com/bazooka-ci/bazooka/commons/mongo"
+	"github.com/bazooka-ci/bazooka/server/db"
 	"github.com/gorilla/mux"
 )
 
@@ -71,9 +71,11 @@ func main() {
 		i := r.PathPrefix("/_").Subrouter()
 
 		i.HandleFunc("/project/{id}/crypto-key", context.mkInternalApiHandler(context.getCryptoKey)).Methods("GET")
-		i.HandleFunc("/job/{id}/finish", context.mkInternalApiHandler(context.finishJob)).Methods("POST")
+		i.HandleFunc("/job/{id}/start", context.mkInternalApiHandler(context.jobStarted)).Methods("POST")
+		i.HandleFunc("/job/{id}/finish", context.mkInternalApiHandler(context.jobFinished)).Methods("POST")
+		i.HandleFunc("/job/{id}/reset", context.mkInternalApiHandler(context.jobReset)).Methods("POST")
 		i.HandleFunc("/job/{id}/scm", context.mkInternalApiHandler(context.addJobScmData)).Methods("PUT")
-		i.HandleFunc("/variant/{id}/finish", context.mkInternalApiHandler(context.finishVariant)).Methods("POST")
+		i.HandleFunc("/variant/{id}/finish", context.mkInternalApiHandler(context.variantFinished)).Methods("POST")
 		i.HandleFunc("/variant", context.mkInternalApiHandler(context.addVariant)).Methods("POST")
 	}
 
@@ -112,7 +114,7 @@ var (
 	}
 )
 
-func ensureDefaultImagesExist(c *mongo.MongoConnector) error {
+func ensureDefaultImagesExist(c *db.MongoConnector) error {
 	for name, image := range defaultImages {
 		exist, err := c.HasImage(name)
 		if err != nil {
