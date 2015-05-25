@@ -11,6 +11,7 @@ import (
 
 const (
 	BazookaEnvSCMKeyfile = "BZK_SCM_KEYFILE"
+	BazookaEnvServerName = "BZK_SERVER_NAME"
 	BazookaEnvHome       = "BZK_HOME"
 	BazookaEnvDockerSock = "BZK_DOCKERSOCK"
 	BazookaEnvMongoAddr  = "MONGO_PORT_27017_TCP_ADDR"
@@ -22,10 +23,11 @@ const (
 )
 
 type context struct {
-	mongoAddr string
-	mongoPort string
-	connector *mongo.MongoConnector
-	paths     paths
+	serverName string
+	mongoAddr  string
+	mongoPort  string
+	connector  *mongo.MongoConnector
+	paths      paths
 }
 
 type paths struct {
@@ -43,8 +45,9 @@ type path struct {
 
 func initContext() *context {
 	c := &context{
-		mongoAddr: os.Getenv(BazookaEnvMongoAddr),
-		mongoPort: os.Getenv(BazookaEnvMongoPort),
+		serverName: os.Getenv(BazookaEnvServerName),
+		mongoAddr:  os.Getenv(BazookaEnvMongoAddr),
+		mongoPort:  os.Getenv(BazookaEnvMongoPort),
 		paths: paths{
 			home:           path{BazookaHome, os.Getenv(BazookaEnvHome)},
 			scmKey:         path{"", os.Getenv(BazookaEnvSCMKeyfile)},

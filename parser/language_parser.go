@@ -40,13 +40,13 @@ func (p *LanguageParser) Parse() ([]*variantData, error) {
 			fmt.Sprintf("%s:/meta", paths.meta.host),
 			fmt.Sprintf("%s:/bazooka-cryptokey", paths.cryptoKey.host),
 		},
-		Detach: true,
+		Detach:              true,
+		LoggingDriver:       "syslog",
+		LoggingDriverConfig: p.context.loggerConfig(p.image),
 	})
 	if err != nil {
 		return nil, err
 	}
-
-	container.Logs(p.image)
 
 	exitCode, err := container.Wait()
 	if err != nil {
@@ -89,7 +89,7 @@ func (p *LanguageParser) Parse() ([]*variantData, error) {
 
 		// extract the "*" part from the .bazooka.*.yml file
 		rootCounter := parseCounter(file)
-		// for every .bazooka.*.yml file, the language parser is also supposed to have generated a meta/* file
+		// for every .bazooka.*.yml file, the language parser is also suppCsed to have generated a meta/* file
 		// which is a simple yml file containing the language specific  matrix variables
 		// for example, if the original .bazooka.yml file defined 2 go versions:
 		//

@@ -1,6 +1,10 @@
 package bazooka
 
-import "time"
+import (
+	"regexp"
+	"strings"
+	"time"
+)
 
 type Project struct {
 	ScmType    string            `bson:"scm_type" json:"scm_type" validate:"required"`
@@ -43,7 +47,7 @@ type Variant struct {
 	Started    time.Time     `bson:"started" json:"started"`
 	Completed  time.Time     `bson:"completed" json:"completed"`
 	BuildImage string        `bson:"image" json:"image"`
-	ProjectID  string        `bson:"project_id" json:"job_id"`
+	ProjectID  string        `bson:"project_id" json:"project_id"`
 	JobID      string        `bson:"job_id" json:"job_id"`
 	Number     int           `bson:"number" json:"number"`
 	ID         string        `bson:"id" json:"id"`
@@ -94,6 +98,12 @@ type SCMMetadata struct {
 	Message   string   `bson:"message" json:"message" yaml:"message"`
 }
 
+type FinishData struct {
+	Status    JobStatus `json:"status"`
+	Time      time.Time `json:"time,omitempty"`
+	Artifacts []string  `json:"artifacts,omitempty"`
+}
+
 func (ms *VariantMetas) Append(m *VariantMeta) { *ms = append(*ms, m) }
 func (ms *VariantMetas) Len() int              { return len(*ms) }
 func (ms *VariantMetas) Swap(i, j int)         { (*ms)[i], (*ms)[j] = (*ms)[j], (*ms)[i] }
@@ -103,4 +113,42 @@ func (ms *VariantMetas) Less(i, j int) bool {
 		return a.Name < b.Name
 	}
 	return a.Kind == META_LANG
+}
+
+var (
+	regLogLevel = regexp.MustCompile(`^\s*\[(\S+)\].*$`)      // Eg. [INFO] My message
+	regMeta     = regexp.MustCompile(`^\s*\<(\S+):(.*)>\s*$`) // Eg. <CMD:go test -v ./...>
+)
+
+func ConstructLog(message string, template LogEntry) LogEntry {
+	message = strings.TrimSpace(message)
+
+	switch {
+	case regLogLevel.MatchString(message):
+		submatchs := regLogLevel.FindStringSubmatch(message)
+		logLevel := submatchs[len(submatchs)-1]
+		template.Level = logLevel
+		template.Message = strings.TrimSpace(message[len(logLevel)+2:])
+	case regMeta.MatchString(message):
+		submatchs := regMeta.FindStringSubmatch(message)
+		instructionType := submatchs[1]
+		instructionValue := submatchs[2]
+		switch instructionType {
+		case "CMD":
+			template.Command = instructionValue
+			template.Message = ""
+		case "PHASE":
+			template.Phase = instructionValue
+			template.Message = ""
+		default:
+			template.Message = message
+		}
+	default:
+		template.Message = message
+	}
+
+	if template.Time.IsZero() {
+		template.Time = time.Now()
+	}
+	return template
 }

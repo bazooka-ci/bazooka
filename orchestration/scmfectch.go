@@ -13,7 +13,7 @@ type SCMFetcher struct {
 	update  bool
 }
 
-func (f *SCMFetcher) Fetch(logger Logger) error {
+func (f *SCMFetcher) Fetch() error {
 	log.WithFields(log.Fields{
 		"source": f.context.scmUrl,
 	}).Info("Fetching SCM From Source Repository")
@@ -54,17 +54,16 @@ func (f *SCMFetcher) Fetch(logger Logger) error {
 	}
 
 	container, err := client.Run(&docker.RunOptions{
-		Image:       image,
-		VolumeBinds: volumes,
-		Env:         env,
-		Detach:      true,
+		Image:               image,
+		VolumeBinds:         volumes,
+		Env:                 env,
+		Detach:              true,
+		LoggingDriver:       "syslog",
+		LoggingDriverConfig: f.context.loggerConfig(image, ""),
 	})
 	if err != nil {
 		return err
 	}
-
-	container.Logs(image)
-	logger(image, "", container)
 
 	exitCode, err := container.Wait()
 	if err != nil {
@@ -91,7 +90,7 @@ func (f *SCMFetcher) Fetch(logger Logger) error {
 		return err
 	}
 
-	err = f.context.connector.AddJobSCMMetadata(f.context.jobID, scmMetadata)
+	err = f.context.client.Internal.AddJobSCMMetadata(f.context.jobID, scmMetadata)
 	if err != nil {
 		return err
 	}
@@ -99,9 +98,9 @@ func (f *SCMFetcher) Fetch(logger Logger) error {
 }
 
 func (f *SCMFetcher) resolveImage() (string, error) {
-	image, err := f.context.connector.GetImage(fmt.Sprintf("scm/fetch/%s", f.context.scm))
+	image, err := f.context.client.Image.Get(fmt.Sprintf("scm/fetch/%s", f.context.scm))
 	if err != nil {
-		return "", fmt.Errorf("Unable to find Bazooka Docker Image for SCM %s\n", f.context.scm)
+		return "", fmt.Errorf("Unable to find Bazooka Docker Image for SCM %s: %v\n", f.context.scm, err)
 	}
-	return image, nil
+	return image.Image, nil
 }

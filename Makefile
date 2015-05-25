@@ -16,7 +16,7 @@ $(MODULES):
 	$(MAKE) -C $@
 
 cli: client commons
-orchestration: commons
+orchestration: client commons
 parser: commons
 server: commons
 

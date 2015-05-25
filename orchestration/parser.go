@@ -25,7 +25,7 @@ type variantData struct {
 	imageTag   string
 }
 
-func (p *Parser) Parse(logger Logger) ([]*variantData, error) {
+func (p *Parser) Parse() ([]*variantData, error) {
 	paths := p.context.paths
 	client, err := docker.NewDocker(paths.dockerEndpoint.container)
 	if err != nil {
@@ -62,17 +62,17 @@ func (p *Parser) Parse(logger Logger) ([]*variantData, error) {
 	}
 
 	container, err := client.Run(&docker.RunOptions{
-		Image:       image,
-		Env:         env,
-		VolumeBinds: volumes,
-		Detach:      true,
+		Image:               image,
+		Env:                 env,
+		VolumeBinds:         volumes,
+		Links:               []string{fmt.Sprintf("%s:server", p.context.serverName)},
+		Detach:              true,
+		LoggingDriver:       "syslog",
+		LoggingDriverConfig: p.context.loggerConfig(image, ""),
 	})
 	if err != nil {
 		return nil, err
 	}
-
-	container.Logs(image)
-	logger(image, "", container)
 
 	exitCode, err := container.Wait()
 	if err != nil {
@@ -140,11 +140,11 @@ func (p *Parser) variantsData() ([]*variantData, error) {
 }
 
 func (f *Parser) resolveImage() (string, error) {
-	image, err := f.context.connector.GetImage("parser")
+	image, err := f.context.client.Image.Get("parser")
 	if err != nil {
 		return "", fmt.Errorf("Unable to find Bazooka Docker Image for parser\n")
 	}
-	return image, nil
+	return image.Image, nil
 }
 
 func parseMeta(file string, vf *variantData) error {

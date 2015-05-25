@@ -116,6 +116,7 @@ func (c *context) startJob(params map[string]string, startJob lib.StartJob, comm
 		container: fmt.Sprintf(buildFolderPattern, c.paths.home.container, runningJob.ProjectID, runningJob.ID),
 	}
 	orchestrationEnv := map[string]string{
+		BazookaEnvServerName: c.serverName,
 		"BZK_SCM":            project.ScmType,
 		"BZK_SCM_URL":        project.ScmURI,
 		"BZK_SCM_REFERENCE":  refToBuild,
@@ -125,8 +126,6 @@ func (c *context) startJob(params map[string]string, startJob lib.StartJob, comm
 		"BZK_JOB_ID":         runningJob.ID,
 		"BZK_DOCKERSOCK":     c.paths.dockerSock.host,
 		"BZK_JOB_PARAMETERS": string(jobParameters),
-		BazookaEnvMongoAddr:  c.mongoAddr,
-		BazookaEnvMongoPort:  c.mongoPort,
 	}
 
 	projectSSHKey, err := c.connector.GetProjectKey(project.ID)
@@ -205,11 +204,22 @@ func (c *context) startJob(params map[string]string, startJob lib.StartJob, comm
 	}
 
 	container, err := client.Run(&docker.RunOptions{
-		Image:       orchestrationImage,
-		VolumeBinds: orchestrationVolumes,
-		Env:         orchestrationEnv,
-		Detach:      true,
+		Image:         orchestrationImage.Image,
+		VolumeBinds:   orchestrationVolumes,
+		Env:           orchestrationEnv,
+		Links:         []string{fmt.Sprintf("%s:server", c.serverName)},
+		Detach:        true,
+		LoggingDriver: "syslog",
+		LoggingDriverConfig: map[string]string{
+			"syslog-address": fmt.Sprintf("tcp://172.17.42.1:3001"),
+			"syslog-tag": fmt.Sprintf("image=%s;project=%s;job=%s",
+				orchestrationImage.Image, project.ID, runningJob.ID),
+		},
 	})
+
+	if err != nil {
+		return nil, err
+	}
 
 	// remove the container at the end of its execution
 	go func(container *docker.Container) {

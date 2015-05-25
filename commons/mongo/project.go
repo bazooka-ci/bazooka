@@ -279,15 +279,17 @@ func (c *MongoConnector) GetLog(like *LogExample) ([]lib.LogEntry, error) {
 	return result, err
 }
 
+var (
+	regLogLevel = regexp.MustCompile(`^\s*\[(\S+)\].*$`)      // Eg. [INFO] My message
+	regMeta     = regexp.MustCompile(`^\s*\<(\S+):(.*)>\s*$`) // Eg. <CMD:go test -v ./...>
+)
+
 func (c *MongoConnector) FeedLog(r io.Reader, template lib.LogEntry) {
 	go func(reader io.Reader) {
 		scanner := lib.NewScanner(reader)
 		for scanner.Scan() {
 			message := scanner.Text()
 			thisTemplate := template
-
-			regLogLevel, _ := regexp.Compile(`^\s*\[(\S+)\].*$`)  // Eg. [INFO] My message
-			regMeta, _ := regexp.Compile(`^\s*\<(\S+):(.*)>\s*$`) // Eg. <CMD:go test -v ./...>
 
 			switch {
 			case regLogLevel.MatchString(message):

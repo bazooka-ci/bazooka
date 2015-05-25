@@ -138,6 +138,12 @@ func (ctx *context) mkAuthHandler(f func(*request) (*response, error)) func(http
 	return ctx.authenticationHandler(mkHandler(f))
 }
 
+func (ctx *context) mkInternalApiHandler(f func(*request) (*response, error)) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		mkHandler(f).ServeHTTP(w, r)
+	}
+}
+
 func mkHandler(f func(*request) (*response, error)) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		validate := validator.New("validate", validator.BakedInValidators)

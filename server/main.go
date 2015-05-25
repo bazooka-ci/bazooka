@@ -54,8 +54,9 @@ func main() {
 	r.HandleFunc("/variant/{id}/artifacts/{path:.*}", context.mkAuthHandler(context.getVariantArtifact)).Methods("GET")
 
 	r.HandleFunc("/image", context.mkAuthHandler(context.getImages)).Methods("GET")
-	r.HandleFunc("/image/{name:.*}", context.mkAuthHandler(context.setImage)).Methods("PUT")
+	r.HandleFunc("/image/{name:.*}", context.mkAuthHandler(context.getImage)).Methods("GET")
 	// r.HandleFunc("/image/{name}", context.mkAuthHandler(context.unsetImage)).Methods("DELETE")
+	r.HandleFunc("/image/{name:.*}", context.mkAuthHandler(context.setImage)).Methods("PUT")
 
 	r.HandleFunc("/user", context.mkAuthHandler(context.getUsers)).Methods("GET")
 	r.HandleFunc("/user", context.mkAuthHandler(context.createUser)).Methods("POST")
@@ -63,17 +64,35 @@ func main() {
 
 	r.HandleFunc("/project/{id}/github", context.mkGithubAuthHandler(context.startGithubJob)).Methods("POST")
 
+	{
+		i := r.PathPrefix("/_").Subrouter()
+
+		i.HandleFunc("/job/{id}/status", context.mkInternalApiHandler(context.finishJob)).Methods("POST")
+		i.HandleFunc("/job/{id}/scm", context.mkInternalApiHandler(context.addJobScmData)).Methods("PUT")
+		i.HandleFunc("/variant/{id}/status", context.mkInternalApiHandler(context.finishVariant)).Methods("POST")
+		i.HandleFunc("/variant", context.mkInternalApiHandler(context.addVariant)).Methods("POST")
+	}
+
 	http.Handle("/", r)
 
+	go context.startLogServer()
 	log.Fatal(http.ListenAndServe(":3000", nil))
 }
 
 var (
 	defaultImages = map[string]string{
-		"orchestration": "bazooka/orchestration",
-		"parser":        "bazooka/parser",
-		"scm/fetch/git": "bazooka/scm-git",
-		"scm/fetch/hg":  "bazooka/scm-hg",
+		"orchestration":  "bazooka/orchestration",
+		"parser":         "bazooka/parser",
+		"scm/fetch/git":  "bazooka/scm-git",
+		"scm/fetch/hg":   "bazooka/scm-hg",
+		"parser/golang":  "bazooka/parser-golang",
+		"parser/go":      "bazooka/parser-golang",
+		"parser/java":    "bazooka/parser-java",
+		"parser/python":  "bazooka/parser-python",
+		"ruby":           "bazooka/parser-ruby",
+		"parser/node_js": "bazooka/parser-nodejs",
+		"parser/nodejs":  "bazooka/parser-nodejs",
+		"parser/php":     "bazooka/parser-php",
 	}
 )
 

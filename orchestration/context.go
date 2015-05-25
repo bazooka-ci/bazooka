@@ -1,12 +1,15 @@
 package main
 
 import (
+	"fmt"
+	"log"
 	"os"
 
-	"github.com/bazooka-ci/bazooka/commons/mongo"
+	"github.com/bazooka-ci/bazooka/client"
 )
 
 const (
+	BazookaEnvServerName    = "BZK_SERVER_NAME"
 	BazookaEnvHome          = "BZK_HOME"
 	BazookaEnvSrc           = "BZK_SRC"
 	BazookaEnvSCMKeyfile    = "BZK_SCM_KEYFILE"
@@ -18,10 +21,17 @@ const (
 	BazookaEnvProjectID     = "BZK_PROJECT_ID"
 	BazookaEnvJobID         = "BZK_JOB_ID"
 	BazookaEnvJobParameters = "BZK_JOB_PARAMETERS"
+
+	BazookaEnvServerAddr = "SERVER_PORT_3000_TCP_ADDR"
+	BazookaEnvServerPort = "SERVER_PORT_3000_TCP_PORT"
+
+	BazookaEnvLogServerAddr = "SERVER_PORT_3001_TCP_ADDR"
+	BazookaEnvLogServerPort = "SERVER_PORT_3001_TCP_PORT"
 )
 
 type context struct {
-	connector     *mongo.MongoConnector
+	client        *client.Client
+	serverName    string
 	scm           string
 	scmUrl        string
 	scmReference  string
@@ -50,9 +60,16 @@ type path struct {
 }
 
 func initContext() *context {
-
+	// Configure Client
+	client, err := client.New(&client.Config{
+		URL: fmt.Sprintf("http://%s:%s", os.Getenv(BazookaEnvServerAddr), os.Getenv(BazookaEnvServerPort)),
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
 	return &context{
-		connector:     mongo.NewConnector(),
+		client:        client,
+		serverName:    os.Getenv(BazookaEnvServerName),
 		scm:           os.Getenv(BazookaEnvSCM),
 		scmUrl:        os.Getenv(BazookaEnvSCMUrl),
 		scmReference:  os.Getenv(BazookaEnvSCMReference),
@@ -74,6 +91,13 @@ func initContext() *context {
 	}
 }
 
-func (c *context) cleanup() {
-	c.connector.Close()
+func (c *context) loggerConfig(image string, variantID string) map[string]string {
+	tag := fmt.Sprintf("image=%s;project=%s;job=%s", image, c.projectID, c.jobID)
+	if len(variantID) > 0 {
+		tag += ";variant=" + variantID
+	}
+	return map[string]string{
+		"syslog-address": fmt.Sprintf("tcp://%s:%s", os.Getenv(BazookaEnvLogServerAddr), os.Getenv(BazookaEnvLogServerPort)),
+		"syslog-tag":     tag,
+	}
 }

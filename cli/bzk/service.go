@@ -384,8 +384,9 @@ func ensureContainerIsStarted(client *docker.Docker, options *docker.RunOptions,
 
 func getServerEnv(home, dockerSock, scmKey, mongoURI string) map[string]string {
 	envMap := map[string]string{
-		"BZK_HOME":       home,
-		"BZK_DOCKERSOCK": dockerSock,
+		"BZK_SERVER_NAME": bzkContainerServer,
+		"BZK_HOME":        home,
+		"BZK_DOCKERSOCK":  dockerSock,
 	}
 	if len(scmKey) > 0 {
 		envMap["BZK_SCM_KEYFILE"] = scmKey
@@ -453,6 +454,7 @@ func getServerRunOptions(registry, bzkHome, dockerSock, scmKey, mongoURI, tag st
 		Env:   getServerEnv(bzkHome, dockerSock, scmKey, mongoURI),
 		PortBindings: map[dockerclient.Port][]dockerclient.PortBinding{
 			"3000/tcp": {{HostPort: "3000"}},
+			"3001/tcp": {{HostPort: "3001"}},
 		},
 	}
 }

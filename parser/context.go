@@ -2,8 +2,11 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
+	"log"
 	"os"
 
+	"github.com/bazooka-ci/bazooka/client"
 	lib "github.com/bazooka-ci/bazooka/commons"
 )
 
@@ -14,12 +17,21 @@ const (
 	BazookaEnvDockerSock    = "BZK_DOCKERSOCK"
 	BazookaEnvProjectID     = "BZK_PROJECT_ID"
 	BazookaEnvJobID         = "BZK_JOB_ID"
+	BazookaEnvJobParameters = "BZK_JOB_PARAMETERS"
+
+	BazookaEnvServerAddr = "SERVER_PORT_3000_TCP_ADDR"
+	BazookaEnvServerPort = "SERVER_PORT_3000_TCP_PORT"
+
+	BazookaEnvLogServerAddr = "SERVER_PORT_3001_TCP_ADDR"
+	BazookaEnvLogServerPort = "SERVER_PORT_3001_TCP_PORT"
 )
 
 type context struct {
+	client        *client.Client
 	projectID     string
 	jobID         string
 	jobParameters string
+	syslogAddress string
 	paths         paths
 }
 
@@ -38,7 +50,16 @@ type path struct {
 }
 
 func initContext() *context {
+	// Configure Client
+	client, err := client.New(&client.Config{
+		URL: fmt.Sprintf("http://%s:%s", os.Getenv(BazookaEnvServerAddr), os.Getenv(BazookaEnvServerPort)),
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	return &context{
+		client:        client,
 		projectID:     os.Getenv(BazookaEnvProjectID),
 		jobID:         os.Getenv(BazookaEnvJobID),
 		jobParameters: os.Getenv(BazookaEnvJobParameters),
@@ -50,6 +71,13 @@ func initContext() *context {
 			dockerSock:     path{"/var/run/docker.sock", ""},
 			dockerEndpoint: path{"unix:///var/run/docker.sock", ""},
 		},
+	}
+}
+
+func (c *context) loggerConfig(image string) map[string]string {
+	return map[string]string{
+		"syslog-address": fmt.Sprintf("tcp://%s:%s", os.Getenv(BazookaEnvLogServerAddr), os.Getenv(BazookaEnvLogServerPort)),
+		"syslog-tag":     fmt.Sprintf("image=%s;project=%s;job=%s", image, c.projectID, c.jobID),
 	}
 }
 
