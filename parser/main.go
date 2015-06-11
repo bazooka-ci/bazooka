@@ -340,6 +340,7 @@ func resolveLanguageParser(language string) (string, error) {
 		"go":      "bazooka/parser-golang",
 		"java":    "bazooka/parser-java",
 		"python":  "bazooka/parser-python",
+		"ruby":    "bazooka/parser-ruby",
 		"node_js": "bazooka/parser-nodejs",
 		"nodejs":  "bazooka/parser-nodejs",
 		"php":     "bazooka/parser-php",
