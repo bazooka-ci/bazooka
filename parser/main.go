@@ -187,11 +187,11 @@ func handlePermutation(permutation map[string]string, config *lib.Config, meta m
 	// do the same for the meta file
 	// start from the language specific permutation meta file
 	// and add this permutation's env map
-	metaEnv, err:=generateEnvForMeta(newConfig.Env)
+	metaEnv, err := generateEnvForMeta(newConfig.Env)
 	if err != nil {
 		return err
 	}
-	
+
 	meta["env"] = metaEnv
 	metaFile := fmt.Sprintf("%s/%s%s", paths.container.meta, rootCounter, counter)
 	lib.Flush(meta, metaFile)
@@ -221,12 +221,12 @@ func feedMatrix(extra map[string]interface{}, mx *matrix.Matrix) error {
 	for k, v := range extra {
 		switch k {
 		case "env":
-			switch converted:=v.(type) {
+			switch converted := v.(type) {
 			case []interface{}:
 				envVars := []lib.BzkString{}
 				for _, envVar := range converted {
 					if strEnvVar, ok := envVar.(string); ok {
-						n, v:=lib.SplitNameValue(strEnvVar)
+						n, v := lib.SplitNameValue(strEnvVar)
 						envVars = append(envVars, lib.BzkString{n, v, false})
 					} else {
 						return fmt.Errorf("Invalid config: env should contain a sequence of strings: found a non string value %v:%T", envVar, envVar)
@@ -235,7 +235,7 @@ func feedMatrix(extra map[string]interface{}, mx *matrix.Matrix) error {
 				}
 				mx.Merge(groupByName(envVars, MX_ENV_PREFIX))
 			case string:
-						n, v:=lib.SplitNameValue(converted)
+				n, v := lib.SplitNameValue(converted)
 				mx.Merge(groupByName([]lib.BzkString{lib.BzkString{n, v, false}}, MX_ENV_PREFIX))
 			default:
 				return fmt.Errorf("Invalid config: env should contain a sequence of strings: %v:%T", v, v)
@@ -290,7 +290,7 @@ func extractEnv(from map[string]string, originalEnv []lib.BzkString) map[string]
 	res := make(map[string]lib.BzkString)
 	for k, v := range from {
 		if strings.HasPrefix(k, MX_ENV_PREFIX) {
-			name:=strings.TrimPrefix(k, MX_ENV_PREFIX)
+			name := strings.TrimPrefix(k, MX_ENV_PREFIX)
 			res[name] = findOrCreateBzkString(name, v, originalEnv)
 		}
 	}
@@ -298,8 +298,8 @@ func extractEnv(from map[string]string, originalEnv []lib.BzkString) map[string]
 }
 
 func findOrCreateBzkString(name, value string, env []lib.BzkString) lib.BzkString {
-	for _, e:=range env {
-		if name==e.Name && value==e.Value {
+	for _, e := range env {
+		if name == e.Name && value == e.Value {
 			return e
 		}
 	}
@@ -307,24 +307,24 @@ func findOrCreateBzkString(name, value string, env []lib.BzkString) lib.BzkStrin
 }
 
 func mapValues(m map[string]lib.BzkString) []lib.BzkString {
-	res :=make([]lib.BzkString, 0, len(m))
-	for _, v:=range m {
-		res=append(res, v)
+	res := make([]lib.BzkString, 0, len(m))
+	for _, v := range m {
+		res = append(res, v)
 	}
 	return res
 }
 
 func generateEnvForMeta(env []lib.BzkString) ([]string, error) {
-	key, err:=lib.ReadCryptoKey(paths.container.cryptoKey)
+	key, err := lib.ReadCryptoKey(paths.container.cryptoKey)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	res := make([]string, 0, len(env))
-	for _, e:=range env {
+	for _, e := range env {
 		value := e.Value
 		if e.Secured {
-			eValue, err:= lib.Encrypt(key, []byte(value))
+			eValue, err := lib.Encrypt(key, []byte(value))
 			if err != nil {
 				return nil, err
 			}
