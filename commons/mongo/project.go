@@ -1,7 +1,6 @@
 package mongo
 
 import (
-	"bufio"
 	"fmt"
 	"io"
 	"log"
@@ -282,7 +281,7 @@ func (c *MongoConnector) GetLog(like *LogExample) ([]lib.LogEntry, error) {
 
 func (c *MongoConnector) FeedLog(r io.Reader, template lib.LogEntry) {
 	go func(reader io.Reader) {
-		scanner := bufio.NewScanner(reader)
+		scanner := lib.NewScanner(reader)
 		for scanner.Scan() {
 			message := scanner.Text()
 			thisTemplate := template
