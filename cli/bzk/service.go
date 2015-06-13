@@ -297,16 +297,7 @@ func getConfigWithParams(bzkHome, dockerSock, registry, scmKey, mongoURI string)
 		config.DockerSock = dockerSock
 	}
 
-	if len(scmKey) == 0 {
-		if len(config.SCMKey) == 0 {
-			defaultSCMKey := ""
-			if errCurrentUser == nil {
-				defaultSCMKey = currentUser.HomeDir + "/.ssh/id_rsa"
-			}
-
-			config.SCMKey = interactiveInput("Bazooka Default SCM private key", defaultSCMKey)
-		}
-	} else {
+	if len(scmKey) != 0 {
 		config.SCMKey = scmKey
 	}
 
