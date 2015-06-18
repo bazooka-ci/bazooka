@@ -1,3 +1,12 @@
 .multiline {
-  white-space: pre;
+  overflow-wrap: break-word;
+  white-space: pre-line;
+  width: 500px;
+}
+
+.sha1ref {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: no-wrap;
+  width: 150px;
 }
