@@ -1,0 +1,149 @@
+$marker-size: 24px;
+
+.job-info {
+    overflow: hidden;
+    margin: 0 0 10px;
+
+    a {
+        color: #444;
+        position: relative;
+        display: block;
+        text-decoration: none;
+        padding: 4px 8px;
+        overflow: hidden;
+
+        &:hover {
+            text-decoration: none;
+        }
+    }
+
+    .marker {
+        position: absolute;
+        right: 0;
+        top: 0;
+        width: 0;
+        height: 0;
+        border: $marker-size solid transparent;
+
+        .job-status {
+            font-size: 18px;
+            line-height: 18px;
+            font-weight: bold;
+            display: block;
+            text-align: center;
+            color: #fff;
+            position: absolute;
+            right: -$marker-size + 4px;
+            top: -$marker-size + 4px;
+        }
+    }
+
+    @mixin job-row($bg, $hover-bg, $marker-bg) {
+        background: lighten($bg, 4%);
+        background: #f8f8f8;
+        border-left: 8px solid $marker-bg;
+
+        &:hover {
+            background: $hover-bg;
+            background: #f2f2f2;
+        }
+
+        h3 {
+            color: $marker-bg;
+        }
+
+        .marker {
+            border-right-color: $marker_bg;
+            border-top-color: $marker-bg;
+        }
+    }
+
+    &.success {
+        @include job-row($success-row, $success-row-hover, $success-bg);
+    }
+
+    &.failed {
+        @include job-row($failed-row, $failed-row-hover, $failed-bg);
+    }
+
+    &.errored {
+        @include job-row($errored-row, $errored-row-hover, $errored-bg);
+    }
+
+    &.running {
+        @include job-row($running-row, $running-row-hover, $running-bg);
+    }
+
+    .glyphicon, .fa {
+        color: #666;
+    }
+
+    .p1 {
+        height: 100%;
+
+        h3 {
+            font-weight: bold;
+            font-size: 18px;
+            line-height: 24px;
+            margin: 0;
+
+            span {
+                font-weight: normal;
+
+                &:before {
+                    content: "#";
+                    padding: 0 4px;
+                    color: #999;
+                }
+            }
+        }
+    }
+
+    .p2 {
+        height: 100%;
+        overflow: hidden;
+
+        .scm-ref {
+            font-weight: bold;
+        }
+
+        .scm-id {
+            color: #666;
+        }
+
+        .author {
+            position: relative;
+            line-height: 24px;
+        }
+
+        .message {
+            font-family: monospace;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            overflow: hidden;
+            margin: 0;
+        }
+
+        .multi-message {
+            font-family: monospace;
+            word-break: break-all;
+            word-wrap: break-word;
+            white-space: pre;
+            margin: 0;
+        }
+    }
+}
+
+@media (min-width: $screen-sm) {
+    .job-info {
+        .p1 {
+            width: 30%;
+            float: left;
+        }
+
+        .p2 {
+            width: 70%;
+            float: left;
+        }
+    }
+}

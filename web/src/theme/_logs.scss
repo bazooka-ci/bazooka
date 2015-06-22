@@ -1,17 +1,11 @@
 .logs {
-  
-  
-  
-
   pre {
     font-family: monospace;
     font-size: 12px;
     line-height: 19px;
     background: $logs-bg;
     color: $logs-fg;
-
-    border-radius: 8px;
-    margin: 10px;
+    margin: 10px 8px;
     padding: 5px 0;
 
     white-space: pre-wrap;

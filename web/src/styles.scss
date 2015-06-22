@@ -4,10 +4,12 @@
 @import 'project/project';
 @import 'projects/projects';
 @import 'job/job';
-@import 'variant/variant';
+@import 'job/variants';
 @import 'theme/tables';
 @import 'theme/logs';
-@import 'theme/jobs';
+@import 'utils/job-info';
+@import 'utils/jobs-list';
+
 
 * {
   box-sizing: border-box;
@@ -52,6 +54,10 @@ h3 {
 
 .content {
   padding: 0;
+}
+
+.pad {
+  padding: 0 8px;
 }
 
 

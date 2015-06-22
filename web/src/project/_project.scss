@@ -1,33 +1,32 @@
 #project {
+    .details {
+        border-collapse: separate;
+        border-spacing: 5px;
+        padding-bottom: 10px;
+        text-align: left;
 
-  .details {
-    border-collapse: separate;
-    border-spacing: 5px;
-    padding-bottom: 10px;
-    text-align: left;
+        td {
+            padding: 0 20px;
+        }
 
-    td {
-      padding: 0 20px;
+        th {
+            padding-left: 10px;
+        }
     }
 
-    th {
-      padding-left: 10px;
-    }
-  }
+    .job-params {
+        position: absolute;
+        background: #fff;
+        padding: 4px;
+        border: 1px solid #ddd;
+        box-shadow: 1px 1px 4px #333;
 
-  .job-params {
-    position: absolute;
-    background: #fff;
-    padding: 4px;
-    border: 1px solid #ddd;
-    box-shadow: 1px 1px 4px #333;
+        td {
+            padding: 2px 2px 0 0;
+        }
 
-    td {
-      padding: 2px 2px 0 0;
+        input {
+            border-radius: 0;
+        }
     }
-
-    input {
-      border-radius: 0;
-    }
-  }
 }

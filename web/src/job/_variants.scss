@@ -1,0 +1,153 @@
+.variants {
+    width: 100%;
+    overflow: hidden;
+    margin: 0 0 10px 0;
+
+    $height: 36px;
+
+    .p1 {
+        list-style-type: none;
+        padding: 0;
+        margin: 0;
+        width: 30%;
+        float: left;
+
+        li {
+            height: $height;
+            line-height: $height;
+            margin: 0 0 4px 0;
+            border-right: 4px solid #fff;
+            border-left: 8px solid #fff;
+            background: #f2f2f2;
+
+            &.selected {
+                background: #E3F2FD;
+            }
+
+            a {
+                display: block;
+                position: relative;
+                padding: 0 10px;
+                text-decoration: none;
+
+                &:hover {
+                    text-decoration: none;
+                }
+            }
+
+            .job-status {
+                font-size: 16px;
+                line-height: $height;
+                padding: 0 4px;
+
+                &.success {
+                    color: $success-bg;
+                }
+
+                &.failed {
+                    color: $failed-bg;
+                }
+
+                &.errored {
+                    color: $errored-bg;
+                }
+
+                &.running {
+                    color: $running-bg;
+                }
+            }
+
+            h4 {
+                display: inline-block;
+                margin: 0;
+                padding: 0;
+                font-weight: bold;
+                font-size: 16px;
+                line-height: $height;
+
+                span {
+                    &:before {
+                        content: "·";
+                        padding: 0 4px;
+                        color: #999;
+                    }
+                }
+            }
+
+            .duration {
+                color: #999;
+                position: absolute;
+                right: 10px;
+                top: 0;
+                text-align: right;
+            }
+        }
+    }
+
+    .p2 {
+        width: 70%;
+        float: left;
+        overflow-x: auto;
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+            width: auto;
+
+            li {
+                width: auto;
+                height: $height;
+                margin: 0 0 4px 0;
+                white-space: nowrap;
+                background: #f2f2f2;
+
+                &.selected {
+                    background: #E3F2FD;
+
+                    .meta {
+                        background: #E3F2FD;
+                    }
+                }
+
+                .meta {
+                    display: inline-block;
+                    width: 200px;
+                    height: $height;
+                    line-height: $height;
+                    border-right: 4px solid #fff;
+                    padding: 0 8px;
+                    overflow: hidden;
+                    background: #f2f2f2;
+
+                    span:first-child {
+                        color: #999;
+                        font-weight: bold;
+                    }
+
+                    span:last-child {
+                        text-overflow: ellipsis;
+                    }
+                }
+            }
+        }
+    }
+
+    @mixin row($kind, $fg, $bg, $hover-bg) {
+        .p1 > li.#{$kind} h4 {
+            color: $fg;
+        }
+
+        .p1 > li.#{$kind} {
+            border-left-color: $fg;
+        }
+    }
+
+    @include row("success", $success-bg, $success-row, $success-row-hover);
+
+    @include row("failed", $failed-bg, $failed-row, $failed-row-hover);
+
+    @include row("errored", $errored-bg, $errored-row, $errored-row-hover);
+
+    @include row("running", $running-bg, $running-row, $running-row-hover);
+}
