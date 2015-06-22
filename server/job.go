@@ -16,8 +16,9 @@ import (
 )
 
 const (
-	buildFolderPattern = "%s/build/%s/%s"     // $bzk_home/build/$projectId/$buildId
-	logFolderPattern   = "%s/build/%s/%s/log" // $bzk_home/build/$projectId/$buildId/log
+	buildFolderPattern        = "%s/build/%s/%s"     // $bzk_home/build/$projectId/$buildId
+	sharedSourceFolderPattern = "%s/build/%s/source" // $bzk_home/build/$projectId/source
+	logFolderPattern          = "%s/build/%s/%s/log" // $bzk_home/build/$projectId/$buildId/log
 )
 
 func (c *context) startBitbucketJob(r *request) (*response, error) {
@@ -57,7 +58,7 @@ func (c *context) startStandardJob(r *request) (*response, error) {
 
 func (c *context) startJob(params map[string]string, startJob lib.StartJob, commitID string) (*response, error) {
 
-	project, err := c.Connector.GetProjectById(params["id"])
+	project, err := c.connector.GetProjectById(params["id"])
 	if err != nil {
 		if err.Error() != "not found" {
 			return nil, err
@@ -65,12 +66,12 @@ func (c *context) startJob(params map[string]string, startJob lib.StartJob, comm
 		return notFound("project not found")
 	}
 
-	client, err := docker.NewDocker(c.DockerEndpoint)
+	client, err := docker.NewDocker(c.paths.dockerEndpoint.container)
 	if err != nil {
 		return nil, err
 	}
 
-	orchestrationImage, err := c.Connector.GetImage("orchestration")
+	orchestrationImage, err := c.connector.GetImage("orchestration")
 	if err != nil {
 		return nil, &errorResponse{500, fmt.Sprintf("Failed to retrieve the orchestration image: %v", err)}
 	}
@@ -84,7 +85,7 @@ func (c *context) startJob(params map[string]string, startJob lib.StartJob, comm
 		},
 	}
 
-	if err := c.Connector.AddJob(runningJob); err != nil {
+	if err := c.connector.AddJob(runningJob); err != nil {
 		return nil, err
 	}
 
@@ -110,47 +111,48 @@ func (c *context) startJob(params map[string]string, startJob lib.StartJob, comm
 		refToBuild = startJob.ScmReference
 	}
 
-	buildFolder := fmt.Sprintf(buildFolderPattern, c.Env[BazookaEnvHome], runningJob.ProjectID, runningJob.ID)
+	buildFolder := path{
+		host:      fmt.Sprintf(buildFolderPattern, c.paths.home.host, runningJob.ProjectID, runningJob.ID),
+		container: fmt.Sprintf(buildFolderPattern, c.paths.home.container, runningJob.ProjectID, runningJob.ID),
+	}
 	orchestrationEnv := map[string]string{
 		"BZK_SCM":            project.ScmType,
 		"BZK_SCM_URL":        project.ScmURI,
 		"BZK_SCM_REFERENCE":  refToBuild,
-		"BZK_HOME":           buildFolder,
-		"BZK_SRC":            buildFolder + "/source",
+		"BZK_HOME":           buildFolder.host,
+		"BZK_SRC":            buildFolder.host + "/source",
 		"BZK_PROJECT_ID":     project.ID,
 		"BZK_JOB_ID":         runningJob.ID,
-		"BZK_DOCKERSOCK":     c.Env[BazookaEnvDockerSock],
+		"BZK_DOCKERSOCK":     c.paths.dockerSock.host,
 		"BZK_JOB_PARAMETERS": string(jobParameters),
-		BazookaEnvMongoAddr:  c.Env[BazookaEnvMongoAddr],
-		BazookaEnvMongoPort:  c.Env[BazookaEnvMongoPort],
+		BazookaEnvMongoAddr:  c.mongoAddr,
+		BazookaEnvMongoPort:  c.mongoPort,
 	}
 
-	buildFolderLocal := fmt.Sprintf(buildFolderPattern, "/bazooka", runningJob.ProjectID, runningJob.ID)
-
-	projectSSHKey, err := c.Connector.GetProjectKey(project.ID)
+	projectSSHKey, err := c.connector.GetProjectKey(project.ID)
 	if err != nil {
 		_, keyNotFound := err.(*mongo.NotFoundError)
 		if !keyNotFound {
 			return nil, err
 		}
 		//Use Global Key if provided
-		if len(c.Env[BazookaEnvSCMKeyfile]) > 0 {
-			orchestrationEnv["BZK_SCM_KEYFILE"] = c.Env[BazookaEnvSCMKeyfile]
+		if len(c.paths.scmKey.host) > 0 {
+			orchestrationEnv[BazookaEnvSCMKeyfile] = c.paths.scmKey.host
 		}
 	} else {
-		err = os.MkdirAll(buildFolderLocal, 0644)
+		err = os.MkdirAll(buildFolder.container, 0644)
 		if err != nil {
 			return nil, err
 		}
 
-		err = ioutil.WriteFile(fmt.Sprintf("%s/key", buildFolderLocal), []byte(projectSSHKey.Content), 0600)
+		err = ioutil.WriteFile(fmt.Sprintf("%s/key", buildFolder.container), []byte(projectSSHKey.Content), 0600)
 		if err != nil {
 			return nil, err
 		}
-		orchestrationEnv["BZK_SCM_KEYFILE"] = fmt.Sprintf("%s/key", buildFolder)
+		orchestrationEnv[BazookaEnvSCMKeyfile] = fmt.Sprintf("%s/key", buildFolder.host)
 	}
 
-	projectCryptoKey, err := c.Connector.GetProjectCryptoKey(project.ID)
+	projectCryptoKey, err := c.connector.GetProjectCryptoKey(project.ID)
 
 	if err != nil {
 		_, keyNotFound := err.(*mongo.NotFoundError)
@@ -158,32 +160,34 @@ func (c *context) startJob(params map[string]string, startJob lib.StartJob, comm
 			return nil, err
 		}
 	} else {
-		err = os.MkdirAll(buildFolderLocal, 0644)
+		err = os.MkdirAll(buildFolder.container, 0644)
 		if err != nil {
 			return nil, err
 		}
 
-		err = ioutil.WriteFile(fmt.Sprintf("%s/crypto-key", buildFolderLocal), []byte(projectCryptoKey.Content), 0600)
+		err = ioutil.WriteFile(fmt.Sprintf("%s/crypto-key", buildFolder.container), []byte(projectCryptoKey.Content), 0600)
 		if err != nil {
 			return nil, err
 		}
-		orchestrationEnv["BZK_CRYPTO_KEYFILE"] = fmt.Sprintf("%s/crypto-key", buildFolder)
+		orchestrationEnv["BZK_CRYPTO_KEYFILE"] = fmt.Sprintf("%s/crypto-key", buildFolder.host)
 	}
 
 	orchestrationVolumes := []string{
-		fmt.Sprintf("%s:/bazooka", buildFolder),
-		fmt.Sprintf("%s:/var/run/docker.sock", c.Env[BazookaEnvDockerSock]),
+		fmt.Sprintf("%s:/bazooka", buildFolder.host),
+		fmt.Sprintf("%s:/var/run/docker.sock", c.paths.dockerSock.host),
 	}
 
 	reuseScmCheckout := project.Config["bzk.scm.reuse"] == "true"
 	if reuseScmCheckout {
-		hostSharedSourceFolder := fmt.Sprintf("%s/build/%s/source", c.Env[BazookaEnvHome], runningJob.ProjectID)
-		containerSharedSourceFolder := fmt.Sprintf("/bazooka/build/%s/source", runningJob.ProjectID)
+		sharedSourceFolder := path{
+			host:      fmt.Sprintf(sharedSourceFolderPattern, c.paths.home.host, runningJob.ProjectID),
+			container: fmt.Sprintf(sharedSourceFolderPattern, c.paths.home.container, runningJob.ProjectID),
+		}
 
-		_, err := os.Stat(containerSharedSourceFolder)
+		_, err := os.Stat(sharedSourceFolder.container)
 		if err != nil {
 			if os.IsNotExist(err) {
-				err = os.MkdirAll(containerSharedSourceFolder, 0644)
+				err = os.MkdirAll(sharedSourceFolder.container, 0644)
 				if err != nil {
 					return nil, fmt.Errorf("Failed to create a shared source directory for project %s, job %s: %v",
 						runningJob.ProjectID, runningJob.ID, err)
@@ -194,10 +198,10 @@ func (c *context) startJob(params map[string]string, startJob lib.StartJob, comm
 			}
 		}
 
-		orchestrationEnv["BZK_SRC"] = hostSharedSourceFolder
+		orchestrationEnv["BZK_SRC"] = sharedSourceFolder.host
 		orchestrationEnv["BZK_REUSE_SCM_CHECKOUT"] = "1"
 
-		orchestrationVolumes = append(orchestrationVolumes, fmt.Sprintf("%s:/bazooka/source", hostSharedSourceFolder))
+		orchestrationVolumes = append(orchestrationVolumes, fmt.Sprintf("%s:/bazooka/source", sharedSourceFolder.host))
 	}
 
 	container, err := client.Run(&docker.RunOptions{
@@ -235,7 +239,7 @@ func (c *context) startJob(params map[string]string, startJob lib.StartJob, comm
 		"orchestration_id": runningJob.OrchestrationID,
 	}).Info("Starting job")
 
-	err = c.Connector.SetJobOrchestrationId(runningJob.ID, container.ID())
+	err = c.connector.SetJobOrchestrationId(runningJob.ID, container.ID())
 	if err != nil {
 		log.Error(err.Error())
 		return nil, err
@@ -246,7 +250,7 @@ func (c *context) startJob(params map[string]string, startJob lib.StartJob, comm
 
 func (c *context) getJob(r *request) (*response, error) {
 
-	job, err := c.Connector.GetJobByID(r.vars["id"])
+	job, err := c.connector.GetJobByID(r.vars["id"])
 	if err != nil {
 		if err.Error() != "not found" {
 			return nil, err
@@ -259,7 +263,7 @@ func (c *context) getJob(r *request) (*response, error) {
 
 func (c *context) getJobs(r *request) (*response, error) {
 
-	jobs, err := c.Connector.GetJobs(r.vars["id"])
+	jobs, err := c.connector.GetJobs(r.vars["id"])
 	if err != nil {
 		return nil, err
 	}
@@ -269,7 +273,7 @@ func (c *context) getJobs(r *request) (*response, error) {
 
 func (c *context) getAllJobs(r *request) (*response, error) {
 
-	jobs, err := c.Connector.GetAllJobs()
+	jobs, err := c.connector.GetAllJobs()
 	if err != nil {
 		return nil, err
 	}
@@ -283,7 +287,7 @@ func (c *context) getJobLog(r *request) (*response, error) {
 
 	jid := r.vars["id"]
 
-	job, err := c.Connector.GetJobByID(jid)
+	job, err := c.connector.GetJobByID(jid)
 
 	if err != nil {
 		if err.Error() != "not found" {
@@ -301,7 +305,7 @@ func (c *context) getJobLog(r *request) (*response, error) {
 		JobID: jid,
 	}
 
-	logs, err := c.Connector.GetLog(query)
+	logs, err := c.connector.GetLog(query)
 	if !follow {
 		logOutput.Encode(logs)
 		return nil, nil
@@ -331,7 +335,7 @@ func (c *context) getJobLog(r *request) (*response, error) {
 	for {
 		time.Sleep(1000 * time.Millisecond)
 		query.After = lastTime
-		logs, err := c.Connector.GetLog(query)
+		logs, err := c.connector.GetLog(query)
 		if err != nil {
 			log.Errorf("Error while retrieving logs: %v", err)
 			return nil, nil
@@ -347,7 +351,7 @@ func (c *context) getJobLog(r *request) (*response, error) {
 			}
 			flushResponse(w)
 		}
-		job, err := c.Connector.GetJobByID(jid)
+		job, err := c.connector.GetJobByID(jid)
 		if err != nil {
 			log.Errorf("Error while retrieving job: %v", err)
 			return nil, nil

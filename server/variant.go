@@ -14,7 +14,7 @@ import (
 )
 
 func (c *context) getVariant(r *request) (*response, error) {
-	variant, err := c.Connector.GetVariantByID(r.vars["id"])
+	variant, err := c.connector.GetVariantByID(r.vars["id"])
 	if err != nil {
 		if err.Error() != "not found" {
 			return nil, err
@@ -26,7 +26,7 @@ func (c *context) getVariant(r *request) (*response, error) {
 }
 
 func (c *context) getVariants(r *request) (*response, error) {
-	variants, err := c.Connector.GetVariants(r.vars["id"])
+	variants, err := c.connector.GetVariants(r.vars["id"])
 	if err != nil {
 		return nil, err
 	}
@@ -40,7 +40,7 @@ func (c *context) getVariantLog(r *request) (*response, error) {
 
 	vid := r.vars["id"]
 
-	variant, err := c.Connector.GetVariantByID(vid)
+	variant, err := c.connector.GetVariantByID(vid)
 
 	if err != nil {
 		if err.Error() != "not found" {
@@ -58,7 +58,7 @@ func (c *context) getVariantLog(r *request) (*response, error) {
 		VariantID: vid,
 	}
 
-	logs, err := c.Connector.GetLog(query)
+	logs, err := c.connector.GetLog(query)
 	if !follow {
 		logOutput.Encode(logs)
 		return nil, nil
@@ -88,7 +88,7 @@ func (c *context) getVariantLog(r *request) (*response, error) {
 	for {
 		time.Sleep(1000 * time.Millisecond)
 		query.After = lastTime
-		logs, err := c.Connector.GetLog(query)
+		logs, err := c.connector.GetLog(query)
 		if err != nil {
 			log.Errorf("Error while retrieving logs: %v", err)
 			return nil, nil
@@ -104,7 +104,7 @@ func (c *context) getVariantLog(r *request) (*response, error) {
 			}
 			flushResponse(w)
 		}
-		variant, err := c.Connector.GetVariantByID(vid)
+		variant, err := c.connector.GetVariantByID(vid)
 		if err != nil {
 			log.Errorf("Error while retrieving variant: %v", err)
 			return nil, nil
@@ -125,7 +125,7 @@ func variantLastLogTime(variant *lib.Variant, logs []lib.LogEntry) time.Time {
 func (c *context) getVariantArtifact(r *request) (*response, error) {
 	vid := r.vars["id"]
 
-	variant, err := c.Connector.GetVariantByID(vid)
+	variant, err := c.connector.GetVariantByID(vid)
 
 	if err != nil {
 		if err.Error() != "not found" {

@@ -14,7 +14,7 @@ func (p *context) createProject(r *request) (*response, error) {
 
 	r.parseBody(&project)
 
-	exists, err := p.Connector.HasProject(project.Name)
+	exists, err := p.connector.HasProject(project.Name)
 	switch {
 	case err != nil:
 		return nil, err
@@ -22,7 +22,7 @@ func (p *context) createProject(r *request) (*response, error) {
 		return conflict("name is already known")
 	}
 
-	supported, err := p.Connector.HasImage(fmt.Sprintf("scm/fetch/%s", project.ScmType))
+	supported, err := p.connector.HasImage(fmt.Sprintf("scm/fetch/%s", project.ScmType))
 	switch {
 	case err != nil:
 		return nil, err
@@ -34,7 +34,7 @@ func (p *context) createProject(r *request) (*response, error) {
 	log.WithFields(log.Fields{
 		"project": project,
 	}).Info("Adding project")
-	if err = p.Connector.AddProject(&project); err != nil {
+	if err = p.connector.AddProject(&project); err != nil {
 		return nil, err
 	}
 
@@ -43,7 +43,7 @@ func (p *context) createProject(r *request) (*response, error) {
 		ProjectID: project.ID,
 	}
 
-	if err = p.Connector.AddCryptoKey(cryptoKey); err != nil {
+	if err = p.connector.AddCryptoKey(cryptoKey); err != nil {
 		return nil, err
 	}
 
@@ -62,7 +62,7 @@ func randSeq(n int) string {
 }
 
 func (p *context) getProject(r *request) (*response, error) {
-	project, err := p.Connector.GetProjectById(r.vars["id"])
+	project, err := p.connector.GetProjectById(r.vars["id"])
 	if err != nil {
 		if err.Error() != "not found" {
 			return nil, err
@@ -77,13 +77,13 @@ func (c *context) getProjects(r *request) (*response, error) {
 	includeStatus := len(r.r.URL.Query().Get("include-status")) > 0
 
 	if includeStatus {
-		projects, err := c.Connector.GetProjectsWithStatus()
+		projects, err := c.connector.GetProjectsWithStatus()
 		if err != nil {
 			return nil, err
 		}
 		return ok(projects)
 	}
-	projects, err := c.Connector.GetProjects()
+	projects, err := c.connector.GetProjects()
 	if err != nil {
 		return nil, err
 	}
@@ -92,7 +92,7 @@ func (c *context) getProjects(r *request) (*response, error) {
 }
 
 func (p *context) getProjectConfig(r *request) (*response, error) {
-	project, err := p.Connector.GetProjectById(r.vars["id"])
+	project, err := p.connector.GetProjectById(r.vars["id"])
 	if err != nil {
 		if err.Error() != "not found" {
 			return nil, err
@@ -107,7 +107,7 @@ func (p *context) setProjectConfigKey(r *request) (*response, error) {
 	id, key := r.vars["id"], r.vars["key"]
 	body := r.rawBody()
 
-	if err := p.Connector.SetProjectConfigKey(id, key, string(body)); err != nil {
+	if err := p.connector.SetProjectConfigKey(id, key, string(body)); err != nil {
 		return nil, err
 	}
 
@@ -115,7 +115,7 @@ func (p *context) setProjectConfigKey(r *request) (*response, error) {
 }
 
 func (p *context) unsetProjectConfigKey(r *request) (*response, error) {
-	if err := p.Connector.UnsetProjectConfigKey(r.vars["id"], r.vars["key"]); err != nil {
+	if err := p.connector.UnsetProjectConfigKey(r.vars["id"], r.vars["key"]); err != nil {
 		if err.Error() != "not found" {
 			return nil, err
 		}

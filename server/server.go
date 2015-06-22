@@ -10,21 +10,8 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/gorilla/mux"
 
-	"github.com/bazooka-ci/bazooka/commons/mongo"
 	basic "github.com/haklop/go-http-basic-auth"
 	validator "gopkg.in/bluesuncorp/validator.v5"
-)
-
-const (
-	BazookaEnvSCMKeyfile = "BZK_SCM_KEYFILE"
-	BazookaEnvHome       = "BZK_HOME"
-	BazookaEnvDockerSock = "BZK_DOCKERSOCK"
-	BazookaEnvMongoAddr  = "MONGO_PORT_27017_TCP_ADDR"
-	BazookaEnvMongoPort  = "MONGO_PORT_27017_TCP_PORT"
-
-	DockerSock     = "/var/run/docker.sock"
-	DockerEndpoint = "unix://" + DockerSock
-	BazookaHome    = "/bazooka"
 )
 
 type errorResponse struct {
@@ -34,12 +21,6 @@ type errorResponse struct {
 
 func (e errorResponse) Error() string {
 	return fmt.Sprintf("%d: %s", e.Code, e.Message)
-}
-
-type context struct {
-	Connector      *mongo.MongoConnector
-	DockerEndpoint string
-	Env            map[string]string
 }
 
 func writeError(err error, res http.ResponseWriter) {
@@ -220,7 +201,7 @@ func mkHandler(f func(*request) (*response, error)) http.Handler {
 
 func (ctx *context) authenticationHandler(next http.Handler) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		users, err := ctx.Connector.GetUsers()
+		users, err := ctx.connector.GetUsers()
 		if err != nil {
 			// TODO handle error properly
 			log.Fatal(err)
@@ -236,5 +217,5 @@ func (ctx *context) authenticationHandler(next http.Handler) func(http.ResponseW
 }
 
 func (ctx *context) userAuthentication(email string, password string) bool {
-	return ctx.Connector.ComparePassword(email, password)
+	return ctx.connector.ComparePassword(email, password)
 }

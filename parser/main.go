@@ -2,9 +2,7 @@ package main
 
 import (
 	"encoding/hex"
-	"encoding/json"
 	"fmt"
-	"os"
 	"strings"
 
 	"github.com/bazooka-ci/bazooka/commons/matrix"
@@ -23,7 +21,8 @@ const (
 
 func init() {
 	log.SetFormatter(&bzklog.BzkFormatter{})
-	err := lib.LoadCryptoKeyFromFile("/bazooka-cryptokey")
+	context := initContext()
+	err := lib.LoadCryptoKeyFromFile(context.paths.cryptoKey.container)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -32,15 +31,16 @@ func init() {
 
 func main() {
 	log.Info("Starting Parsing Phase")
+
+	context := initContext()
+
 	// Find either .travis.yml or .bazooka.yml file in the project
-	configFile, err := lib.ResolveConfigFile(paths.container.source)
+	configFile, err := lib.ResolveConfigFile(context.paths.source.container)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	envParamString := os.Getenv(BazookaEnvJobParameters)
-	var envParams []lib.BzkString
-	err = json.Unmarshal([]byte(envParamString), &envParams)
+	envParams, err := context.unmarshalJobParameters()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -73,7 +73,8 @@ func main() {
 
 		// run the parser image
 		langParser := &LanguageParser{
-			Image: image,
+			image:   image,
+			context: context,
 		}
 		variants, err = langParser.Parse()
 		if err != nil {
@@ -131,7 +132,7 @@ func main() {
 			// handlePermutation will start from the .bazooka.*.yml file, which should already contain a single language specific permutation
 			// and enrich it with the env variables combination
 			// the same goes for the meta file
-			if err := handlePermutation(permutation, variant.config, variant.meta, counter, variant.counter); err != nil {
+			if err := handlePermutation(context, permutation, variant.config, variant.meta, counter, variant.counter); err != nil {
 				log.Fatal(fmt.Errorf("Error while generating the permutations: %v", err))
 			}
 		}, exclusions)
@@ -140,7 +141,7 @@ func main() {
 
 	log.Info("Starting generating Dockerfiles from Matrix")
 	// Now we're left with the final build files
-	files, err := lib.ListFilesWithPrefix(paths.container.output, ".bazooka")
+	files, err := lib.ListFilesWithPrefix(context.paths.output.container, ".bazooka")
 	if err != nil {
 		log.Fatal(fmt.Errorf("Error while listing .bazooka* files: %v", err))
 	}
@@ -154,9 +155,9 @@ func main() {
 
 		// transform the .bazooka.x.yml file into a set of dockerfile + shell scripts who perform the actual build
 		g := &Generator{
-			Config:       config,
-			OutputFolder: paths.container.output,
-			Index:        parseCounter(file),
+			config:       config,
+			outputFolder: context.paths.output.container,
+			index:        parseCounter(file),
 		}
 		err = g.GenerateDockerfile()
 		if err != nil {
@@ -167,7 +168,7 @@ func main() {
 
 }
 
-func handlePermutation(permutation map[string]string, config *lib.Config, meta map[string]interface{}, counter, rootCounter string) error {
+func handlePermutation(context *context, permutation map[string]string, config *lib.Config, meta map[string]interface{}, counter, rootCounter string) error {
 	// start from the language-spcecific permutation
 	newConfig := *config
 
@@ -180,20 +181,20 @@ func handlePermutation(permutation map[string]string, config *lib.Config, meta m
 	}
 
 	newConfig.Env = mapValues(envMap)
-	if err := lib.Flush(newConfig, fmt.Sprintf("%s/.bazooka.%s%s.yml", paths.container.output, rootCounter, counter)); err != nil {
+	if err := lib.Flush(newConfig, fmt.Sprintf("%s/.bazooka.%s%s.yml", context.paths.output.container, rootCounter, counter)); err != nil {
 		return err
 	}
 
 	// do the same for the meta file
 	// start from the language specific permutation meta file
 	// and add this permutation's env map
-	metaEnv, err := generateEnvForMeta(newConfig.Env)
+	metaEnv, err := generateEnvForMeta(newConfig.Env, context.paths.cryptoKey.container)
 	if err != nil {
 		return err
 	}
 
 	meta["env"] = metaEnv
-	metaFile := fmt.Sprintf("%s/%s%s", paths.container.meta, rootCounter, counter)
+	metaFile := fmt.Sprintf("%s/%s%s", context.paths.meta.container, rootCounter, counter)
 	lib.Flush(meta, metaFile)
 
 	return nil
@@ -314,8 +315,8 @@ func mapValues(m map[string]lib.BzkString) []lib.BzkString {
 	return res
 }
 
-func generateEnvForMeta(env []lib.BzkString) ([]string, error) {
-	key, err := lib.ReadCryptoKey(paths.container.cryptoKey)
+func generateEnvForMeta(env []lib.BzkString, cryptoKeyPath string) ([]string, error) {
+	key, err := lib.ReadCryptoKey(cryptoKeyPath)
 	if err != nil {
 		return nil, err
 	}

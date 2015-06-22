@@ -14,7 +14,7 @@ func (p *context) createUser(r *request) (*response, error) {
 		return badRequest("password is mandatory")
 	}
 
-	exists, err := p.Connector.HasUser(user.Email)
+	exists, err := p.connector.HasUser(user.Email)
 	switch {
 	case err != nil:
 		return nil, err
@@ -22,14 +22,14 @@ func (p *context) createUser(r *request) (*response, error) {
 		return conflict("email is already known")
 	}
 
-	if err = p.Connector.AddUser(&user); err != nil {
+	if err = p.connector.AddUser(&user); err != nil {
 		return nil, err
 	}
 	return created(&user, "/user/"+user.ID)
 }
 
 func (p *context) getUser(r *request) (*response, error) {
-	user, err := p.Connector.GetUserByEmail(r.vars["email"])
+	user, err := p.connector.GetUserByEmail(r.vars["email"])
 	if err != nil {
 		if err.Error() != "not found" {
 			return nil, err
@@ -41,7 +41,7 @@ func (p *context) getUser(r *request) (*response, error) {
 }
 
 func (p *context) getUsers(r *request) (*response, error) {
-	users, err := p.Connector.GetUsers()
+	users, err := p.connector.GetUsers()
 	if err != nil {
 		return nil, err
 	}

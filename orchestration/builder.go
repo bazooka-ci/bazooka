@@ -13,25 +13,21 @@ import (
 )
 
 type Builder struct {
-	Options *BuildOptions
-}
-
-type BuildOptions struct {
-	BaseFolder string
-	ProjectID  string
-	Variants   []*variantData
+	context  *context
+	variants []*variantData
 }
 
 func (b *Builder) Build() error {
 	log.Info("Starting building Dockerfiles")
+	paths := b.context.paths
 
-	client, err := docker.NewDocker(paths.container.dockerEndpoint)
+	client, err := docker.NewDocker(paths.dockerEndpoint.container)
 	if err != nil {
 		return err
 	}
 
 	par := parallel.New()
-	for _, ivariant := range b.Options.Variants {
+	for _, ivariant := range b.variants {
 		variant := ivariant
 		par.Submit(func() error {
 			return b.buildContainer(client, variant)
@@ -59,12 +55,12 @@ func (b *Builder) buildContainer(client *docker.Docker, vd *variantData) error {
 		"variant": vd.counter,
 	}).Info("Building container for variant")
 
-	tag := fmt.Sprintf("bazooka-build/%s-%s-%d", b.Options.ProjectID, vd.variant.JobID, vd.variant.Number)
+	tag := fmt.Sprintf("bazooka-build/%s-%s-%d", b.context.projectID, vd.variant.JobID, vd.variant.Number)
 
 	err := client.Build(&docker.BuildOptions{
 		Tag:        tag,
 		Dockerfile: strings.TrimPrefix(vd.dockerFile, "/bazooka/"), //Ugly hack: the Dockerfile path needs to be relative to context dir
-		Path:       b.Options.BaseFolder,
+		Path:       b.context.paths.base.container,
 	})
 	if err != nil {
 		return err

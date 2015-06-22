@@ -3,10 +3,6 @@ package main
 import (
 	"fmt"
 	"net/http"
-	"os"
-	"time"
-
-	lib "github.com/bazooka-ci/bazooka/commons"
 
 	log "github.com/Sirupsen/logrus"
 	bzklog "github.com/bazooka-ci/bazooka/commons/logs"
@@ -20,83 +16,52 @@ func init() {
 
 func main() {
 	// Configure Bazooka
-	env := map[string]string{
-		BazookaEnvSCMKeyfile: os.Getenv(BazookaEnvSCMKeyfile),
-		BazookaEnvHome:       os.Getenv(BazookaEnvHome),
-		BazookaEnvDockerSock: os.Getenv(BazookaEnvDockerSock),
-		BazookaEnvMongoAddr:  os.Getenv(BazookaEnvMongoAddr),
-		BazookaEnvMongoPort:  os.Getenv(BazookaEnvMongoPort),
-	}
+	context := initContext()
+	defer context.cleanup()
 
-	if len(env[BazookaEnvHome]) == 0 {
-		env[BazookaEnvHome] = "/bazooka"
-	}
-
-	// Enable bazooka-server to be execute without running its own container
-	var serverEndpoint string
-	if len(os.Getenv("DOCKER_HOST")) != 0 {
-		serverEndpoint = os.Getenv("DOCKER_HOST")
-	} else {
-		serverEndpoint = DockerEndpoint
-	}
-
-	// Configure Mongo
-	if err := lib.WaitForTcpConnection(env[BazookaEnvMongoAddr], env[BazookaEnvMongoPort], 100*time.Millisecond, 5*time.Second); err != nil {
-		log.Fatalf("Cannot connect to the database: %v", err)
-	}
-
-	connector := mongo.NewConnector()
-	defer connector.Close()
-
-	if err := ensureDefaultImagesExist(connector); err != nil {
+	if err := ensureDefaultImagesExist(context.connector); err != nil {
 		log.Fatal(err)
-	}
-
-	ctx := context{
-		Connector:      connector,
-		DockerEndpoint: serverEndpoint,
-		Env:            env,
 	}
 
 	// Configure web server
 	r := mux.NewRouter()
 
-	r.HandleFunc("/project", ctx.mkAuthHandler(ctx.createProject)).Methods("POST")
+	r.HandleFunc("/project", context.mkAuthHandler(context.createProject)).Methods("POST")
 
-	r.HandleFunc("/project", ctx.mkAuthHandler(ctx.getProjects)).Methods("GET")
-	r.HandleFunc("/project/{id}", ctx.mkAuthHandler(ctx.getProject)).Methods("GET")
-	r.HandleFunc("/project/{id}/job", ctx.mkAuthHandler(ctx.startStandardJob)).Methods("POST")
-	r.HandleFunc("/project/{id}/bitbucket", ctx.mkAuthHandler(ctx.startBitbucketJob)).Methods("POST")
-	r.HandleFunc("/project/{id}/job", ctx.mkAuthHandler(ctx.getJobs)).Methods("GET")
+	r.HandleFunc("/project", context.mkAuthHandler(context.getProjects)).Methods("GET")
+	r.HandleFunc("/project/{id}", context.mkAuthHandler(context.getProject)).Methods("GET")
+	r.HandleFunc("/project/{id}/job", context.mkAuthHandler(context.startStandardJob)).Methods("POST")
+	r.HandleFunc("/project/{id}/bitbucket", context.mkAuthHandler(context.startBitbucketJob)).Methods("POST")
+	r.HandleFunc("/project/{id}/job", context.mkAuthHandler(context.getJobs)).Methods("GET")
 
-	r.HandleFunc("/project/{id}/config", ctx.mkAuthHandler(ctx.getProjectConfig)).Methods("GET")
-	r.HandleFunc("/project/{id}/config/{key}", ctx.mkAuthHandler(ctx.setProjectConfigKey)).Methods("PUT")
-	r.HandleFunc("/project/{id}/config/{key}", ctx.mkAuthHandler(ctx.unsetProjectConfigKey)).Methods("DELETE")
+	r.HandleFunc("/project/{id}/config", context.mkAuthHandler(context.getProjectConfig)).Methods("GET")
+	r.HandleFunc("/project/{id}/config/{key}", context.mkAuthHandler(context.setProjectConfigKey)).Methods("PUT")
+	r.HandleFunc("/project/{id}/config/{key}", context.mkAuthHandler(context.unsetProjectConfigKey)).Methods("DELETE")
 
-	r.HandleFunc("/project/{id}/key", ctx.mkAuthHandler(ctx.addKey)).Methods("POST")
-	r.HandleFunc("/project/{id}/key", ctx.mkAuthHandler(ctx.updateKey)).Methods("PUT")
-	r.HandleFunc("/project/{id}/key", ctx.mkAuthHandler(ctx.listKeys)).Methods("GET")
+	r.HandleFunc("/project/{id}/key", context.mkAuthHandler(context.addKey)).Methods("POST")
+	r.HandleFunc("/project/{id}/key", context.mkAuthHandler(context.updateKey)).Methods("PUT")
+	r.HandleFunc("/project/{id}/key", context.mkAuthHandler(context.listKeys)).Methods("GET")
 
-	r.HandleFunc("/project/{id}/crypto", ctx.mkAuthHandler(ctx.encryptData)).Methods("PUT")
+	r.HandleFunc("/project/{id}/crypto", context.mkAuthHandler(context.encryptData)).Methods("PUT")
 
-	r.HandleFunc("/job", ctx.mkAuthHandler(ctx.getAllJobs)).Methods("GET")
-	r.HandleFunc("/job/{id}", ctx.mkAuthHandler(ctx.getJob)).Methods("GET")
-	r.HandleFunc("/job/{id}/log", ctx.mkAuthHandler(ctx.getJobLog)).Methods("GET")
-	r.HandleFunc("/job/{id}/variant", ctx.mkAuthHandler(ctx.getVariants)).Methods("GET")
+	r.HandleFunc("/job", context.mkAuthHandler(context.getAllJobs)).Methods("GET")
+	r.HandleFunc("/job/{id}", context.mkAuthHandler(context.getJob)).Methods("GET")
+	r.HandleFunc("/job/{id}/log", context.mkAuthHandler(context.getJobLog)).Methods("GET")
+	r.HandleFunc("/job/{id}/variant", context.mkAuthHandler(context.getVariants)).Methods("GET")
 
-	r.HandleFunc("/variant/{id}", ctx.mkAuthHandler(ctx.getVariant)).Methods("GET")
-	r.HandleFunc("/variant/{id}/log", ctx.mkAuthHandler(ctx.getVariantLog)).Methods("GET")
-	r.HandleFunc("/variant/{id}/artifacts/{path:.*}", ctx.mkAuthHandler(ctx.getVariantArtifact)).Methods("GET")
+	r.HandleFunc("/variant/{id}", context.mkAuthHandler(context.getVariant)).Methods("GET")
+	r.HandleFunc("/variant/{id}/log", context.mkAuthHandler(context.getVariantLog)).Methods("GET")
+	r.HandleFunc("/variant/{id}/artifacts/{path:.*}", context.mkAuthHandler(context.getVariantArtifact)).Methods("GET")
 
-	r.HandleFunc("/image", ctx.mkAuthHandler(ctx.getImages)).Methods("GET")
-	r.HandleFunc("/image/{name:.*}", ctx.mkAuthHandler(ctx.setImage)).Methods("PUT")
-	// r.HandleFunc("/image/{name}", ctx.mkAuthHandler(ctx.unsetImage)).Methods("DELETE")
+	r.HandleFunc("/image", context.mkAuthHandler(context.getImages)).Methods("GET")
+	r.HandleFunc("/image/{name:.*}", context.mkAuthHandler(context.setImage)).Methods("PUT")
+	// r.HandleFunc("/image/{name}", context.mkAuthHandler(context.unsetImage)).Methods("DELETE")
 
-	r.HandleFunc("/user", ctx.mkAuthHandler(ctx.getUsers)).Methods("GET")
-	r.HandleFunc("/user", ctx.mkAuthHandler(ctx.createUser)).Methods("POST")
-	r.HandleFunc("/user/{id}", ctx.mkAuthHandler(ctx.getUser)).Methods("GET")
+	r.HandleFunc("/user", context.mkAuthHandler(context.getUsers)).Methods("GET")
+	r.HandleFunc("/user", context.mkAuthHandler(context.createUser)).Methods("POST")
+	r.HandleFunc("/user/{id}", context.mkAuthHandler(context.getUser)).Methods("GET")
 
-	r.HandleFunc("/project/{id}/github", ctx.mkGithubAuthHandler(ctx.startGithubJob)).Methods("POST")
+	r.HandleFunc("/project/{id}/github", context.mkGithubAuthHandler(context.startGithubJob)).Methods("POST")
 
 	http.Handle("/", r)
 
