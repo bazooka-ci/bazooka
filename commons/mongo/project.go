@@ -106,6 +106,30 @@ func (c *MongoConnector) AddProject(project *lib.Project) error {
 }
 
 func (c *MongoConnector) SetProjectConfig(id string, config map[string]string) error {
+	return c.setProjectDatastore("config", id, config)
+}
+
+func (c *MongoConnector) SetProjectConfigKey(id, key, value string) error {
+	return c.setProjectDatastoreKey("config", id, key, value)
+}
+
+func (c *MongoConnector) UnsetProjectConfigKey(id, key string) error {
+	return c.unsetProjectDatastoreKey("config", id, key)
+}
+
+func (c *MongoConnector) SetProjectEnv(id string, config map[string]string) error {
+	return c.setProjectDatastore("env", id, config)
+}
+
+func (c *MongoConnector) SetProjectEnvKey(id, key, value string) error {
+	return c.setProjectDatastoreKey("env", id, key, value)
+}
+
+func (c *MongoConnector) UnsetProjectEnvKey(id, key string) error {
+	return c.unsetProjectDatastoreKey("env", id, key)
+}
+
+func (c *MongoConnector) setProjectDatastore(datastore string, id string, config map[string]string) error {
 	proj, err := c.GetProjectById(id)
 	if err != nil {
 		return err
@@ -119,13 +143,13 @@ func (c *MongoConnector) SetProjectConfig(id string, config map[string]string) e
 	}
 	request := bson.M{
 		"$set": bson.M{
-			"config": escapedConfig,
+			datastore: escapedConfig,
 		},
 	}
 	return c.database.C("projects").Update(selector, request)
 }
 
-func (c *MongoConnector) SetProjectConfigKey(id, key, value string) error {
+func (c *MongoConnector) setProjectDatastoreKey(datastore, id, key, value string) error {
 	proj, err := c.GetProjectById(id)
 	if err != nil {
 		return err
@@ -135,13 +159,13 @@ func (c *MongoConnector) SetProjectConfigKey(id, key, value string) error {
 	}
 	request := bson.M{
 		"$set": bson.M{
-			fmt.Sprintf("config.%s", escapeDots(key)): value,
+			fmt.Sprintf("%s.%s", datastore, escapeDots(key)): value,
 		},
 	}
 	return c.database.C("projects").Update(selector, request)
 }
 
-func (c *MongoConnector) UnsetProjectConfigKey(id, key string) error {
+func (c *MongoConnector) unsetProjectDatastoreKey(datastore, id, key string) error {
 	proj, err := c.GetProjectById(id)
 	if err != nil {
 		return err
@@ -151,7 +175,7 @@ func (c *MongoConnector) UnsetProjectConfigKey(id, key string) error {
 	}
 	request := bson.M{
 		"$unset": bson.M{
-			fmt.Sprintf("config.%s", escapeDots(key)): "",
+			fmt.Sprintf("%s.%s", datastore, escapeDots(key)): "",
 		},
 	}
 	return c.database.C("projects").Update(selector, request)

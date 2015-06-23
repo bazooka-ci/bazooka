@@ -27,6 +27,7 @@ func New(config *Config) (*Client, error) {
 			config: config,
 			Key:    &ProjectKey{config},
 			Config: &ProjectConfig{config},
+			Env:    &ProjectEnv{config},
 		},
 		Job:     &Job{config},
 		Variant: &Variant{config},

@@ -3,6 +3,7 @@ package bazooka
 import (
 	"errors"
 	"fmt"
+	"strings"
 )
 
 const (
@@ -40,6 +41,14 @@ type ConfigMatrix struct {
 	Exclude []map[string]interface{} `yaml:"exclude,omitempty"`
 }
 
+func FlattenStringsEnvMap(mapp map[string]string) []string {
+	res := []string{}
+	for key, value := range mapp {
+		res = append(res, fmt.Sprintf("%s=%s", key, value))
+	}
+	return res
+}
+
 func ResolveConfigFile(source string) (string, error) {
 	bazookaPath := fmt.Sprintf("%s/%s", source, bazookaConfigFile)
 	exist, err := FileExists(bazookaPath)
@@ -74,4 +83,17 @@ func (c *Commands) UnmarshalYAML(unmarshal func(interface{}) error) (err error) 
 func (g *Globs) UnmarshalYAML(unmarshal func(interface{}) error) (err error) {
 	*g, err = unmarshalOneOrMany(unmarshal, "Globs (archive, archive_success, archive_failure)")
 	return err
+}
+
+func GetStringsEnvMap(envArray []string) map[string][]string {
+	envKeyMap := make(map[string][]string)
+	for _, env := range envArray {
+		envSplit := strings.Split(env, "=")
+		value := ""
+		if len(envSplit) == 2 {
+			value = envSplit[1]
+		}
+		envKeyMap[envSplit[0]] = append(envKeyMap[envSplit[0]], value)
+	}
+	return envKeyMap
 }
