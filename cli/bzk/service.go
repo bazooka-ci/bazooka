@@ -51,14 +51,15 @@ func startService(cmd *cli.Cmd) {
 		Desc: "The bazooka version to run",
 	})
 
-	cmd.Action = func() {
-		config, err := getConfigWithParams(*bzkHome, *dockerSock, *registry, *scmKey, *mongoURI)
+	cmd.Action = doStartService(tag, bzkHome, dockerSock, registry, scmKey, mongoURI)
+}
+
+func doStartService(version, bzkHome, dockerSock, registry, scmKey, mongoURI *string) func() {
+	return func() {
+
+		config, err := getConfigWithParams(*version, *bzkHome, *dockerSock, *registry, *scmKey, *mongoURI)
 		if err != nil {
 			log.Fatal(err)
-		}
-
-		if len(*tag) == 0 {
-			*tag = "latest"
 		}
 
 		client, err := docker.NewDocker("")
@@ -74,115 +75,30 @@ func startService(cmd *cli.Cmd) {
 		}
 
 		if config.MongoURI == "" {
-			err = ensureContainerIsStarted(client, getMongoRunOptions(), allContainers)
+			err = startContainer(client, getMongoRunOptions(), allContainers)
 			if err != nil {
 				log.Fatal(err)
 			}
 		}
 
-		err = ensureContainerIsStarted(client, getServerRunOptions(config.Registry, config.Home, config.DockerSock, config.SCMKey, config.MongoURI, *tag), allContainers)
+		err = startContainer(client, getServerRunOptions(config), allContainers)
 		if err != nil {
 			log.Fatal(err)
 		}
 
-		err = ensureContainerIsStarted(client, getWebRunOptions(config.Registry, *tag), allContainers)
+		err = startContainer(client, getWebRunOptions(config), allContainers)
 		if err != nil {
 			log.Fatal(err)
 		}
-	}
-}
-
-func restartService(cmd *cli.Cmd) {
-	cmd.Action = doRestartService
-}
-
-func doRestartService() {
-	client, err := docker.NewDocker("")
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	allContainers, err := client.Ps(&docker.PsOptions{
-		All: true,
-	})
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	config, err := getConfig()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	if config.MongoURI == "" {
-		err = ensureContainerIsStarted(client, getMongoRunOptions(), allContainers)
-		if err != nil {
-			log.Fatal(err)
-		}
-	}
-
-	tag, err := getTagFromCurrentImages(client, allContainers)
-
-	err = restartContainer(client, getServerRunOptions(config.Registry, config.Home, config.DockerSock, config.SCMKey, config.MongoURI, tag), allContainers)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	err = restartContainer(client, getWebRunOptions(config.Registry, tag), allContainers)
-	if err != nil {
-		log.Fatal(err)
-	}
-}
-
-func getTagFromCurrentImages(client *docker.Docker, allContainers []dockerclient.APIContainers) (string, error) {
-	container, err := getContainer(allContainers, bzkContainerServer)
-	if err != nil {
-		// Container not found, using latest by default
-		return "latest", nil
-	}
-	split := strings.Split(container.Image, ":")
-	return split[len(split)-1], nil
-}
-
-func upgradeService(cmd *cli.Cmd) {
-	cmd.Action = func() {
-		fmt.Printf("Pulling Bazooka images to check for new versions. This may take some time...\n")
-
-		client, err := docker.NewDocker("")
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		bzkImages, err := client.Images(&docker.ImagesOptions{})
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		var hasError bool
-		for _, image := range bzkImages {
-			for _, tag := range image.RepoTags {
-				if strings.HasPrefix(tag, "bazooka/") {
-					err = client.Pull(&docker.PullOptions{Image: tag})
-					if err != nil {
-						fmt.Printf("Unable to pull image %s, reason is: %v\n", tag, err)
-						hasError = true
-					}
-					fmt.Printf("Newest image %s upgraded\n", tag)
-					break
-				}
-			}
-		}
-		if hasError {
-			log.Fatalf("Error while pulling some images, see above errors\n")
-		}
-
-		fmt.Printf("Bazooka Images have been upgraded, let's restart bazooka\n")
-		doRestartService()
 	}
 }
 
 func stopService(cmd *cli.Cmd) {
-	cmd.Action = func() {
+	cmd.Action = doStopService()
+}
+
+func doStopService() func() {
+	return func() {
 		client, err := docker.NewDocker("")
 		if err != nil {
 			log.Fatal(err)
@@ -201,7 +117,7 @@ func stopService(cmd *cli.Cmd) {
 		}
 
 		if config.MongoURI == "" {
-			err = stopContainer(client, bzkContainerMongo, allContainers)
+			err := stopContainer(client, bzkContainerMongo, allContainers)
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -216,6 +132,89 @@ func stopService(cmd *cli.Cmd) {
 		if err != nil {
 			log.Fatal(err)
 		}
+	}
+}
+
+func restartService(cmd *cli.Cmd) {
+	cmd.Spec = "[-x [-swd]]"
+
+	recreate := cmd.Bool(cli.BoolOpt{
+		Name:      "x recreate",
+		Desc:      "Recreate existing Bazooka containers",
+		Value:     false,
+		HideValue: true,
+	})
+	recreateServer := cmd.Bool(cli.BoolOpt{
+		Name:      "s server",
+		Desc:      "Recreate existing server container",
+		Value:     false,
+		HideValue: true,
+	})
+	recreateWeb := cmd.Bool(cli.BoolOpt{
+		Name:      "w web",
+		Desc:      "Recreate existing web container",
+		Value:     false,
+		HideValue: true,
+	})
+	recreateDatabase := cmd.Bool(cli.BoolOpt{
+		Name:      "d database",
+		Desc:      "Recreate existing database container",
+		Value:     false,
+		HideValue: true,
+	})
+
+	cmd.Action = doRestartService(recreate, recreateServer, recreateWeb, recreateDatabase)
+}
+
+func doRestartService(recreate, recreateServer, recreateWeb, recreateDatabase *bool) func() {
+	return func() {
+		doStopService()()
+
+		client, err := docker.NewDocker("")
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		config, err := getConfig()
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		allContainers, err := client.Ps(&docker.PsOptions{
+			All: true,
+		})
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		if *recreate {
+			if !*recreateDatabase && !*recreateServer && !*recreateWeb {
+				*recreateServer = true
+				*recreateWeb = true
+			}
+
+			if *recreateServer {
+				err := destroyContainer(client, bzkContainerServer, allContainers)
+				if err != nil {
+					log.Fatal(err)
+				}
+			}
+
+			if *recreateWeb {
+				err := destroyContainer(client, bzkContainerWeb, allContainers)
+				if err != nil {
+					log.Fatal(err)
+				}
+			}
+
+			if *recreateDatabase {
+				err := destroyContainer(client, bzkContainerMongo, allContainers)
+				if err != nil {
+					log.Fatal(err)
+				}
+			}
+		}
+		doStartService(&config.Tag, &config.Home, &config.DockerSock, &config.Registry, &config.SCMKey, &config.MongoURI)()
 	}
 }
 
@@ -254,6 +253,56 @@ func statusService(cmd *cli.Cmd) {
 	}
 }
 
+func upgradeService(cmd *cli.Cmd) {
+	cmd.Action = func() {
+		fmt.Printf("Pulling Bazooka images to check for new versions. This may take some time...\n")
+
+		client, err := docker.NewDocker("")
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		bzkImages, err := client.Images(&docker.ImagesOptions{})
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		var hasError bool
+		for _, image := range bzkImages {
+			for _, tag := range image.RepoTags {
+				if strings.HasPrefix(tag, "bazooka/") {
+					err = client.Pull(&docker.PullOptions{Image: tag})
+					if err != nil {
+						fmt.Printf("Unable to pull image %s, reason is: %v\n", tag, err)
+						hasError = true
+					}
+					fmt.Printf("Newest image %s upgraded\n", tag)
+					break
+				}
+			}
+		}
+		if hasError {
+			log.Fatalf("Error while pulling some images, see above errors\n")
+		}
+
+		fmt.Printf("Bazooka Images have been upgraded, let's restart bazooka\n")
+
+		// Recreate containers except database
+		recreate, recreateServer, recreateWeb, recreateDatabase := true, true, true, false
+		doRestartService(&recreate, &recreateServer, &recreateWeb, &recreateDatabase)()
+	}
+}
+
+func getTagFromCurrentImages(client *docker.Docker, allContainers []dockerclient.APIContainers) (string, error) {
+	container, err := getContainer(allContainers, bzkContainerServer)
+	if err != nil {
+		// Container not found, using latest by default
+		return "latest", nil
+	}
+	split := strings.Split(container.Image, ":")
+	return split[len(split)-1], nil
+}
+
 func getContainerStatus(name string, allContainers []dockerclient.APIContainers) bool {
 	container, err := getContainer(allContainers, name)
 	if err != nil {
@@ -270,7 +319,7 @@ func getContainerStatus(name string, allContainers []dockerclient.APIContainers)
 
 }
 
-func getConfigWithParams(bzkHome, dockerSock, registry, scmKey, mongoURI string) (*Config, error) {
+func getConfigWithParams(tag, bzkHome, dockerSock, registry, scmKey, mongoURI string) (*Config, error) {
 	config, err := loadConfig()
 	if err != nil {
 		return nil, fmt.Errorf("Unable to load Bazooka config, reason is: %v\n", err)
@@ -289,6 +338,7 @@ func getConfigWithParams(bzkHome, dockerSock, registry, scmKey, mongoURI string)
 	} else {
 		config.Home = bzkHome
 	}
+
 	if len(dockerSock) == 0 {
 		if len(config.DockerSock) == 0 {
 			config.DockerSock = interactiveInput("Docker Socket path", "/var/run/docker.sock")
@@ -309,6 +359,14 @@ func getConfigWithParams(bzkHome, dockerSock, registry, scmKey, mongoURI string)
 		config.Registry = registry
 	}
 
+	if len(tag) == 0 {
+		if len(config.Tag) == 0 {
+			config.Tag = "latest"
+		}
+	} else {
+		config.Tag = tag
+	}
+
 	err = saveConfig(config)
 	if err != nil {
 		return nil, fmt.Errorf("Unable to save Bazooka config, reason is: %v\n", err)
@@ -318,25 +376,20 @@ func getConfigWithParams(bzkHome, dockerSock, registry, scmKey, mongoURI string)
 }
 
 func getConfig() (*Config, error) {
-	return getConfigWithParams("", "", "", "", "")
+	return getConfigWithParams("", "", "", "", "", "")
 }
 
-func restartContainer(client *docker.Docker, options *docker.RunOptions, allContainers []dockerclient.APIContainers) error {
-	container, err := getContainer(allContainers, options.Name)
+func destroyContainer(client *docker.Docker, name string, allContainers []dockerclient.APIContainers) error {
+	container, err := getContainer(allContainers, name)
 	if err != nil {
-		fmt.Printf("Container %s not found, Starting it\n", options.Name)
-		_, err := client.Run(options)
-		return err
+		fmt.Printf("Container %s does not exist\n", name)
+		return nil
 	}
-	fmt.Printf("Restarting Container %s\n", options.Name)
+	fmt.Printf("Destroying Container %s\n", name)
 	err = client.Rm(&docker.RmOptions{
 		Container: []string{container.ID},
 		Force:     true,
 	})
-	if err != nil {
-		return err
-	}
-	_, err = client.Run(options)
 	return err
 }
 
@@ -361,25 +414,40 @@ func stopContainer(client *docker.Docker, name string, allContainers []dockercli
 	return nil
 }
 
-func ensureContainerIsStarted(client *docker.Docker, options *docker.RunOptions, allContainers []dockerclient.APIContainers) error {
+func startContainer(client *docker.Docker, options *docker.RunOptions, allContainers []dockerclient.APIContainers) error {
 	container, err := getContainer(allContainers, options.Name)
 	if err != nil {
-		fmt.Printf("Container %s not found, Starting it\n", options.Name)
+		fmt.Printf("Container %s not found, creating and starting it\n", options.Name)
 		_, err := client.Run(options)
 		return err
 	}
+
 	if container.Image == options.Image {
 		if strings.HasPrefix(container.Status, "Up") {
 			fmt.Printf("Container %s already Up & Running, keeping on\n", options.Name)
 			return nil
 		}
+
 		fmt.Printf("Container %s is not `Up`, starting it\n", options.Name)
 		return client.Start(&docker.StartOptions{
-			ID: container.ID,
+			ID:              container.ID,
+			VolumeBinds:     options.VolumeBinds,
+			Links:           options.Links,
+			PublishAllPorts: options.PublishAllPorts,
+			PortBindings:    options.PortBindings,
 		})
 	}
+
 	fmt.Printf("Container %s found, but not in the right version, recreating it\n", options.Name)
-	return restartContainer(client, options, allContainers)
+	err = destroyContainer(client, options.Name, allContainers)
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("Starting %s\n", options.Name)
+	_, err = client.Run(options)
+	return err
+
 }
 
 func getServerEnv(home, dockerSock, scmKey, mongoURI string) map[string]string {
@@ -434,33 +502,33 @@ func getMongoRunOptions() *docker.RunOptions {
 	}
 }
 
-func getServerRunOptions(registry, bzkHome, dockerSock, scmKey, mongoURI, tag string) *docker.RunOptions {
+func getServerRunOptions(config *Config) *docker.RunOptions {
 	links := []string{}
 
-	if mongoURI == "" {
+	if config.MongoURI == "" {
 		links = append(links, fmt.Sprintf("%s:mongo", bzkContainerMongo))
 	}
 
 	return &docker.RunOptions{
 		Name:   bzkContainerServer,
-		Image:  getImageLocation(registry, "bazooka/server", tag),
+		Image:  getImageLocation(config.Registry, "bazooka/server", config.Tag),
 		Detach: true,
 		VolumeBinds: []string{
-			fmt.Sprintf("%s:/bazooka", bzkHome),
-			fmt.Sprintf("%s:/var/run/docker.sock", dockerSock),
+			fmt.Sprintf("%s:/bazooka", config.Home),
+			fmt.Sprintf("%s:/var/run/docker.sock", config.DockerSock),
 		},
 		Links: links,
-		Env:   getServerEnv(bzkHome, dockerSock, scmKey, mongoURI),
+		Env:   getServerEnv(config.Home, config.DockerSock, config.SCMKey, config.MongoURI),
 		PortBindings: map[dockerclient.Port][]dockerclient.PortBinding{
 			"3000/tcp": {{HostPort: "3000"}},
 		},
 	}
 }
 
-func getWebRunOptions(registry, tag string) *docker.RunOptions {
+func getWebRunOptions(config *Config) *docker.RunOptions {
 	return &docker.RunOptions{
 		Name:   bzkContainerWeb,
-		Image:  getImageLocation(registry, "bazooka/web", tag),
+		Image:  getImageLocation(config.Registry, "bazooka/web", config.Tag),
 		Detach: true,
 		Links:  []string{"bzk_server:server"},
 		PortBindings: map[dockerclient.Port][]dockerclient.PortBinding{
