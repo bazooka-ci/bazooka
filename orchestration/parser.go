@@ -9,22 +9,11 @@ import (
 	lib "github.com/bazooka-ci/bazooka/commons"
 
 	log "github.com/Sirupsen/logrus"
-	"github.com/bazooka-ci/bazooka/commons/mongo"
 	docker "github.com/bywan/go-dockercommand"
 )
 
 type Parser struct {
-	MongoConnector *mongo.MongoConnector
-	Options        *ParseOptions
-}
-
-type ParseOptions struct {
-	InputFolder   string
-	OutputFolder  string
-	DockerSock    string
-	CryptoKeyFile string
-	MetaFolder    string
-	Env           map[string]string
+	context *context
 }
 
 type variantData struct {
@@ -37,7 +26,8 @@ type variantData struct {
 }
 
 func (p *Parser) Parse(logger Logger) ([]*variantData, error) {
-	client, err := docker.NewDocker(paths.container.dockerEndpoint)
+	paths := p.context.paths
+	client, err := docker.NewDocker(paths.dockerEndpoint.container)
 	if err != nil {
 		return nil, err
 	}
@@ -52,22 +42,23 @@ func (p *Parser) Parse(logger Logger) ([]*variantData, error) {
 	}).Info("Running Parsing Image on checked-out source")
 
 	env := map[string]string{
-		"BZK_HOME": paths.host.base,
-		"BZK_SRC": paths.host.source,
-	}
-	for k, v := range p.Options.Env {
-		env[k] = v
+		BazookaEnvHome:          paths.base.host,
+		BazookaEnvSrc:           paths.source.host,
+		BazookaEnvProjectID:     p.context.projectID,
+		BazookaEnvJobID:         p.context.jobID,
+		BazookaEnvJobParameters: p.context.jobParameters,
 	}
 
 	volumes := []string{
-		fmt.Sprintf("%s:/bazooka", p.Options.InputFolder),
-		fmt.Sprintf("%s:/meta", p.Options.MetaFolder),
-		fmt.Sprintf("%s:/bazooka-output", p.Options.OutputFolder),
-		fmt.Sprintf("%s:/docker.sock", p.Options.DockerSock),
+		fmt.Sprintf("%s:/bazooka", paths.source.host),
+		fmt.Sprintf("%s:/meta", paths.meta.host),
+		fmt.Sprintf("%s:/bazooka-output", paths.work.host),
+		fmt.Sprintf("%s:/var/run/docker.sock", paths.dockerSock.host),
 	}
 
-	if len(p.Options.CryptoKeyFile) > 0 {
-		volumes = append(volumes, fmt.Sprintf("%s:/bazooka-cryptokey", p.Options.CryptoKeyFile))
+	if len(paths.cryptoKey.host) > 0 {
+		volumes = append(volumes, fmt.Sprintf("%s:/bazooka-cryptokey", paths.cryptoKey.host))
+		env[BazookaEnvCryptoKeyfile] = paths.cryptoKey.host
 	}
 
 	container, err := client.Run(&docker.RunOptions{
@@ -100,7 +91,7 @@ func (p *Parser) Parse(logger Logger) ([]*variantData, error) {
 	}
 
 	log.WithFields(log.Fields{
-		"dockerfiles_path": p.Options.OutputFolder,
+		"dockerfiles_path": paths.work.host,
 	}).Info("Parsing Image ran sucessfully, Dockerfiles generated")
 
 	return p.variantsData()
@@ -149,7 +140,7 @@ func (p *Parser) variantsData() ([]*variantData, error) {
 }
 
 func (f *Parser) resolveImage() (string, error) {
-	image, err := f.MongoConnector.GetImage("parser")
+	image, err := f.context.connector.GetImage("parser")
 	if err != nil {
 		return "", fmt.Errorf("Unable to find Bazooka Docker Image for parser\n")
 	}

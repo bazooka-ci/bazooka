@@ -14,7 +14,7 @@ func (c *context) addKey(r *request) (*response, error) {
 		return badRequest("content is mandatory")
 	}
 
-	project, err := c.Connector.GetProjectById(r.vars["id"])
+	project, err := c.connector.GetProjectById(r.vars["id"])
 	if err != nil {
 		if err.Error() != "not found" {
 			return nil, err
@@ -22,7 +22,7 @@ func (c *context) addKey(r *request) (*response, error) {
 		return notFound("project not found")
 	}
 
-	keys, err := c.Connector.GetKeys(r.vars["id"])
+	keys, err := c.connector.GetKeys(r.vars["id"])
 	if err != nil {
 		return nil, err
 	}
@@ -37,7 +37,7 @@ func (c *context) addKey(r *request) (*response, error) {
 		"key": key,
 	}).Debug("Adding key")
 
-	if err = c.Connector.AddKey(&key); err != nil {
+	if err = c.connector.AddKey(&key); err != nil {
 		return nil, err
 	}
 
@@ -57,7 +57,7 @@ func (c *context) updateKey(r *request) (*response, error) {
 		return badRequest("content is mandatory")
 	}
 
-	project, err := c.Connector.GetProjectById(r.vars["id"])
+	project, err := c.connector.GetProjectById(r.vars["id"])
 	if err != nil {
 		if err.Error() != "not found" {
 			return nil, err
@@ -71,7 +71,7 @@ func (c *context) updateKey(r *request) (*response, error) {
 		"key": key,
 	}).Debug("Updating key")
 
-	if err = c.Connector.UpdateKey(project.ID, &key); err != nil {
+	if err = c.connector.UpdateKey(project.ID, &key); err != nil {
 		return nil, err
 	}
 
@@ -84,7 +84,7 @@ func (c *context) updateKey(r *request) (*response, error) {
 
 func (c *context) listKeys(r *request) (*response, error) {
 
-	keys, err := c.Connector.GetKeys(r.vars["id"])
+	keys, err := c.connector.GetKeys(r.vars["id"])
 	if err != nil {
 		return nil, err
 	}

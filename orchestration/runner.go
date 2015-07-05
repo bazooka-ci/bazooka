@@ -1,37 +1,30 @@
 package main
 
 import (
-	"path/filepath"
 	"bufio"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strconv"
 	"time"
 
 	log "github.com/Sirupsen/logrus"
 
 	commons "github.com/bazooka-ci/bazooka/commons"
-	"github.com/bazooka-ci/bazooka/commons/mongo"
 	"github.com/bazooka-ci/bazooka/commons/parallel"
 	docker "github.com/bywan/go-dockercommand"
 )
 
-var (
-	whiteListEnvVarsNames = []string{
-		"BZK_SCM_URL", "BZK_PROJECT_ID", "BZK_JOB_ID", "BZK_BUILD_DIR",
-		"BZK_JOB_PARAMETERS", "BZK_SCM", "BZK_SCM_REFERENCE", "BZK_VARIANT",
-	}
-)
-
 type Runner struct {
-	Variants            []*variantData
-	Env                 map[string]string
-	Mongo               *mongo.MongoConnector
-	client              *docker.Docker
+	variants []*variantData
+	context  *context
+	client   *docker.Docker
 }
 
 func (r *Runner) Run(logger Logger) error {
-	client, err := docker.NewDocker(paths.container.dockerEndpoint)
+	paths := r.context.paths
+
+	client, err := docker.NewDocker(paths.dockerEndpoint.container)
 	if err != nil {
 		return err
 	}
@@ -39,7 +32,7 @@ func (r *Runner) Run(logger Logger) error {
 
 	par := parallel.New()
 
-	for _, ivariant := range r.Variants {
+	for _, ivariant := range r.variants {
 		if ivariant.variant.Status != commons.JOB_RUNNING {
 			continue
 		}
@@ -67,8 +60,10 @@ func (r *Runner) Run(logger Logger) error {
 }
 
 func (r *Runner) runContainer(logger Logger, vd *variantData) error {
+	paths := r.context.paths
+
 	success := true
-	servicesFile := fmt.Sprintf("%s/%d/services", paths.container.work, vd.counter)
+	servicesFile := fmt.Sprintf("%s/%d/services", paths.work.container, vd.counter)
 
 	servicesList, err := listServices(servicesFile)
 	if err != nil {
@@ -78,7 +73,7 @@ func (r *Runner) runContainer(logger Logger, vd *variantData) error {
 	serviceContainers := []*docker.Container{}
 	containerLinks := []string{}
 	for _, service := range servicesList {
-		name := fmt.Sprintf("service-%s-%s-%d", r.Env[BazookaEnvProjectID], r.Env[BazookaEnvJobID], vd.variant.Number)
+		name := fmt.Sprintf("service-%s-%s-%d", r.context.projectID, r.context.jobID, vd.variant.Number)
 		containerLinks = append(containerLinks, fmt.Sprintf("%s:%s", name, service))
 		serviceContainer, err := r.client.Run(&docker.RunOptions{
 			Name:   name,
@@ -91,17 +86,25 @@ func (r *Runner) runContainer(logger Logger, vd *variantData) error {
 		serviceContainers = append(serviceContainers, serviceContainer)
 	}
 
-	hostArtifactsFolder := fmt.Sprintf("%s/%s", paths.host.artifacts, vd.variant.ID)
-	containerArtifactsFolder := fmt.Sprintf("%s/%s", paths.container.artifacts, vd.variant.ID)
+	hostArtifactsFolder := fmt.Sprintf("%s/%s", paths.artifacts.host, vd.variant.ID)
+	containerArtifactsFolder := fmt.Sprintf("%s/%s", paths.artifacts.container, vd.variant.ID)
 
 	container, err := r.client.Run(&docker.RunOptions{
 		Image: vd.imageTag,
 		Links: containerLinks,
 		VolumeBinds: []string{
-			fmt.Sprintf("%s:/var/run/docker.sock", paths.host.dockerSock),
+			fmt.Sprintf("%s:/var/run/docker.sock", paths.dockerSock.host),
 			fmt.Sprintf("%s:/artifacts", hostArtifactsFolder),
 		},
-		Env:    whiteListEnvVars(injectVariantInEnv(vd.variant.Number, r.Env)),
+		Env: map[string]string{
+			BazookaEnvSCM:           r.context.scm,
+			BazookaEnvSCMUrl:        r.context.scmUrl,
+			BazookaEnvSCMReference:  r.context.scmReference,
+			BazookaEnvProjectID:     r.context.projectID,
+			BazookaEnvJobID:         r.context.jobID,
+			BazookaEnvJobParameters: r.context.jobParameters,
+			"BZK_VARIANT":           strconv.Itoa(vd.variant.Number),
+		},
 		Detach: true,
 	})
 	if err != nil {
@@ -155,7 +158,7 @@ func (r *Runner) runContainer(logger Logger, vd *variantData) error {
 		case info.IsDir():
 			// nop
 		default:
-			relPath, err:=filepath.Rel(containerArtifactsFolder, path)
+			relPath, err := filepath.Rel(containerArtifactsFolder, path)
 			if err != nil {
 				return err
 			}
@@ -163,34 +166,10 @@ func (r *Runner) runContainer(logger Logger, vd *variantData) error {
 		}
 		return nil
 	}); err != nil {
-		return fmt.Errorf("Error while walking the artifacts: %v",err)
+		return fmt.Errorf("Error while walking the artifacts: %v", err)
 	}
 
 	return nil
-}
-
-func whiteListEnvVars(envVars map[string]string) map[string]string {
-	res := map[string]string{}
-	for k, v := range envVars {
-		if stringInSlice(k, whiteListEnvVarsNames) {
-			res[k] = v
-		}
-	}
-	return res
-}
-
-func stringInSlice(a string, list []string) bool {
-	for _, b := range list {
-		if b == a {
-			return true
-		}
-	}
-	return false
-}
-
-func injectVariantInEnv(v int, env map[string]string) map[string]string {
-	env["BZK_VARIANT"] = strconv.Itoa(v)
-	return env
 }
 
 func listServices(servicesFile string) ([]string, error) {

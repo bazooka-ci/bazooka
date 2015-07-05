@@ -11,28 +11,28 @@ import (
 )
 
 type Generator struct {
-	Config       *lib.Config
-	OutputFolder string
-	Index        string
+	config       *lib.Config
+	outputFolder string
+	index        string
 }
 
 func (g *Generator) GenerateDockerfile() error {
-	err := os.MkdirAll(fmt.Sprintf("%s/%s", g.OutputFolder, g.Index), 0755)
+	err := os.MkdirAll(fmt.Sprintf("%s/%s", g.outputFolder, g.index), 0755)
 	if err != nil {
 		return err
 	}
 
 	var dockerBuffer bytes.Buffer
 
-	dockerBuffer.WriteString(fmt.Sprintf("FROM %s\n\n", g.Config.FromImage))
+	dockerBuffer.WriteString(fmt.Sprintf("FROM %s\n\n", g.config.FromImage))
 
-	envMap := lib.GetEnvMap(g.Config.Env)
+	envMap := lib.GetEnvMap(g.config.Env)
 
 	bzkBuildDir := envMap["BZK_BUILD_DIR"][0].Value
 
 	dockerBuffer.WriteString(fmt.Sprintf("COPY source %s/\n\n", bzkBuildDir))
 
-	dockerBuffer.WriteString(fmt.Sprintf("COPY work/%s/bazooka_run.sh %s/\n", g.Index, bzkBuildDir))
+	dockerBuffer.WriteString(fmt.Sprintf("COPY work/%s/bazooka_run.sh %s/\n", g.index, bzkBuildDir))
 	dockerBuffer.WriteString(fmt.Sprintf("RUN  chmod +x %s/bazooka_run.sh\n\n", bzkBuildDir))
 
 	type buildPhase struct {
@@ -46,7 +46,7 @@ func (g *Generator) GenerateDockerfile() error {
 	phases := []*buildPhase{
 		&buildPhase{
 			name:      "setup",
-			commands:  g.Config.Setup,
+			commands:  g.config.Setup,
 			beforeCmd: []string{"set -e"},
 			runCmd: []string{
 				"./bazooka_setup.sh",
@@ -58,7 +58,7 @@ func (g *Generator) GenerateDockerfile() error {
 		},
 		&buildPhase{
 			name:      "before_install",
-			commands:  g.Config.BeforeInstall,
+			commands:  g.config.BeforeInstall,
 			beforeCmd: []string{"set -e"},
 			runCmd: []string{
 				"./bazooka_before_install.sh",
@@ -70,7 +70,7 @@ func (g *Generator) GenerateDockerfile() error {
 		},
 		&buildPhase{
 			name:      "install",
-			commands:  g.Config.Install,
+			commands:  g.config.Install,
 			beforeCmd: []string{"set -e"},
 			runCmd: []string{
 				"./bazooka_install.sh",
@@ -82,7 +82,7 @@ func (g *Generator) GenerateDockerfile() error {
 		},
 		&buildPhase{
 			name:      "before_script",
-			commands:  g.Config.BeforeScript,
+			commands:  g.config.BeforeScript,
 			beforeCmd: []string{"set -e"},
 			runCmd: []string{
 				"./bazooka_before_script.sh",
@@ -94,7 +94,7 @@ func (g *Generator) GenerateDockerfile() error {
 		},
 		&buildPhase{
 			name:      "script",
-			commands:  g.Config.Script,
+			commands:  g.config.Script,
 			beforeCmd: []string{"set -e"},
 			runCmd: []string{
 				"./bazooka_script.sh",
@@ -103,11 +103,11 @@ func (g *Generator) GenerateDockerfile() error {
 		},
 		&buildPhase{
 			name:     "archive",
-			commands: archiveCommands(g.Config.Archive),
+			commands: archiveCommands(g.config.Archive),
 		},
 		&buildPhase{
 			name:     "archive_success",
-			commands: archiveCommands(g.Config.ArchiveSuccess),
+			commands: archiveCommands(g.config.ArchiveSuccess),
 			runCmd: []string{
 				"if [[ $exitCode == 0 ]] ; then",
 				"  ./bazooka_archive_success.sh",
@@ -116,7 +116,7 @@ func (g *Generator) GenerateDockerfile() error {
 		},
 		&buildPhase{
 			name:     "archive_failure",
-			commands: archiveCommands(g.Config.ArchiveFailure),
+			commands: archiveCommands(g.config.ArchiveFailure),
 			runCmd: []string{
 				"if [[ $exitCode != 0 ]] ; then",
 				"  ./bazooka_archive_failure.sh",
@@ -125,7 +125,7 @@ func (g *Generator) GenerateDockerfile() error {
 		},
 		&buildPhase{
 			name:      "after_success",
-			commands:  g.Config.AfterSuccess,
+			commands:  g.config.AfterSuccess,
 			beforeCmd: []string{"set -e"},
 			runCmd: []string{
 				"if [[ $exitCode == 0 ]] ; then",
@@ -135,7 +135,7 @@ func (g *Generator) GenerateDockerfile() error {
 		},
 		&buildPhase{
 			name:      "after_failure",
-			commands:  g.Config.AfterFailure,
+			commands:  g.config.AfterFailure,
 			beforeCmd: []string{"set -e"},
 			runCmd: []string{
 				"if [[ $exitCode != 0 ]] ; then",
@@ -144,7 +144,7 @@ func (g *Generator) GenerateDockerfile() error {
 		},
 		&buildPhase{
 			name:      "after_script",
-			commands:  g.Config.AfterScript,
+			commands:  g.config.AfterScript,
 			beforeCmd: []string{"set -e"},
 			runCmd:    []string{},
 		},
@@ -172,12 +172,12 @@ func (g *Generator) GenerateDockerfile() error {
 				phaseBuffer.WriteString(fmt.Sprintf("echo %s\n", strconv.Quote(fmt.Sprintf("<CMD:%s>", action))))
 				phaseBuffer.WriteString(fmt.Sprintf("%s\n", action))
 			}
-			err = ioutil.WriteFile(fmt.Sprintf("%s/%s/bazooka_%s.sh", g.OutputFolder, g.Index, phase.name), phaseBuffer.Bytes(), 0644)
+			err = ioutil.WriteFile(fmt.Sprintf("%s/%s/bazooka_%s.sh", g.outputFolder, g.index, phase.name), phaseBuffer.Bytes(), 0644)
 			if err != nil {
-				return fmt.Errorf("Phase [%d/%s]: writing file failed: %v", g.Index, phase.name, err)
+				return fmt.Errorf("Phase [%d/%s]: writing file failed: %v", g.index, phase.name, err)
 			}
 
-			dockerBuffer.WriteString(fmt.Sprintf("COPY work/%s/bazooka_%s.sh %s/\n", g.Index, phase.name, bzkBuildDir))
+			dockerBuffer.WriteString(fmt.Sprintf("COPY work/%s/bazooka_%s.sh %s/\n", g.index, phase.name, bzkBuildDir))
 			dockerBuffer.WriteString(fmt.Sprintf("RUN  chmod +x %s/bazooka_%s.sh\n\n", bzkBuildDir, phase.name))
 
 			if len(phase.runCmd) == 0 {
@@ -194,12 +194,12 @@ func (g *Generator) GenerateDockerfile() error {
 		}
 	}
 
-	err = ioutil.WriteFile(fmt.Sprintf("%s/%s/bazooka_run.sh", g.OutputFolder, g.Index), bufferRun.Bytes(), 0644)
+	err = ioutil.WriteFile(fmt.Sprintf("%s/%s/bazooka_run.sh", g.outputFolder, g.index), bufferRun.Bytes(), 0644)
 	if err != nil {
-		return fmt.Errorf("Phase [%d/run]: writing file failed: %v", g.Index, err)
+		return fmt.Errorf("Phase [%d/run]: writing file failed: %v", g.index, err)
 	}
 
-	for _, env := range g.Config.Env {
+	for _, env := range g.config.Env {
 		dockerBuffer.WriteString(fmt.Sprintf("ENV  %s %s\n", env.Name, env.Value))
 	}
 
@@ -207,19 +207,19 @@ func (g *Generator) GenerateDockerfile() error {
 
 	dockerBuffer.WriteString("CMD  ./bazooka_run.sh\n")
 
-	err = ioutil.WriteFile(fmt.Sprintf("%s/%s/Dockerfile", g.OutputFolder, g.Index), dockerBuffer.Bytes(), 0644)
+	err = ioutil.WriteFile(fmt.Sprintf("%s/%s/Dockerfile", g.outputFolder, g.index), dockerBuffer.Bytes(), 0644)
 	if err != nil {
-		return fmt.Errorf("Phase [%d/docker]: writing file failed: %v", g.Index, err)
+		return fmt.Errorf("Phase [%d/docker]: writing file failed: %v", g.index, err)
 	}
 
-	if len(g.Config.Services) > 0 {
+	if len(g.config.Services) > 0 {
 		var servicesBuffer bytes.Buffer
-		for _, service := range g.Config.Services {
+		for _, service := range g.config.Services {
 			servicesBuffer.WriteString(fmt.Sprintf("%s\n", service))
 		}
-		err = ioutil.WriteFile(fmt.Sprintf("%s/%s/services", g.OutputFolder, g.Index), servicesBuffer.Bytes(), 0644)
+		err = ioutil.WriteFile(fmt.Sprintf("%s/%s/services", g.outputFolder, g.index), servicesBuffer.Bytes(), 0644)
 		if err != nil {
-			return fmt.Errorf("Phase [%d/services]: writing file failed: %v", g.Index, err)
+			return fmt.Errorf("Phase [%d/services]: writing file failed: %v", g.index, err)
 		}
 	}
 	return nil

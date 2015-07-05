@@ -5,32 +5,20 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 	lib "github.com/bazooka-ci/bazooka/commons"
-	"github.com/bazooka-ci/bazooka/commons/mongo"
 	docker "github.com/bywan/go-dockercommand"
 )
 
 type SCMFetcher struct {
-	Options        *FetchOptions
-	MongoConnector *mongo.MongoConnector
-}
-
-type FetchOptions struct {
-	Scm         string
-	URL         string
-	Reference   string
-	LocalFolder string
-	KeyFile     string
-	MetaFolder  string
-	JobID       string
-	Env         map[string]string
-	Update       bool
+	context *context
+	update  bool
 }
 
 func (f *SCMFetcher) Fetch(logger Logger) error {
-
 	log.WithFields(log.Fields{
-		"source": f.Options.URL,
+		"source": f.context.scmUrl,
 	}).Info("Fetching SCM From Source Repository")
+
+	paths := f.context.paths
 
 	image, err := f.resolveImage()
 	if err != nil {
@@ -40,27 +28,30 @@ func (f *SCMFetcher) Fetch(logger Logger) error {
 		"image": image,
 	}).Info("Starting SCM Fetch")
 
-	client, err := docker.NewDocker(paths.container.dockerEndpoint)
+	client, err := docker.NewDocker(paths.dockerEndpoint.container)
 	if err != nil {
 		return err
 	}
 
-	env := map[string]string{}
-	for k, v:=range f.Options.Env {
-		env[k] = v
+	env := map[string]string{
+		BazookaEnvSCMUrl:       f.context.scmUrl,
+		BazookaEnvSCMReference: f.context.scmReference,
+		BazookaEnvProjectID:    f.context.projectID,
+		BazookaEnvJobID:        f.context.jobID,
 	}
-	if f.Options.Update {
+
+	if f.update {
 		env["UPDATE"] = "1"
 	}
 
 	volumes := []string{
-		fmt.Sprintf("%s:/bazooka", f.Options.LocalFolder),
-		fmt.Sprintf("%s:/meta", f.Options.MetaFolder),
+		fmt.Sprintf("%s:/bazooka", paths.source.host),
+		fmt.Sprintf("%s:/meta", paths.meta.host),
 	}
-	if len(f.Options.KeyFile) > 0 {
-		volumes = append(volumes, fmt.Sprintf("%s:/bazooka-key", f.Options.KeyFile))
+	scmKeyFile := paths.scmKey.host
+	if len(scmKeyFile) > 0 {
+		volumes = append(volumes, fmt.Sprintf("%s:/bazooka-key", scmKeyFile))
 	}
-	
 
 	container, err := client.Run(&docker.RunOptions{
 		Image:       image,
@@ -84,7 +75,7 @@ func (f *SCMFetcher) Fetch(logger Logger) error {
 	}
 
 	log.WithFields(log.Fields{
-		"checkout_folder": f.Options.LocalFolder,
+		"checkout_folder": paths.source.host,
 	}).Info("SCM Source Repo Fetched")
 
 	err = container.Remove(&docker.RemoveOptions{
@@ -94,13 +85,13 @@ func (f *SCMFetcher) Fetch(logger Logger) error {
 
 	scmMetadata := &lib.SCMMetadata{}
 
-	scmMetadataFile := fmt.Sprintf("%s/scm", paths.container.meta)
+	scmMetadataFile := fmt.Sprintf("%s/scm", paths.meta.container)
 	err = lib.Parse(scmMetadataFile, scmMetadata)
 	if err != nil {
 		return err
 	}
 
-	err = f.MongoConnector.AddJobSCMMetadata(f.Options.JobID, scmMetadata)
+	err = f.context.connector.AddJobSCMMetadata(f.context.jobID, scmMetadata)
 	if err != nil {
 		return err
 	}
@@ -108,9 +99,9 @@ func (f *SCMFetcher) Fetch(logger Logger) error {
 }
 
 func (f *SCMFetcher) resolveImage() (string, error) {
-	image, err := f.MongoConnector.GetImage(fmt.Sprintf("scm/fetch/%s", f.Options.Scm))
+	image, err := f.context.connector.GetImage(fmt.Sprintf("scm/fetch/%s", f.context.scm))
 	if err != nil {
-		return "", fmt.Errorf("Unable to find Bazooka Docker Image for SCM %s\n", f.Options.Scm)
+		return "", fmt.Errorf("Unable to find Bazooka Docker Image for SCM %s\n", f.context.scm)
 	}
 	return image, nil
 }

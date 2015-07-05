@@ -10,20 +10,7 @@ import (
 	log "github.com/Sirupsen/logrus"
 	lib "github.com/bazooka-ci/bazooka/commons"
 	bzklog "github.com/bazooka-ci/bazooka/commons/logs"
-	"github.com/bazooka-ci/bazooka/commons/mongo"
 	docker "github.com/bywan/go-dockercommand"
-)
-
-const (
-	BazookaEnvSCM           = "BZK_SCM"
-	BazookaEnvSCMUrl        = "BZK_SCM_URL"
-	BazookaEnvSCMReference  = "BZK_SCM_REFERENCE"
-	BazookaEnvProjectID     = "BZK_PROJECT_ID"
-	BazookaEnvJobID         = "BZK_JOB_ID"
-	BazookaEnvJobParameters = "BZK_JOB_PARAMETERS"
-
-	BazookaEnvMongoAddr = "MONGO_PORT_27017_TCP_ADDR"
-	BazookaEnvMongoPort = "MONGO_PORT_27017_TCP_PORT"
 )
 
 func init() {
@@ -36,25 +23,15 @@ func main() {
 	// TODO add validation
 	start := time.Now()
 
-	// Configure Mongo
-	connector := mongo.NewConnector()
-	defer connector.Close()
-
-	env := map[string]string{
-		BazookaEnvSCM:           os.Getenv(BazookaEnvSCM),
-		BazookaEnvSCMUrl:        os.Getenv(BazookaEnvSCMUrl),
-		BazookaEnvSCMReference:  os.Getenv(BazookaEnvSCMReference),
-		BazookaEnvProjectID:     os.Getenv(BazookaEnvProjectID),
-		BazookaEnvJobID:         os.Getenv(BazookaEnvJobID),
-		BazookaEnvJobParameters: os.Getenv(BazookaEnvJobParameters),
-	}
+	context := initContext()
+	defer context.cleanup()
 
 	var containerLogger Logger = func(image string, variantID string, container *docker.Container) {
 		r, w := io.Pipe()
 		container.StreamLogs(w)
-		connector.FeedLog(r, lib.LogEntry{
-			ProjectID: env[BazookaEnvProjectID],
-			JobID:     env[BazookaEnvJobID],
+		context.connector.FeedLog(r, lib.LogEntry{
+			ProjectID: context.projectID,
+			JobID:     context.jobID,
 			VariantID: variantID,
 			Image:     image,
 		})
@@ -64,41 +41,28 @@ func main() {
 	func() {
 		r, w := io.Pipe()
 		log.SetOutput(io.MultiWriter(os.Stdout, w))
-		connector.FeedLog(r, lib.LogEntry{
-			ProjectID: env[BazookaEnvProjectID],
-			JobID:     env[BazookaEnvJobID],
+		context.connector.FeedLog(r, lib.LogEntry{
+			ProjectID: context.projectID,
+			JobID:     context.jobID,
 			Image:     "bazooka/orchestration",
 		})
 	}()
 
 	log.WithFields(log.Fields{
-		"environment": env,
+		"environment": context,
 	}).Info("Starting Orchestration")
 
-	reuseScmCheckout := os.Getenv("BZK_REUSE_SCM_CHECKOUT") != ""
-
 	f := &SCMFetcher{
-		MongoConnector: connector,
-		Options: &FetchOptions{
-			Scm:         env[BazookaEnvSCM],
-			URL:         env[BazookaEnvSCMUrl],
-			Reference:   env[BazookaEnvSCMReference],
-			JobID:       env[BazookaEnvJobID],
-			LocalFolder: paths.host.source,
-			MetaFolder:  paths.host.meta,
-			KeyFile:     paths.host.key,
-			Update:      reuseScmCheckout,
-			Env:         env,
-		},
+		context: context,
 	}
 	err := f.Fetch(containerLogger)
-	if err != nil && reuseScmCheckout {
+	if err != nil && context.reuseScm {
 		log.Info("First SCM fetch with bzk.scm.reuse true failed, retrying with a clean SCM fetch")
-		f.Options.Update = false
+		f.update = false
 		err = f.Fetch(containerLogger)
 	}
 	if err != nil {
-		mongoErr := connector.FinishJob(env[BazookaEnvJobID], lib.JOB_ERRORED, time.Now())
+		mongoErr := context.connector.FinishJob(context.jobID, lib.JOB_ERRORED, time.Now())
 		if mongoErr != nil {
 			log.Fatal(mongoErr)
 		}
@@ -106,19 +70,11 @@ func main() {
 	}
 
 	p := &Parser{
-		MongoConnector: connector,
-		Options: &ParseOptions{
-			InputFolder:   paths.host.source,
-			OutputFolder:  paths.host.work,
-			DockerSock:    paths.host.dockerSock,
-			MetaFolder:    paths.host.meta,
-			CryptoKeyFile: paths.host.cryptoKey,
-			Env:           env,
-		},
+		context: context,
 	}
 	parsedVariants, err := p.Parse(containerLogger)
 	if err != nil {
-		mongoErr := connector.FinishJob(env[BazookaEnvJobID], lib.JOB_ERRORED, time.Now())
+		mongoErr := context.connector.FinishJob(context.jobID, lib.JOB_ERRORED, time.Now())
 		if mongoErr != nil {
 			log.Fatal(err, mongoErr)
 		}
@@ -130,13 +86,13 @@ func main() {
 			Started:   time.Now(),
 			Status:    lib.JOB_RUNNING,
 			Number:    i,
-			ProjectID: env[BazookaEnvProjectID],
-			JobID:     env[BazookaEnvJobID],
+			ProjectID: context.projectID,
+			JobID:     context.jobID,
 			Metas:     v.meta,
 		}
-		err := connector.AddVariant(variant)
+		err := context.connector.AddVariant(variant)
 		if err != nil {
-			mongoErr := connector.FinishJob(env[BazookaEnvJobID], lib.JOB_ERRORED, time.Now())
+			mongoErr := context.connector.FinishJob(context.jobID, lib.JOB_ERRORED, time.Now())
 			if mongoErr != nil {
 				log.Fatal(err, mongoErr)
 			}
@@ -147,15 +103,12 @@ func main() {
 	}
 
 	b := &Builder{
-		Options: &BuildOptions{
-			BaseFolder: paths.container.base,
-			ProjectID:  env[BazookaEnvProjectID],
-			Variants:   parsedVariants,
-		},
+		context:  context,
+		variants: parsedVariants,
 	}
 
 	if err := b.Build(); err != nil {
-		mongoErr := connector.FinishJob(env[BazookaEnvJobID], lib.JOB_ERRORED, time.Now())
+		mongoErr := context.connector.FinishJob(context.jobID, lib.JOB_ERRORED, time.Now())
 		if mongoErr != nil {
 			log.Fatal(mongoErr)
 		}
@@ -167,7 +120,7 @@ func main() {
 	for _, vd := range parsedVariants {
 		switch vd.variant.Status {
 		case lib.JOB_ERRORED:
-			if err := connector.FinishVariant(vd.variant.ID, lib.JOB_ERRORED, vd.variant.Completed, nil); err != nil {
+			if err := context.connector.FinishVariant(vd.variant.ID, lib.JOB_ERRORED, vd.variant.Completed, nil); err != nil {
 				log.Fatal(err)
 			}
 		default:
@@ -176,14 +129,13 @@ func main() {
 	}
 
 	r := &Runner{
-		Variants:            variantsToBuild,
-		Env:                 env,
-		Mongo:               connector,
+		variants: variantsToBuild,
+		context:  context,
 	}
 
 	err = r.Run(containerLogger)
 	if err != nil {
-		mongoErr := connector.FinishJob(env[BazookaEnvJobID], lib.JOB_ERRORED, time.Now())
+		mongoErr := context.connector.FinishJob(context.jobID, lib.JOB_ERRORED, time.Now())
 		if mongoErr != nil {
 			log.Fatal(mongoErr)
 		}
@@ -191,7 +143,7 @@ func main() {
 	}
 
 	for _, vd := range variantsToBuild {
-		if err := connector.FinishVariant(vd.variant.ID, vd.variant.Status, vd.variant.Completed, vd.variant.Artifacts); err != nil {
+		if err := context.connector.FinishVariant(vd.variant.ID, vd.variant.Status, vd.variant.Completed, vd.variant.Artifacts); err != nil {
 			log.Fatal(err)
 		}
 	}
@@ -228,9 +180,9 @@ func main() {
 		jobStatus = lib.JOB_FAILED
 	default:
 		jobStatus = lib.JOB_SUCCESS
-
 	}
-	if err = connector.FinishJob(env[BazookaEnvJobID], jobStatus, time.Now()); err != nil {
+
+	if err = context.connector.FinishJob(context.jobID, jobStatus, time.Now()); err != nil {
 		log.Fatal(err)
 	}
 	elapsed := time.Since(start)

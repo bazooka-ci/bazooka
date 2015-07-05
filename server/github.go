@@ -55,7 +55,7 @@ func (ctx *context) githubAuth(req *http.Request) bool {
 	// Replace req.Body so body can be read again
 	req.Body = ioutil.NopCloser(bytes.NewBuffer(body))
 	params := mux.Vars(req)
-	project, err := ctx.Connector.GetProjectById(params["id"])
+	project, err := ctx.connector.GetProjectById(params["id"])
 	if err != nil {
 		log.Errorf("Error reading project with ID %s, reason is: %v\n", params["id"], err)
 		return false

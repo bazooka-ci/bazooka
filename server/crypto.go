@@ -12,7 +12,7 @@ func (c *context) encryptData(r *request) (*response, error) {
 
 	r.parseBody(&v)
 
-	_, err := c.Connector.GetProjectById(r.vars["id"])
+	_, err := c.connector.GetProjectById(r.vars["id"])
 	if err != nil {
 		if err.Error() != "not found" {
 			return nil, err
@@ -20,7 +20,7 @@ func (c *context) encryptData(r *request) (*response, error) {
 		return notFound("project not found")
 	}
 
-	keys, err := c.Connector.GetCryptoKeys(r.vars["id"])
+	keys, err := c.connector.GetCryptoKeys(r.vars["id"])
 	if err != nil {
 		return nil, err
 	}

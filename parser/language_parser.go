@@ -9,12 +9,9 @@ import (
 	docker "github.com/bywan/go-dockercommand"
 )
 
-const (
-	dockerEndpoint = "unix:///docker.sock"
-)
-
 type LanguageParser struct {
-	Image string
+	image   string
+	context *context
 }
 
 type variantData struct {
@@ -24,23 +21,24 @@ type variantData struct {
 }
 
 func (p *LanguageParser) Parse() ([]*variantData, error) {
-
 	log.WithFields(log.Fields{
-		"image": p.Image,
+		"image": p.image,
 	}).Info("Lauching language parsing")
 
-	client, err := docker.NewDocker(dockerEndpoint)
+	paths := p.context.paths
+
+	client, err := docker.NewDocker(paths.dockerEndpoint.container)
 	if err != nil {
 		return nil, err
 	}
 
 	container, err := client.Run(&docker.RunOptions{
-		Image: p.Image,
+		Image: p.image,
 		VolumeBinds: []string{
-			fmt.Sprintf("%s:/bazooka", paths.host.source),
-			fmt.Sprintf("%s:/bazooka-output", paths.host.output),
-			fmt.Sprintf("%s:/meta", paths.host.meta),
-			fmt.Sprintf("%s:/bazooka-cryptokey", paths.host.cryptoKey),
+			fmt.Sprintf("%s:/bazooka", paths.source.host),
+			fmt.Sprintf("%s:/bazooka-output", paths.output.host),
+			fmt.Sprintf("%s:/meta", paths.meta.host),
+			fmt.Sprintf("%s:/bazooka-cryptokey", paths.cryptoKey.host),
 		},
 		Detach: true,
 	})
@@ -48,14 +46,14 @@ func (p *LanguageParser) Parse() ([]*variantData, error) {
 		return nil, err
 	}
 
-	container.Logs(p.Image)
+	container.Logs(p.image)
 
 	exitCode, err := container.Wait()
 	if err != nil {
 		return nil, err
 	}
 	if exitCode != 0 {
-		return nil, fmt.Errorf("Error during execution of Language Parser container %s/parser\n Check Docker container logs, id is %s\n", p.Image, container.ID())
+		return nil, fmt.Errorf("Error during execution of Language Parser container %s/parser\n Check Docker container logs, id is %s\n", p.image, container.ID())
 	}
 
 	err = container.Remove(&docker.RemoveOptions{
@@ -73,7 +71,7 @@ func (p *LanguageParser) Parse() ([]*variantData, error) {
 	// they are also supposed to enrich it with a from attribute corresponding to a base docker image
 	// to be used to run the build
 
-	files, err := lib.ListFilesWithPrefix(paths.container.output, ".bazooka")
+	files, err := lib.ListFilesWithPrefix(paths.output.container, ".bazooka")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -106,7 +104,7 @@ func (p *LanguageParser) Parse() ([]*variantData, error) {
 		// and
 		//
 		// go: 1.3.1
-		rootMetaFile := fmt.Sprintf("%s/%s", paths.container.meta, rootCounter)
+		rootMetaFile := fmt.Sprintf("%s/%s", paths.meta.container, rootCounter)
 		// since we have no idea of the generated meta file structure, we'll parse it into a map[string]interface{}
 		var langExtraVars map[string]interface{}
 		err := lib.Parse(rootMetaFile, &langExtraVars)
