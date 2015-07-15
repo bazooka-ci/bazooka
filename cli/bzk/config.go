@@ -26,6 +26,7 @@ type Config struct {
 	DockerSock string `yaml:"docker_sock"`
 	SCMKey     string `yaml:"scm_key"`
 	Registry   string `yaml:"registry"`
+	Tag        string `yaml:"tag"`
 
 	MongoURI string `yaml:"mongo_uri"`
 }
