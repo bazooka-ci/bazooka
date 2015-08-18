@@ -18,10 +18,80 @@
             margin: 0 0 4px 0;
             border-right: 4px solid #fff;
             border-left: 8px solid #fff;
-            background: #f2f2f2;
+            background: $line-background-color;
+
+            .job-status {
+                font-size: 16px;
+                line-height: $height;
+                padding: 0 4px;
+
+                &.success {
+                  color: $success-bg;
+                }
+
+                &.failed {
+                  color: $failed-bg;
+                }
+
+                .errored {
+                    color: $errored-bg;
+                }
+
+                .running {
+                    color: $running-bg;
+                }
+            }
 
             &.selected {
-                background: #E3F2FD;
+              &.success {
+                background: $line-background-selected-success-color;
+
+                .job-status {
+                  color: $success-bg;
+                }
+              }
+
+              &.failed {
+                background: $line-background-selected-failed-color;
+
+                .job-status {
+                  color: $failed-bg;
+                }
+              }
+
+              &.errored {
+                background: $line-background-selected-success-color;
+
+                .job-status {
+                    color: $errored-bg;
+                }
+              }
+
+              &.running {
+                background: $line-background-selected-running-color;
+
+                .job-status {
+                    color: $running-bg;
+                }
+              }
+            }
+
+            &.unselected {
+              &.success .job-status {
+                color: lighten($success-bg, 20%);
+              }
+
+              &.failed .job-status {
+                color: lighten($failed-bg, 20%);
+              }
+
+              &.errored .job-status {
+                color: lighten($errored-bg, 20%);
+              }
+
+              &.running .job-status {
+                color: lighten($running-bg, 20%);
+              }
             }
 
             a {
@@ -32,28 +102,6 @@
 
                 &:hover {
                     text-decoration: none;
-                }
-            }
-
-            .job-status {
-                font-size: 16px;
-                line-height: $height;
-                padding: 0 4px;
-
-                &.success {
-                    color: $success-bg;
-                }
-
-                &.failed {
-                    color: $failed-bg;
-                }
-
-                &.errored {
-                    color: $errored-bg;
-                }
-
-                &.running {
-                    color: $running-bg;
                 }
             }
 
@@ -100,13 +148,39 @@
                 height: $height;
                 margin: 0 0 4px 0;
                 white-space: nowrap;
-                background: #f2f2f2;
+                background: $line-background-color;
 
                 &.selected {
-                    background: #E3F2FD;
+                    &.success {
+                      background: $line-background-selected-success-color;
 
-                    .meta {
-                        background: #E3F2FD;
+                      .meta {
+                        background: $line-background-selected-success-color;
+                      }
+                    }
+
+                    &.failed {
+                      background: $line-background-selected-failed-color;
+
+                      .meta {
+                        background: $line-background-selected-failed-color;
+                      }
+                    }
+
+                    &.errored {
+                      background: $line-background-selected-success-color;
+
+                      .meta {
+                        background: $line-background-selected-success-color;
+                      }
+                    }
+
+                    &.running {
+                      background: $line-background-selected-running-color;
+
+                      .meta {
+                        background: $line-background-selected-running-color;
+                      }
                     }
                 }
 
@@ -118,7 +192,7 @@
                     border-right: 4px solid #fff;
                     padding: 0 8px;
                     overflow: hidden;
-                    background: #f2f2f2;
+                    background: $line-background-color;
 
                     span:first-child {
                         color: #999;
@@ -134,12 +208,25 @@
     }
 
     @mixin row($kind, $fg, $bg, $hover-bg) {
-        .p1 > li.#{$kind} h4 {
-            color: $fg;
-        }
-
         .p1 > li.#{$kind} {
+          border-left-color: $fg;
+          h4 {
+            color: $fg;
+          }
+
+          &.selected {
             border-left-color: $fg;
+            h4 {
+              color: $fg;
+            }
+          }
+
+          &.unselected {
+            border-left-color: lighten($fg, 20%);
+            h4 {
+              color: lighten($fg, 20%);
+            }
+          }
         }
     }
 
