@@ -26,11 +26,11 @@
                 padding: 0 4px;
 
                 &.success {
-                  color: $success-bg;
+                    color: $success-bg;
                 }
 
                 &.failed {
-                  color: $failed-bg;
+                    color: $failed-bg;
                 }
 
                 .errored {
@@ -42,56 +42,58 @@
                 }
             }
 
-            &.selected {
-              &.success {
-                background: $line-background-selected-success-color;
+            &.success {
+                border-left-color: $success-bg;
 
-                .job-status {
-                  color: $success-bg;
+                h4 {
+                    color: $success-bg;
                 }
-              }
+            }
 
-              &.failed {
-                background: $line-background-selected-failed-color;
+            &.failed {
+                border-left-color: $failed-bg;
 
-                .job-status {
-                  color: $failed-bg;
+                h4 {
+                    color: $failed-bg;
                 }
-              }
+            }
 
-              &.errored {
-                background: $line-background-selected-success-color;
+            &.errored {
+                border-left-color: $errored-bg;
 
-                .job-status {
+                h4 {
                     color: $errored-bg;
                 }
-              }
+            }
 
-              &.running {
-                background: $line-background-selected-running-color;
+            &.running {
+                border-left-color: $running-bg;
 
-                .job-status {
+                h4 {
                     color: $running-bg;
                 }
-              }
+            }
+
+            &.selected {
+                &.success {
+                    background: $line-background-selected-success-color;
+                }
+
+                &.failed {
+                    background: $line-background-selected-failed-color;
+                }
+
+                &.errored {
+                    background: $line-background-selected-success-color;
+                }
+
+                &.running {
+                    background: $line-background-selected-running-color;
+                }
             }
 
             &.unselected {
-              &.success .job-status {
-                color: lighten($success-bg, 20%);
-              }
-
-              &.failed .job-status {
-                color: lighten($failed-bg, 20%);
-              }
-
-              &.errored .job-status {
-                color: lighten($errored-bg, 20%);
-              }
-
-              &.running .job-status {
-                color: lighten($running-bg, 20%);
-              }
+                opacity: 0.7;
             }
 
             a {
@@ -152,36 +154,40 @@
 
                 &.selected {
                     &.success {
-                      background: $line-background-selected-success-color;
-
-                      .meta {
                         background: $line-background-selected-success-color;
-                      }
+
+                        .meta {
+                            background: $line-background-selected-success-color;
+                        }
                     }
 
                     &.failed {
-                      background: $line-background-selected-failed-color;
-
-                      .meta {
                         background: $line-background-selected-failed-color;
-                      }
+
+                        .meta {
+                            background: $line-background-selected-failed-color;
+                        }
                     }
 
                     &.errored {
-                      background: $line-background-selected-success-color;
-
-                      .meta {
                         background: $line-background-selected-success-color;
-                      }
+
+                        .meta {
+                            background: $line-background-selected-success-color;
+                        }
                     }
 
                     &.running {
-                      background: $line-background-selected-running-color;
-
-                      .meta {
                         background: $line-background-selected-running-color;
-                      }
+
+                        .meta {
+                            background: $line-background-selected-running-color;
+                        }
                     }
+                }
+
+                &.unselected {
+                    opacity: 0.7;
                 }
 
                 .meta {
@@ -206,35 +212,4 @@
             }
         }
     }
-
-    @mixin row($kind, $fg, $bg, $hover-bg) {
-        .p1 > li.#{$kind} {
-          border-left-color: $fg;
-          h4 {
-            color: $fg;
-          }
-
-          &.selected {
-            border-left-color: $fg;
-            h4 {
-              color: $fg;
-            }
-          }
-
-          &.unselected {
-            border-left-color: lighten($fg, 20%);
-            h4 {
-              color: lighten($fg, 20%);
-            }
-          }
-        }
-    }
-
-    @include row("success", $success-bg, $success-row, $success-row-hover);
-
-    @include row("failed", $failed-bg, $failed-row, $failed-row-hover);
-
-    @include row("errored", $errored-bg, $errored-row, $errored-row-hover);
-
-    @include row("running", $running-bg, $running-row, $running-row-hover);
 }
