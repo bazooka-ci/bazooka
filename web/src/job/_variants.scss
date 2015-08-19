@@ -18,22 +18,7 @@
             margin: 0 0 4px 0;
             border-right: 4px solid #fff;
             border-left: 8px solid #fff;
-            background: #f2f2f2;
-
-            &.selected {
-                background: #E3F2FD;
-            }
-
-            a {
-                display: block;
-                position: relative;
-                padding: 0 10px;
-                text-decoration: none;
-
-                &:hover {
-                    text-decoration: none;
-                }
-            }
+            background: $line-background-color;
 
             .job-status {
                 font-size: 16px;
@@ -48,12 +33,77 @@
                     color: $failed-bg;
                 }
 
-                &.errored {
+                .errored {
                     color: $errored-bg;
                 }
 
-                &.running {
+                .running {
                     color: $running-bg;
+                }
+            }
+
+            &.success {
+                border-left-color: $success-bg;
+
+                h4 {
+                    color: $success-bg;
+                }
+            }
+
+            &.failed {
+                border-left-color: $failed-bg;
+
+                h4 {
+                    color: $failed-bg;
+                }
+            }
+
+            &.errored {
+                border-left-color: $errored-bg;
+
+                h4 {
+                    color: $errored-bg;
+                }
+            }
+
+            &.running {
+                border-left-color: $running-bg;
+
+                h4 {
+                    color: $running-bg;
+                }
+            }
+
+            &.selected {
+                &.success {
+                    background: $line-background-selected-success-color;
+                }
+
+                &.failed {
+                    background: $line-background-selected-failed-color;
+                }
+
+                &.errored {
+                    background: $line-background-selected-success-color;
+                }
+
+                &.running {
+                    background: $line-background-selected-running-color;
+                }
+            }
+
+            &.unselected {
+                opacity: 0.7;
+            }
+
+            a {
+                display: block;
+                position: relative;
+                padding: 0 10px;
+                text-decoration: none;
+
+                &:hover {
+                    text-decoration: none;
                 }
             }
 
@@ -100,14 +150,44 @@
                 height: $height;
                 margin: 0 0 4px 0;
                 white-space: nowrap;
-                background: #f2f2f2;
+                background: $line-background-color;
 
                 &.selected {
-                    background: #E3F2FD;
+                    &.success {
+                        background: $line-background-selected-success-color;
 
-                    .meta {
-                        background: #E3F2FD;
+                        .meta {
+                            background: $line-background-selected-success-color;
+                        }
                     }
+
+                    &.failed {
+                        background: $line-background-selected-failed-color;
+
+                        .meta {
+                            background: $line-background-selected-failed-color;
+                        }
+                    }
+
+                    &.errored {
+                        background: $line-background-selected-success-color;
+
+                        .meta {
+                            background: $line-background-selected-success-color;
+                        }
+                    }
+
+                    &.running {
+                        background: $line-background-selected-running-color;
+
+                        .meta {
+                            background: $line-background-selected-running-color;
+                        }
+                    }
+                }
+
+                &.unselected {
+                    opacity: 0.7;
                 }
 
                 .meta {
@@ -118,7 +198,7 @@
                     border-right: 4px solid #fff;
                     padding: 0 8px;
                     overflow: hidden;
-                    background: #f2f2f2;
+                    background: $line-background-color;
 
                     span:first-child {
                         color: #999;
@@ -132,22 +212,4 @@
             }
         }
     }
-
-    @mixin row($kind, $fg, $bg, $hover-bg) {
-        .p1 > li.#{$kind} h4 {
-            color: $fg;
-        }
-
-        .p1 > li.#{$kind} {
-            border-left-color: $fg;
-        }
-    }
-
-    @include row("success", $success-bg, $success-row, $success-row-hover);
-
-    @include row("failed", $failed-bg, $failed-row, $failed-row-hover);
-
-    @include row("errored", $errored-bg, $errored-row, $errored-row-hover);
-
-    @include row("running", $running-bg, $running-row, $running-row-hover);
 }

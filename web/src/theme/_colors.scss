@@ -27,8 +27,8 @@ $errored-row-hover: darken(#f2f2eb, 5%);
 $running-row: darken(#FFAB00, 5%);
 $running-row-hover: darken(#FFAB00, 5%);
 
-$success-bg: #292;
-$failed-bg: #c13737;
+$success-bg: #3fa75f;
+$failed-bg: #db423c;
 $errored-bg: #808080;
 $running-bg: #FFAB00;
 
@@ -41,3 +41,9 @@ $logs-fg: #fff;
 $logs-line: #9599a3;
 
 $low-importance: #808080;
+
+// job and lines colors
+$line-background-color: #fafaf8;
+$line-background-selected-success-color: #e5efe4;
+$line-background-selected-failed-color: #fbebe6;
+$line-background-selected-running-color: #f4efd8;

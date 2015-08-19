@@ -45,7 +45,7 @@ $marker-size: 24px;
 
         &:hover {
             background: $hover-bg;
-            background: #f2f2f2;
+            background: $line-background-color;
         }
 
         h3 {
