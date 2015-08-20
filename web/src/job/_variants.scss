@@ -33,11 +33,11 @@
                     color: $failed-bg;
                 }
 
-                .errored {
+                &.errored {
                     color: $errored-bg;
                 }
 
-                .running {
+                &.running {
                     color: $running-bg;
                 }
             }
@@ -84,7 +84,7 @@
                 }
 
                 &.errored {
-                    background: $line-background-selected-success-color;
+                    background: $line-background-selected-errored-color;
                 }
 
                 &.running {
@@ -173,7 +173,7 @@
                         background: $line-background-selected-success-color;
 
                         .meta {
-                            background: $line-background-selected-success-color;
+                            background: $line-background-selected-errored-color;
                         }
                     }
 
