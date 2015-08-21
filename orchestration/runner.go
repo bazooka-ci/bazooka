@@ -63,7 +63,7 @@ func (r *Runner) runContainer(logger Logger, vd *variantData) error {
 	paths := r.context.paths
 
 	success := true
-	servicesFile := fmt.Sprintf("%s/%d/services", paths.work.container, vd.counter)
+	servicesFile := fmt.Sprintf("%s/%s/services", paths.work.container, vd.counter)
 
 	servicesList, err := listServices(servicesFile)
 	if err != nil {
