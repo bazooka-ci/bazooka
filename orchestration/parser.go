@@ -23,6 +23,7 @@ type variantData struct {
 	scripts    []string
 	variant    *lib.Variant
 	imageTag   string
+	services   []lib.Service
 }
 
 func (p *Parser) Parse(logger Logger) ([]*variantData, error) {
@@ -114,11 +115,19 @@ func (p *Parser) variantsData() ([]*variantData, error) {
 			}
 			for _, file := range files {
 				fullName := fmt.Sprintf("%s/%s/%s", workFolder, dir.Name(), file.Name())
-				if file.Name() == "Dockerfile" {
+				switch file.Name() {
+				case "Dockerfile":
 					vf.dockerFile = fullName
-					continue
+				case "services":
+					servicesList := []lib.Service{}
+					err := lib.Parse(fullName, &servicesList)
+					if err != nil {
+						return nil, fmt.Errorf("Failed to parse services file %s: %v", fullName, err)
+					}
+					vf.services = servicesList
+				default:
+					vf.scripts = append(vf.scripts, fullName)
 				}
-				vf.scripts = append(vf.scripts, fullName)
 			}
 			if len(vf.dockerFile) == 0 {
 				return nil, fmt.Errorf("The variant %s has no Dockerfile", dir.Name())

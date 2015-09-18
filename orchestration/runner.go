@@ -1,11 +1,12 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strconv"
+	"strings"
 	"time"
 
 	log "github.com/Sirupsen/logrus"
@@ -63,21 +64,18 @@ func (r *Runner) runContainer(logger Logger, vd *variantData) error {
 	paths := r.context.paths
 
 	success := true
-	servicesFile := fmt.Sprintf("%s/%s/services", paths.work.container, vd.counter)
-
-	servicesList, err := listServices(servicesFile)
-	if err != nil {
-		return err
-	}
 
 	serviceContainers := []*docker.Container{}
 	containerLinks := []string{}
-	for _, service := range servicesList {
-		name := fmt.Sprintf("service-%s-%s-%d", r.context.projectID, r.context.jobID, vd.variant.Number)
-		containerLinks = append(containerLinks, fmt.Sprintf("%s:%s", name, service))
+	for sidx, service := range vd.services {
+		name := fmt.Sprintf("bazooka-service-%s-%s-%d-%d", r.context.projectID, r.context.jobID, vd.variant.Number, sidx)
+		if len(service.Alias) == 0 {
+			service.Alias = safeDockerAlias(strings.Split(service.Image, ":")[0])
+		}
+		containerLinks = append(containerLinks, fmt.Sprintf("%s:%s", name, service.Alias))
 		serviceContainer, err := r.client.Run(&docker.RunOptions{
 			Name:   name,
-			Image:  service,
+			Image:  service.Image,
 			Detach: true,
 		})
 		if err != nil {
@@ -172,24 +170,7 @@ func (r *Runner) runContainer(logger Logger, vd *variantData) error {
 	return nil
 }
 
-func listServices(servicesFile string) ([]string, error) {
-	file, err := os.Open(servicesFile)
-	if err != nil {
-		if os.IsNotExist(err) {
-			return []string{}, nil
-		}
-		return nil, err
-	}
-	defer file.Close()
-
-	scanner := bufio.NewScanner(file)
-	var services []string
-	for scanner.Scan() {
-		services = append(services, scanner.Text())
-	}
-
-	if err := scanner.Err(); err != nil {
-		return nil, err
-	}
-	return services, nil
+func safeDockerAlias(unsafeAlias string) string {
+	re := regexp.MustCompile("(/|;|:|-|\\.)")
+	return re.ReplaceAllString(unsafeAlias, "_")
 }
