@@ -140,7 +140,7 @@ func (c *context) startJob(params map[string]string, startJob lib.StartJob, comm
 			orchestrationEnv[BazookaEnvSCMKeyfile] = c.paths.scmKey.host
 		}
 	} else {
-		err = os.MkdirAll(buildFolder.container, 0644)
+		err = os.MkdirAll(buildFolder.container, 0755)
 		if err != nil {
 			return nil, err
 		}
@@ -160,7 +160,7 @@ func (c *context) startJob(params map[string]string, startJob lib.StartJob, comm
 			return nil, err
 		}
 	} else {
-		err = os.MkdirAll(buildFolder.container, 0644)
+		err = os.MkdirAll(buildFolder.container, 0755)
 		if err != nil {
 			return nil, err
 		}
@@ -187,7 +187,7 @@ func (c *context) startJob(params map[string]string, startJob lib.StartJob, comm
 		_, err := os.Stat(sharedSourceFolder.container)
 		if err != nil {
 			if os.IsNotExist(err) {
-				err = os.MkdirAll(sharedSourceFolder.container, 0644)
+				err = os.MkdirAll(sharedSourceFolder.container, 0755)
 				if err != nil {
 					return nil, fmt.Errorf("Failed to create a shared source directory for project %s, job %s: %v",
 						runningJob.ProjectID, runningJob.ID, err)
