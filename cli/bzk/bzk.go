@@ -40,9 +40,8 @@ func main() {
 	})
 
 	app.Command("key", "Actions on projects keys", func(cmd *cli.Cmd) {
-		cmd.Command("list", "list Keys for the bazooka project", listKeysCommand)
-		cmd.Command("add", "Add SSH Key for the bazooka project", addKeyCommand)
-		cmd.Command("update", "Update SSH Key for the bazooka project", updateKeyCommand)
+		cmd.Command("get", "list Keys for the bazooka project", getKeyCommand)
+		cmd.Command("set", "Add SSH Key for the bazooka project", setKeyCommand)
 	})
 
 	app.Command("image", "Actions on images", func(cmd *cli.Cmd) {

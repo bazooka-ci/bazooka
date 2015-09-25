@@ -38,9 +38,8 @@ func main() {
 	r.HandleFunc("/project/{id}/config/{key}", context.mkAuthHandler(context.setProjectConfigKey)).Methods("PUT")
 	r.HandleFunc("/project/{id}/config/{key}", context.mkAuthHandler(context.unsetProjectConfigKey)).Methods("DELETE")
 
-	r.HandleFunc("/project/{id}/key", context.mkAuthHandler(context.addKey)).Methods("POST")
-	r.HandleFunc("/project/{id}/key", context.mkAuthHandler(context.updateKey)).Methods("PUT")
-	r.HandleFunc("/project/{id}/key", context.mkAuthHandler(context.listKeys)).Methods("GET")
+	r.HandleFunc("/project/{id}/key", context.mkAuthHandler(context.setKey)).Methods("PUT")
+	r.HandleFunc("/project/{id}/key", context.mkAuthHandler(context.getKey)).Methods("GET")
 
 	r.HandleFunc("/project/{id}/crypto", context.mkAuthHandler(context.encryptData)).Methods("PUT")
 

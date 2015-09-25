@@ -7,7 +7,7 @@ import (
 
 func (c *MongoConnector) GetProjectCryptoKey(projectID string) (*bazooka.CryptoKey, error) {
 	result := &bazooka.CryptoKey{}
-	if err := c.ByField("crypto", "project_id", projectID, result); err != nil {
+	if err := c.selectOneByField("crypto", "project_id", projectID, result); err != nil {
 		return nil, err
 	}
 	return result, nil
