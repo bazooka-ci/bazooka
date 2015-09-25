@@ -66,6 +66,6 @@ func TestFlush(t *testing.T) {
 }
 
 type parse struct {
-	Type1 string   "abc"
-	Type2 []string "def"
+	Type1 string   `yaml:"abc"`
+	Type2 []string `yaml:"def"`
 }
