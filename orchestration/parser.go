@@ -25,7 +25,7 @@ type variantData struct {
 	imageTag   string
 }
 
-func (p *Parser) Parse(logger Logger) ([]*variantData, error) {
+func (p *Parser) Parse() ([]*variantData, error) {
 	paths := p.context.paths
 	client, err := docker.NewDocker(paths.dockerEndpoint.container)
 	if err != nil {
@@ -42,6 +42,7 @@ func (p *Parser) Parse(logger Logger) ([]*variantData, error) {
 	}).Info("Running Parsing Image on checked-out source")
 
 	env := map[string]string{
+		BazookaEnvSyslogUrl:     p.context.syslogUrl,
 		BazookaEnvHome:          paths.base.host,
 		BazookaEnvSrc:           paths.source.host,
 		BazookaEnvProjectID:     p.context.projectID,
@@ -62,17 +63,16 @@ func (p *Parser) Parse(logger Logger) ([]*variantData, error) {
 	}
 
 	container, err := client.Run(&docker.RunOptions{
-		Image:       image,
-		Env:         env,
-		VolumeBinds: volumes,
-		Detach:      true,
+		Image:               image,
+		Env:                 env,
+		VolumeBinds:         volumes,
+		Detach:              true,
+		LoggingDriver:       "syslog",
+		LoggingDriverConfig: p.context.loggerConfig(image, ""),
 	})
 	if err != nil {
 		return nil, err
 	}
-
-	container.Logs(image)
-	logger(image, "", container)
 
 	exitCode, err := container.Wait()
 	if err != nil {

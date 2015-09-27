@@ -32,6 +32,11 @@ func startService(cmd *cli.Cmd) {
 		Desc:   "Location of the private SSH Key Bazooka will use for SCM Fetch",
 		EnvVar: "BZK_SCM_KEYFILE",
 	})
+	syslogURI := cmd.String(cli.StringOpt{
+		Name:   "syslog-uri",
+		Desc:   "URI of the bazooka server syslog endpoint",
+		EnvVar: "BZK_SYSLOG_URI",
+	})
 	mongoURI := cmd.String(cli.StringOpt{
 		Name:   "mongo-uri",
 		Desc:   "URI of a MongoDB server",
@@ -51,13 +56,13 @@ func startService(cmd *cli.Cmd) {
 		Desc: "The bazooka version to run",
 	})
 
-	cmd.Action = doStartService(tag, bzkHome, dockerSock, registry, scmKey, mongoURI)
+	cmd.Action = doStartService(tag, bzkHome, dockerSock, registry, scmKey, syslogURI, mongoURI)
 }
 
-func doStartService(version, bzkHome, dockerSock, registry, scmKey, mongoURI *string) func() {
+func doStartService(version, bzkHome, dockerSock, registry, scmKey, syslogURI, mongoURI *string) func() {
 	return func() {
 
-		config, err := getConfigWithParams(*version, *bzkHome, *dockerSock, *registry, *scmKey, *mongoURI)
+		config, err := getConfigWithParams(*version, *bzkHome, *dockerSock, *registry, *scmKey, *syslogURI, *mongoURI)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -214,7 +219,7 @@ func doRestartService(recreate, recreateServer, recreateWeb, recreateDatabase *b
 				}
 			}
 		}
-		doStartService(&config.Tag, &config.Home, &config.DockerSock, &config.Registry, &config.SCMKey, &config.MongoURI)()
+		doStartService(&config.Tag, &config.Home, &config.DockerSock, &config.Registry, &config.SCMKey, &config.SyslogURI, &config.MongoURI)()
 	}
 }
 
@@ -319,7 +324,7 @@ func getContainerStatus(name string, allContainers []dockerclient.APIContainers)
 
 }
 
-func getConfigWithParams(tag, bzkHome, dockerSock, registry, scmKey, mongoURI string) (*Config, error) {
+func getConfigWithParams(tag, bzkHome, dockerSock, registry, scmKey, syslogURI, mongoURI string) (*Config, error) {
 	config, err := loadConfig()
 	if err != nil {
 		return nil, fmt.Errorf("Unable to load Bazooka config, reason is: %v\n", err)
@@ -351,6 +356,10 @@ func getConfigWithParams(tag, bzkHome, dockerSock, registry, scmKey, mongoURI st
 		config.SCMKey = scmKey
 	}
 
+	if len(syslogURI) != 0 {
+		config.SyslogURI = syslogURI
+	}
+
 	if len(mongoURI) != 0 {
 		config.MongoURI = mongoURI
 	}
@@ -376,7 +385,7 @@ func getConfigWithParams(tag, bzkHome, dockerSock, registry, scmKey, mongoURI st
 }
 
 func getConfig() (*Config, error) {
-	return getConfigWithParams("", "", "", "", "", "")
+	return getConfigWithParams("", "", "", "", "", "", "")
 }
 
 func destroyContainer(client *docker.Docker, name string, allContainers []dockerclient.APIContainers) error {
@@ -402,7 +411,7 @@ func stopContainer(client *docker.Docker, name string, allContainers []dockercli
 	if strings.HasPrefix(container.Status, "Up") {
 		fmt.Printf("Stopping Container %s\n", name)
 		err = client.Stop(&docker.StopOptions{
-			ID: container.ID,
+			ID:      container.ID,
 			Timeout: 5,
 		})
 		if err != nil {
@@ -451,10 +460,11 @@ func startContainer(client *docker.Docker, options *docker.RunOptions, allContai
 
 }
 
-func getServerEnv(home, dockerSock, scmKey, mongoURI string) map[string]string {
+func getServerEnv(home, dockerSock, scmKey, syslogURI, mongoURI string) map[string]string {
 	envMap := map[string]string{
 		"BZK_HOME":       home,
 		"BZK_DOCKERSOCK": dockerSock,
+		"BZK_SYSLOG_URL": syslogURI,
 	}
 	if len(scmKey) > 0 {
 		envMap["BZK_SCM_KEYFILE"] = scmKey
@@ -519,9 +529,10 @@ func getServerRunOptions(config *Config) *docker.RunOptions {
 			fmt.Sprintf("%s:/var/run/docker.sock", config.DockerSock),
 		},
 		Links: links,
-		Env:   getServerEnv(config.Home, config.DockerSock, config.SCMKey, config.MongoURI),
+		Env:   getServerEnv(config.Home, config.DockerSock, config.SCMKey, config.SyslogURI, config.MongoURI),
 		PortBindings: map[dockerclient.Port][]dockerclient.PortBinding{
 			"3000/tcp": {{HostPort: "3000"}},
+			"3001/tcp": {{HostPort: "3001"}},
 		},
 	}
 }

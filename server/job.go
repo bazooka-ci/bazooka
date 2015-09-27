@@ -125,6 +125,7 @@ func (c *context) startJob(params map[string]string, startJob lib.StartJob, comm
 		"BZK_JOB_ID":         runningJob.ID,
 		"BZK_DOCKERSOCK":     c.paths.dockerSock.host,
 		"BZK_JOB_PARAMETERS": string(jobParameters),
+		BazookaEnvSyslogUrl:  c.syslogUrl,
 		BazookaEnvMongoAddr:  c.mongoAddr,
 		BazookaEnvMongoPort:  c.mongoPort,
 	}
@@ -205,11 +206,22 @@ func (c *context) startJob(params map[string]string, startJob lib.StartJob, comm
 	}
 
 	container, err := client.Run(&docker.RunOptions{
-		Image:       orchestrationImage.Image,
-		VolumeBinds: orchestrationVolumes,
-		Env:         orchestrationEnv,
-		Detach:      true,
+		Image:         orchestrationImage.Image,
+		VolumeBinds:   orchestrationVolumes,
+		Env:           orchestrationEnv,
+		Detach:        true,
+		LoggingDriver: "syslog",
+		LoggingDriverConfig: map[string]string{
+			"syslog-address": c.syslogUrl,
+			"syslog-tag": fmt.Sprintf("image=%s;project=%s;job=%s",
+				orchestrationImage.Image, project.ID, runningJob.ID),
+		},
 	})
+
+	if err != nil {
+		return nil, fmt.Errorf("Failed to run the orchestration container for project %s, job %s: %v",
+			runningJob.ProjectID, runningJob.ID, err)
+	}
 
 	// remove the container at the end of its execution
 	go func(container *docker.Container) {

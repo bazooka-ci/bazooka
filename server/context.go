@@ -5,6 +5,8 @@ import (
 	"os"
 	"time"
 
+	"fmt"
+
 	lib "github.com/bazooka-ci/bazooka/commons"
 	"github.com/bazooka-ci/bazooka/commons/mongo"
 )
@@ -13,6 +15,7 @@ const (
 	BazookaEnvSCMKeyfile = "BZK_SCM_KEYFILE"
 	BazookaEnvHome       = "BZK_HOME"
 	BazookaEnvDockerSock = "BZK_DOCKERSOCK"
+	BazookaEnvSyslogUrl  = "BZK_SYSLOG_URL"
 	BazookaEnvMongoAddr  = "MONGO_PORT_27017_TCP_ADDR"
 	BazookaEnvMongoPort  = "MONGO_PORT_27017_TCP_PORT"
 
@@ -22,6 +25,7 @@ const (
 )
 
 type context struct {
+	syslogUrl string
 	mongoAddr string
 	mongoPort string
 	connector *mongo.MongoConnector
@@ -43,6 +47,7 @@ type path struct {
 
 func initContext() *context {
 	c := &context{
+		syslogUrl: os.Getenv(BazookaEnvSyslogUrl),
 		mongoAddr: os.Getenv(BazookaEnvMongoAddr),
 		mongoPort: os.Getenv(BazookaEnvMongoPort),
 		paths: paths{
@@ -57,6 +62,8 @@ func initContext() *context {
 		log.Fatalf("Cannot connect to the database: %v", err)
 	}
 	c.connector = mongo.NewConnector()
+
+	fmt.Printf("server init, context=%#v\n", c)
 	return c
 }
 

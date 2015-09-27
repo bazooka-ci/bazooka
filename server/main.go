@@ -80,7 +80,13 @@ func main() {
 	http.Handle("/", r)
 
 	go func() {
+		log.Infof("Starting API server on port 3000")
 		log.Fatal(http.ListenAndServe(":3000", nil))
+	}()
+
+	go func() {
+		log.Infof("Starting Syslog server on port 3001")
+		context.startLogServer(":3001")
 	}()
 
 	signals := make(chan os.Signal, 1)
