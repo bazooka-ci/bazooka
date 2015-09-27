@@ -403,6 +403,7 @@ func stopContainer(client *docker.Docker, name string, allContainers []dockercli
 		fmt.Printf("Stopping Container %s\n", name)
 		err = client.Stop(&docker.StopOptions{
 			ID: container.ID,
+			Timeout: 5,
 		})
 		if err != nil {
 			return fmt.Errorf("Error stopping container %s, reason is %v\n", name, err)

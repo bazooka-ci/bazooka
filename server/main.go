@@ -4,6 +4,11 @@ import (
 	"fmt"
 	"net/http"
 
+	"os"
+	"os/signal"
+
+	"syscall"
+
 	log "github.com/Sirupsen/logrus"
 	bzklog "github.com/bazooka-ci/bazooka/commons/logs"
 	"github.com/bazooka-ci/bazooka/commons/mongo"
@@ -65,7 +70,14 @@ func main() {
 
 	http.Handle("/", r)
 
-	log.Fatal(http.ListenAndServe(":3000", nil))
+	go func() {
+		log.Fatal(http.ListenAndServe(":3000", nil))
+	}()
+
+	signals := make(chan os.Signal, 1)
+	signal.Notify(signals, syscall.SIGTERM)
+	<-signals
+	log.Infof("Got SIGTERM, Exiting")
 }
 
 var (
