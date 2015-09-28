@@ -43,7 +43,7 @@ type Variant struct {
 	Started    time.Time     `bson:"started" json:"started"`
 	Completed  time.Time     `bson:"completed" json:"completed"`
 	BuildImage string        `bson:"image" json:"image"`
-	ProjectID  string        `bson:"project_id" json:"job_id"`
+	ProjectID  string        `bson:"project_id" json:"project_id"`
 	JobID      string        `bson:"job_id" json:"job_id"`
 	Number     int           `bson:"number" json:"number"`
 	ID         string        `bson:"id" json:"id"`
