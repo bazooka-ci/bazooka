@@ -215,7 +215,7 @@ func (c *context) startJob(params map[string]string, startJob lib.StartJob, comm
 	go func(container *docker.Container) {
 		exitCode, err := container.Wait()
 		if err != nil {
-			log.Errorf("Error while listening container %s", container.ID, err)
+			log.Errorf("Error while waiting for container %s: %v", container.ID(), err)
 		}
 
 		if exitCode != 0 {
@@ -228,7 +228,7 @@ func (c *context) startJob(params map[string]string, startJob lib.StartJob, comm
 			RemoveVolumes: true,
 		})
 		if err != nil {
-			log.Errorf("Cannot remove container %s", container.ID)
+			log.Errorf("Cannot remove container %s", container.ID())
 		}
 	}(container)
 
