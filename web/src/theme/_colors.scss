@@ -18,19 +18,19 @@ $breadcrumb-color-link: #0096c8;
 $breadcrumb-bg: none;
 
 // Tables
-$success-row-hover: #dcffdc;
-$success-row: #fafffa;
-$failed-row-hover: #ffdcdc;
-$failed-row: #fffafa;
-$errored-row: #fdfdfd;
-$errored-row-hover: #f2f2eb;
-$running-row: #FFFDE7;
-$running-row-hover: #FFF9C4;
+$success-row-hover: darken(#dcffdc, 5%);
+$success-row: darken(#fafffa, 5%);
+$failed-row-hover: darken(#ffdcdc, 5%);
+$failed-row: darken(#fffafa, 5%);
+$errored-row: darken(#fdfdfd, 5%);
+$errored-row-hover: darken(#f2f2eb, 5%);
+$running-row: darken(#FFAB00, 5%);
+$running-row-hover: darken(#FFAB00, 5%);
 
-$success-bg: #292;
-$failed-bg: #c13737;
+$success-bg: #3fa75f;
+$failed-bg: #db423c;
 $errored-bg: #808080;
-$running-bg: #FFD600;
+$running-bg: #FFAB00;
 
 $table-thead-bg: #f0f2f3;
 $table-thead-color: #9599a3;
@@ -41,3 +41,10 @@ $logs-fg: #fff;
 $logs-line: #9599a3;
 
 $low-importance: #808080;
+
+// job and lines colors
+$line-background-color: #fafaf8;
+$line-background-selected-success-color: #e5efe4;
+$line-background-selected-failed-color: #fbebe6;
+$line-background-selected-running-color: #f4efd8;
+$line-background-selected-errored-color: #f2f2f2;

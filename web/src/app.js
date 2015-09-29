@@ -1,6 +1,6 @@
 "use strict";
 
-angular.module('bzk', ['bzk.home', 'bzk.projects', 'bzk.project', 'bzk.job', 'bzk.variant', 'bzk.utils', 'bzk.templates', 'ngRoute', 'angular-growl']);
+angular.module('bzk', ['bzk.home', 'bzk.projects', 'bzk.project', 'bzk.job', 'bzk.utils', 'bzk.templates', 'ngRoute', 'angular-growl']);
 
 angular.module('bzk').config(function($routeProvider) {
     $routeProvider.otherwise({

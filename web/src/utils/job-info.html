@@ -1,22 +1,32 @@
-<table class="details">
-	<tbody>
-		<tr>
-			<th>Author</th>
-			<td>{{job().scm_metadata.author.name}}</td>
-			<th>Reference</th>
-			<td>{{job().scm_metadata.reference}}</td>
-		</tr>
-		<tr>
-			<th>Duration</th>
-			<td>{{job() | bzkDuration}}</td>
-			<th>Revision</th>
-			<td>{{job().scm_metadata.commit_id | bzkExcerpt}}</td>
-		</tr>
-		<tr>
-			<th>Finished</th>
-			<td>{{job() | bzkFinished}}</td>
-			<th>Message</th>
-			<td><p class="multiline">{{job().scm_metadata.message}}</p></td>
-		</tr>
-	</tbody>
-</table>
+<div class="job-info" ng-class="job().status | lowercase">
+	<a ng-href="#/p/{{job().project_id | bzkExcerpt}}/{{job() | bzkId}}">
+		<div class="marker">
+			<span bzk-job-status="job().status"></span>
+		</div>
+		<div class="p1">
+			<h3>
+			{{projectName(job().project_id)}} <span>{{job().number}}</span>
+			</h3>
+			<div>
+				<span class="glyphicon glyphicon-time"></span>
+				{{job().started | bzkDate}}
+			</div>
+			<div>
+				<span class="glyphicon glyphicon-hourglass"></span>
+				{{job() | bzkDuration}}
+			</div>
+		</div>
+		<div class="p2">
+			<div class="author" ng-if="job().scm_metadata.author.name">
+				<span class="glyphicon glyphicon-user"></span>
+				{{job().scm_metadata.author.name}}
+			</div>
+			<div ng-if="job().scm_metadata.reference">
+				<span class="fa fa-circle-o"></span>
+				<span class="scm-ref">{{job().scm_metadata.reference}}</span>
+				<span class="scm-id">{{job().scm_metadata.commit_id | bzkExcerpt}}</span>
+			</div>
+			<p class="{{detailed()?'multi-':''}}message">{{job().scm_metadata.message}}</p>
+		</div>
+	</a>
+</div>

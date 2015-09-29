@@ -1,19 +1,20 @@
 #job {
+    .artifacts {
+        background: $line-background-color;
+        margin: 0;
+        padding: 0;
+        overflow: auto;
+        list-style-type: none;
 
-  .details {
-    border-collapse: separate;
-    border-spacing: 5px;
-    padding-bottom: 10px;
-    text-align: left;
+        li {
+            display: inline-block;
+            line-height: 24px;
+            margin: 5px 30px 5px 10px;
 
-    td {
-      padding: 0 20px;
-      vertical-align: top;
-		}
-
-    th {
-      padding-left: 10px;
-      vertical-align: top;
-		}
-	}
+            a {
+                font-weight: bold;
+                display: block;
+            }
+        }
+    }
 }
