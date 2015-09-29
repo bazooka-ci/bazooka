@@ -11,7 +11,7 @@ import (
 
 func (c *MongoConnector) GetUserByEmail(email string) (*lib.User, error) {
 	result := &lib.User{}
-	if err := c.ByField("user", "email", email, result); err != nil {
+	if err := c.selectOneByField("user", "email", email, result); err != nil {
 		return nil, err
 	}
 	result.Password = ""
@@ -63,7 +63,7 @@ func (c *MongoConnector) AddUser(user *lib.User) error {
 
 func (c *MongoConnector) ComparePassword(email string, password string) bool {
 	result := &lib.User{}
-	if err := c.ByField("user", "email", email, result); err != nil {
+	if err := c.selectOneByField("user", "email", email, result); err != nil {
 		return false
 	}
 

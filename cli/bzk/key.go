@@ -9,7 +9,7 @@ import (
 	"github.com/jawher/mow.cli"
 )
 
-func addKeyCommand(cmd *cli.Cmd) {
+func setKeyCommand(cmd *cli.Cmd) {
 	pid := cmd.String(cli.StringArg{
 		Name: "PROJECT_ID",
 		Desc: "Project id",
@@ -24,44 +24,13 @@ func addKeyCommand(cmd *cli.Cmd) {
 		if err != nil {
 			log.Fatal(err)
 		}
-		res, err := client.Project.Key.Add(*pid, *scmKey)
-		if err != nil {
+		if err := client.Project.Key.Set(*pid, *scmKey); err != nil {
 			log.Fatal(err)
 		}
-		w := tabwriter.NewWriter(os.Stdout, 15, 1, 3, ' ', 0)
-		fmt.Fprint(w, "PROJECT ID\n")
-		fmt.Fprintf(w, "%s\n", idExcerpt(res.ProjectID))
-		w.Flush()
 	}
 }
 
-func updateKeyCommand(cmd *cli.Cmd) {
-	pid := cmd.String(cli.StringArg{
-		Name: "PROJECT_ID",
-		Desc: "Project id",
-	})
-	scmKey := cmd.String(cli.StringArg{
-		Name: "SCM_KEY_PATH",
-		Desc: "The absolute path to the SCM key",
-	})
-
-	cmd.Action = func() {
-		client, err := NewClient()
-		if err != nil {
-			log.Fatal(err)
-		}
-		res, err := client.Project.Key.Update(*pid, *scmKey)
-		if err != nil {
-			log.Fatal(err)
-		}
-		w := tabwriter.NewWriter(os.Stdout, 15, 1, 3, ' ', 0)
-		fmt.Fprint(w, "PROJECT ID\n")
-		fmt.Fprintf(w, "%s\n", idExcerpt(res.ProjectID))
-		w.Flush()
-	}
-}
-
-func listKeysCommand(cmd *cli.Cmd) {
+func getKeyCommand(cmd *cli.Cmd) {
 	pid := cmd.String(cli.StringArg{
 		Name: "PROJECT_ID",
 		Desc: "Project id",
@@ -72,15 +41,13 @@ func listKeysCommand(cmd *cli.Cmd) {
 		if err != nil {
 			log.Fatal(err)
 		}
-		res, err := client.Project.Key.List(*pid)
+		res, err := client.Project.Key.Get(*pid)
 		if err != nil {
 			log.Fatal(err)
 		}
 		w := tabwriter.NewWriter(os.Stdout, 15, 1, 3, ' ', 0)
 		fmt.Fprint(w, "PROJECT ID\n")
-		for _, item := range res {
-			fmt.Fprintf(w, "%s\n", idExcerpt(item.ProjectID))
-		}
+		fmt.Fprintf(w, "%s\n", idExcerpt(res.ProjectID))
 		w.Flush()
 	}
 }

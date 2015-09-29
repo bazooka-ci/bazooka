@@ -27,7 +27,7 @@ func (c *MongoConnector) HasProject(name string) (bool, error) {
 
 func (c *MongoConnector) GetProjectById(id string) (*lib.Project, error) {
 	result := &lib.Project{}
-	if err := c.ByIdOrName("projects", id, result); err != nil {
+	if err := c.selectOneByIdOrName("projects", id, result); err != nil {
 		return nil, err
 	}
 	result.Config = unescapeDotsInMap(result.Config)
@@ -339,7 +339,7 @@ func (c *MongoConnector) FinishJob(id string, status lib.JobStatus, completed ti
 			"completed": completed,
 		},
 	}
-	return c.database.C("jobs").Update(c.idLike(id), request)
+	return c.database.C("jobs").Update(c.fieldStartsWith("id", id), request)
 }
 
 func (c *MongoConnector) AddJobSCMMetadata(id string, metadata *lib.SCMMetadata) error {
@@ -372,12 +372,12 @@ func (c *MongoConnector) FinishVariant(id string, status lib.JobStatus, complete
 			"artifacts": artifacts,
 		},
 	}
-	return c.database.C("variants").Update(c.idLike(id), request)
+	return c.database.C("variants").Update(c.fieldStartsWith("id", id), request)
 }
 
 func (c *MongoConnector) GetJobByID(id string) (*lib.Job, error) {
 	result := &lib.Job{}
-	if err := c.ById("jobs", id, result); err != nil {
+	if err := c.selectOneByFieldLike("jobs", "id", id, result); err != nil {
 		return nil, err
 	}
 	return result, nil
@@ -385,7 +385,7 @@ func (c *MongoConnector) GetJobByID(id string) (*lib.Job, error) {
 
 func (c *MongoConnector) GetVariantByID(id string) (*lib.Variant, error) {
 	result := &lib.Variant{}
-	if err := c.ById("variants", id, result); err != nil {
+	if err := c.selectOneByFieldLike("variants", "id", id, result); err != nil {
 		return nil, err
 	}
 	return result, nil
