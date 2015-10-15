@@ -14,11 +14,12 @@ type Config struct {
 }
 
 type Client struct {
-	Project *Project
-	Job     *Job
-	Variant *Variant
-	Image   *Image
-	User    *User
+	Project  *Project
+	Job      *Job
+	Variant  *Variant
+	Image    *Image
+	User     *User
+	Internal *Internal
 }
 
 func New(config *Config) (*Client, error) {
@@ -28,10 +29,11 @@ func New(config *Config) (*Client, error) {
 			Key:    &ProjectKey{config},
 			Config: &ProjectConfig{config},
 		},
-		Job:     &Job{config},
-		Variant: &Variant{config},
-		Image:   &Image{config},
-		User:    &User{config},
+		Job:      &Job{config},
+		Variant:  &Variant{config},
+		Image:    &Image{config},
+		User:     &User{config},
+		Internal: &Internal{config},
 	}, nil
 }
 

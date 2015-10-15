@@ -216,6 +216,13 @@ func (ctx *context) authenticationHandler(next http.Handler) func(http.ResponseW
 	}
 }
 
+func (ctx *context) mkInternalApiHandler(f func(*request) (*response, error)) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		mkHandler(f).ServeHTTP(w, r)
+	}
+}
+
+
 func (ctx *context) userAuthentication(email string, password string) bool {
 	return ctx.connector.ComparePassword(email, password)
 }
