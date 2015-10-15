@@ -58,8 +58,8 @@ func main() {
 	r.HandleFunc("/variant/{id}/artifacts/{path:.*}", context.mkAuthHandler(context.getVariantArtifact)).Methods("GET")
 
 	r.HandleFunc("/image", context.mkAuthHandler(context.getImages)).Methods("GET")
+	r.HandleFunc("/image/{name:.*}", context.mkAuthHandler(context.getImage)).Methods("GET")
 	r.HandleFunc("/image/{name:.*}", context.mkAuthHandler(context.setImage)).Methods("PUT")
-	// r.HandleFunc("/image/{name}", context.mkAuthHandler(context.unsetImage)).Methods("DELETE")
 
 	r.HandleFunc("/user", context.mkAuthHandler(context.getUsers)).Methods("GET")
 	r.HandleFunc("/user", context.mkAuthHandler(context.createUser)).Methods("POST")

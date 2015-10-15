@@ -103,5 +103,5 @@ func (f *SCMFetcher) resolveImage() (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("Unable to find Bazooka Docker Image for SCM %s\n", f.context.scm)
 	}
-	return image, nil
+	return image.Image, nil
 }

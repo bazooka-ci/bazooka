@@ -30,6 +30,23 @@ func (c *Image) List() ([]*lib.Image, error) {
 	return images, err
 }
 
+func (c *Image) Get(name string) (*lib.Image, error) {
+	var image lib.Image
+
+	requestURL, err := c.config.getRequestURL(fmt.Sprintf("image/%s", name))
+	if err != nil {
+		return nil, err
+	}
+
+	err = perigee.Get(requestURL, perigee.Options{
+		Results:    &image,
+		OkCodes:    []int{200},
+		SetHeaders: c.config.authenticateRequest,
+	})
+
+	return &image, err
+}
+
 func (c *Image) Set(name, image string) error {
 	requestURL, err := c.config.getRequestURL(fmt.Sprintf("image/%s", url.QueryEscape(name)))
 	if err != nil {
