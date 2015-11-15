@@ -94,6 +94,12 @@ type SCMMetadata struct {
 	Message   string   `bson:"message" json:"message" yaml:"message"`
 }
 
+type FinishData struct {
+	Status    JobStatus `json:"status"`
+	Time      time.Time `json:"time,omitempty"`
+	Artifacts []string  `json:"artifacts,omitempty"`
+}
+
 func (ms *VariantMetas) Append(m *VariantMeta) { *ms = append(*ms, m) }
 func (ms *VariantMetas) Len() int              { return len(*ms) }
 func (ms *VariantMetas) Swap(i, j int)         { (*ms)[i], (*ms)[j] = (*ms)[j], (*ms)[i] }

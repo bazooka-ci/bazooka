@@ -67,6 +67,16 @@ func main() {
 
 	r.HandleFunc("/project/{id}/github", context.mkGithubAuthHandler(context.startGithubJob)).Methods("POST")
 
+	{
+		i := r.PathPrefix("/_").Subrouter()
+
+		i.HandleFunc("/project/{id}/crypto-key", context.mkInternalApiHandler(context.getCryptoKey)).Methods("GET")
+		i.HandleFunc("/job/{id}/finish", context.mkInternalApiHandler(context.finishJob)).Methods("POST")
+		i.HandleFunc("/job/{id}/scm", context.mkInternalApiHandler(context.addJobScmData)).Methods("PUT")
+		i.HandleFunc("/variant/{id}/finish", context.mkInternalApiHandler(context.finishVariant)).Methods("POST")
+		i.HandleFunc("/variant", context.mkInternalApiHandler(context.addVariant)).Methods("POST")
+	}
+
 	http.Handle("/", r)
 
 	go func() {
