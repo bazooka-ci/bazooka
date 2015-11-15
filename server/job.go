@@ -205,7 +205,7 @@ func (c *context) startJob(params map[string]string, startJob lib.StartJob, comm
 	}
 
 	container, err := client.Run(&docker.RunOptions{
-		Image:       orchestrationImage,
+		Image:       orchestrationImage.Image,
 		VolumeBinds: orchestrationVolumes,
 		Env:         orchestrationEnv,
 		Detach:      true,

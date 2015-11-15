@@ -46,6 +46,7 @@ func main() {
 
 	app.Command("image", "Actions on images", func(cmd *cli.Cmd) {
 		cmd.Command("list", "List the registered docker images", listImagesCommand)
+		cmd.Command("get", "View a registered docker image", getImageCommand)
 		cmd.Command("register", "Register a docker image", setImageCommand)
 	})
 

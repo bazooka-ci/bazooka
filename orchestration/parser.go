@@ -144,7 +144,7 @@ func (f *Parser) resolveImage() (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("Unable to find Bazooka Docker Image for parser\n")
 	}
-	return image, nil
+	return image.Image, nil
 }
 
 func parseMeta(file string, vf *variantData) error {

@@ -29,6 +29,27 @@ func listImagesCommand(cmd *cli.Cmd) {
 	}
 }
 
+func getImageCommand(cmd *cli.Cmd) {
+	name := cmd.StringArg("IMAGE", "", "The image name")
+	cmd.Action = func() {
+		client, err := NewClient()
+		if err != nil {
+			log.Fatal(err)
+		}
+		image, err := client.Image.Get(*name)
+		if err != nil {
+			log.Fatal(err)
+		}
+		w := tabwriter.NewWriter(os.Stdout, 15, 1, 3, ' ', 0)
+
+		fmt.Fprint(w, "NAME\tIMAGE\tDESCRIPTION\n")
+
+		fmt.Fprintf(w, "%s\t%s\t%s\n", image.Name, image.Image, image.Description)
+
+		w.Flush()
+	}
+}
+
 func setImageCommand(cmd *cli.Cmd) {
 	cmd.Spec = "NAME IMAGE"
 
