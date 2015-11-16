@@ -213,11 +213,7 @@ func (g *Generator) GenerateDockerfile() error {
 	}
 
 	if len(g.config.Services) > 0 {
-		var servicesBuffer bytes.Buffer
-		for _, service := range g.config.Services {
-			servicesBuffer.WriteString(fmt.Sprintf("%s\n", service))
-		}
-		err = ioutil.WriteFile(fmt.Sprintf("%s/%s/services", g.outputFolder, g.index), servicesBuffer.Bytes(), 0644)
+		err = lib.Flush(g.config.Services, fmt.Sprintf("%s/%s/services", g.outputFolder, g.index))
 		if err != nil {
 			return fmt.Errorf("Phase [%s/services]: writing file failed: %v", g.index, err)
 		}
