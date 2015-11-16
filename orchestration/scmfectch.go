@@ -90,7 +90,7 @@ func (f *SCMFetcher) Fetch() error {
 		return err
 	}
 
-	err = f.context.connector.AddJobSCMMetadata(f.context.jobID, scmMetadata)
+	err = f.context.client.Internal.AddJobSCMMetadata(f.context.jobID, scmMetadata)
 	if err != nil {
 		return err
 	}
@@ -98,7 +98,7 @@ func (f *SCMFetcher) Fetch() error {
 }
 
 func (f *SCMFetcher) resolveImage() (string, error) {
-	image, err := f.context.connector.GetImage(fmt.Sprintf("scm/fetch/%s", f.context.scm))
+	image, err := f.context.client.Image.Get(fmt.Sprintf("scm/fetch/%s", f.context.scm))
 	if err != nil {
 		return "", fmt.Errorf("Unable to find Bazooka Docker Image for SCM %s\n", f.context.scm)
 	}

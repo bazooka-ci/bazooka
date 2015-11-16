@@ -356,6 +356,10 @@ func getConfigWithParams(tag, bzkHome, dockerSock, registry, scmKey, syslogURI, 
 		config.SCMKey = scmKey
 	}
 
+	if len(*bzkApiUri) != 0 {
+		config.ApiURI = *bzkApiUri
+	}
+
 	if len(syslogURI) != 0 {
 		config.SyslogURI = syslogURI
 	}
@@ -460,10 +464,11 @@ func startContainer(client *docker.Docker, options *docker.RunOptions, allContai
 
 }
 
-func getServerEnv(home, dockerSock, scmKey, syslogURI, mongoURI string) map[string]string {
+func getServerEnv(home, dockerSock, scmKey, apiURI, syslogURI, mongoURI string) map[string]string {
 	envMap := map[string]string{
 		"BZK_HOME":       home,
 		"BZK_DOCKERSOCK": dockerSock,
+		"BZK_API_URL":    apiURI,
 		"BZK_SYSLOG_URL": syslogURI,
 	}
 	if len(scmKey) > 0 {
@@ -529,7 +534,7 @@ func getServerRunOptions(config *Config) *docker.RunOptions {
 			fmt.Sprintf("%s:/var/run/docker.sock", config.DockerSock),
 		},
 		Links: links,
-		Env:   getServerEnv(config.Home, config.DockerSock, config.SCMKey, config.SyslogURI, config.MongoURI),
+		Env:   getServerEnv(config.Home, config.DockerSock, config.SCMKey, config.ApiURI, config.SyslogURI, config.MongoURI),
 		PortBindings: map[dockerclient.Port][]dockerclient.PortBinding{
 			"3000/tcp": {{HostPort: "3000"}},
 			"3001/tcp": {{HostPort: "3001"}},

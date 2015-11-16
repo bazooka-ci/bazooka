@@ -22,7 +22,6 @@ func main() {
 	start := time.Now()
 
 	context := initContext()
-	defer context.cleanup()
 
 	log.WithFields(log.Fields{
 		"environment": context,
@@ -38,9 +37,9 @@ func main() {
 		err = f.Fetch()
 	}
 	if err != nil {
-		mongoErr := context.connector.FinishJob(context.jobID, lib.JOB_ERRORED, time.Now())
-		if mongoErr != nil {
-			log.Fatal(mongoErr)
+		clientErr := context.client.Internal.MarkJobAsFinished(context.jobID, lib.JOB_ERRORED)
+		if clientErr != nil {
+			log.Fatal(err, clientErr)
 		}
 		log.Fatal(err)
 	}
@@ -50,9 +49,9 @@ func main() {
 	}
 	parsedVariants, err := p.Parse()
 	if err != nil {
-		mongoErr := context.connector.FinishJob(context.jobID, lib.JOB_ERRORED, time.Now())
-		if mongoErr != nil {
-			log.Fatal(err, mongoErr)
+		clientErr := context.client.Internal.MarkJobAsFinished(context.jobID, lib.JOB_ERRORED)
+		if clientErr != nil {
+			log.Fatal(err, clientErr)
 		}
 		log.Fatal(err)
 	}
@@ -66,16 +65,16 @@ func main() {
 			JobID:     context.jobID,
 			Metas:     v.meta,
 		}
-		err := context.connector.AddVariant(variant)
+		var err error
+		variant, err = context.client.Internal.AddVariant(variant)
 		if err != nil {
-			mongoErr := context.connector.FinishJob(context.jobID, lib.JOB_ERRORED, time.Now())
-			if mongoErr != nil {
-				log.Fatal(err, mongoErr)
+			clientErr := context.client.Internal.MarkJobAsFinished(context.jobID, lib.JOB_ERRORED)
+			if clientErr != nil {
+				log.Fatal(err, clientErr)
 			}
 			log.Fatal(err)
 		}
 		v.variant = variant
-
 	}
 
 	b := &Builder{
@@ -84,9 +83,9 @@ func main() {
 	}
 
 	if err := b.Build(); err != nil {
-		mongoErr := context.connector.FinishJob(context.jobID, lib.JOB_ERRORED, time.Now())
-		if mongoErr != nil {
-			log.Fatal(mongoErr)
+		clientErr := context.client.Internal.MarkJobAsFinished(context.jobID, lib.JOB_ERRORED)
+		if clientErr != nil {
+			log.Fatal(err, clientErr)
 		}
 		log.Fatal(err)
 	}
@@ -96,7 +95,7 @@ func main() {
 	for _, vd := range parsedVariants {
 		switch vd.variant.Status {
 		case lib.JOB_ERRORED:
-			if err := context.connector.FinishVariant(vd.variant.ID, lib.JOB_ERRORED, vd.variant.Completed, nil); err != nil {
+			if err := context.client.Internal.MarkVariantAsFinished(vd.variant.ID, lib.JOB_ERRORED, vd.variant.Completed, nil); err != nil {
 				log.Fatal(err)
 			}
 		default:
@@ -111,15 +110,15 @@ func main() {
 
 	err = r.Run()
 	if err != nil {
-		mongoErr := context.connector.FinishJob(context.jobID, lib.JOB_ERRORED, time.Now())
-		if mongoErr != nil {
-			log.Fatal(mongoErr)
+		clientErr := context.client.Internal.MarkJobAsFinished(context.jobID, lib.JOB_ERRORED)
+		if clientErr != nil {
+			log.Fatal(err, clientErr)
 		}
 		log.Fatal(err)
 	}
 
 	for _, vd := range variantsToBuild {
-		if err := context.connector.FinishVariant(vd.variant.ID, vd.variant.Status, vd.variant.Completed, vd.variant.Artifacts); err != nil {
+		if err := context.client.Internal.MarkVariantAsFinished(vd.variant.ID, vd.variant.Status, vd.variant.Completed, vd.variant.Artifacts); err != nil {
 			log.Fatal(err)
 		}
 	}
@@ -158,7 +157,7 @@ func main() {
 		jobStatus = lib.JOB_SUCCESS
 	}
 
-	if err = context.connector.FinishJob(context.jobID, jobStatus, time.Now()); err != nil {
+	if err = context.client.Internal.MarkJobAsFinished(context.jobID, jobStatus); err != nil {
 		log.Fatal(err)
 	}
 	elapsed := time.Since(start)

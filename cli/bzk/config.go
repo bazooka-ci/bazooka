@@ -17,11 +17,11 @@ const (
 
 // TODO handle multiple server
 type Config struct {
-	Username string `yaml:"username,omitempty"`
-	Password string `yaml:"password,omitempty"`
-	Auth     string `yaml:"auth"`
+	Username   string `yaml:"username,omitempty"`
+	Password   string `yaml:"password,omitempty"`
+	Auth       string `yaml:"auth"`
 
-	ServerURI  string `yaml:"server_uri"`
+	ApiURI     string `yaml:"api_uri"`
 	SyslogURI  string `yaml:"syslog_uri"`
 	Home       string `yaml:"home"`
 	DockerSock string `yaml:"docker_sock"`
@@ -29,7 +29,7 @@ type Config struct {
 	Registry   string `yaml:"registry"`
 	Tag        string `yaml:"tag"`
 
-	MongoURI string `yaml:"mongo_uri"`
+	MongoURI   string `yaml:"mongo_uri"`
 }
 
 func saveConfig(authConfig *Config) error {
