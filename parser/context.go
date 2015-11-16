@@ -4,10 +4,13 @@ import (
 	"encoding/json"
 	"os"
 
+	"fmt"
+
 	lib "github.com/bazooka-ci/bazooka/commons"
 )
 
 const (
+	BazookaEnvSyslogUrl     = "BZK_SYSLOG_URL"
 	BazookaEnvHome          = "BZK_HOME"
 	BazookaEnvSrc           = "BZK_SRC"
 	BazookaEnvCryptoKeyfile = "BZK_CRYPTO_KEYFILE"
@@ -17,6 +20,7 @@ const (
 )
 
 type context struct {
+	syslogUrl     string
 	projectID     string
 	jobID         string
 	jobParameters string
@@ -39,6 +43,7 @@ type path struct {
 
 func initContext() *context {
 	return &context{
+		syslogUrl:     os.Getenv(BazookaEnvSyslogUrl),
 		projectID:     os.Getenv(BazookaEnvProjectID),
 		jobID:         os.Getenv(BazookaEnvJobID),
 		jobParameters: os.Getenv(BazookaEnvJobParameters),
@@ -50,6 +55,13 @@ func initContext() *context {
 			dockerSock:     path{"/var/run/docker.sock", ""},
 			dockerEndpoint: path{"unix:///var/run/docker.sock", ""},
 		},
+	}
+}
+
+func (c *context) loggerConfig(image string) map[string]string {
+	return map[string]string{
+		"syslog-address": c.syslogUrl,
+		"syslog-tag":     fmt.Sprintf("image=%s;project=%s;job=%s", image, c.projectID, c.jobID),
 	}
 }
 

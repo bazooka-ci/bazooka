@@ -4,4 +4,4 @@ COPY main /bin/main
 
 ENTRYPOINT ["/bin/main"]
 
-EXPOSE 3000
+EXPOSE 3000 3001

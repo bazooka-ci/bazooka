@@ -13,7 +13,7 @@ type SCMFetcher struct {
 	update  bool
 }
 
-func (f *SCMFetcher) Fetch(logger Logger) error {
+func (f *SCMFetcher) Fetch() error {
 	log.WithFields(log.Fields{
 		"source": f.context.scmUrl,
 	}).Info("Fetching SCM From Source Repository")
@@ -54,17 +54,16 @@ func (f *SCMFetcher) Fetch(logger Logger) error {
 	}
 
 	container, err := client.Run(&docker.RunOptions{
-		Image:       image,
-		VolumeBinds: volumes,
-		Env:         env,
-		Detach:      true,
+		Image:               image,
+		VolumeBinds:         volumes,
+		Env:                 env,
+		Detach:              true,
+		LoggingDriver:       "syslog",
+		LoggingDriverConfig: f.context.loggerConfig(image, ""),
 	})
 	if err != nil {
 		return err
 	}
-
-	container.Logs(image)
-	logger(image, "", container)
 
 	exitCode, err := container.Wait()
 	if err != nil {

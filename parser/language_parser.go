@@ -40,7 +40,9 @@ func (p *LanguageParser) Parse() ([]*variantData, error) {
 			fmt.Sprintf("%s:/meta", paths.meta.host),
 			fmt.Sprintf("%s:/bazooka-cryptokey", paths.cryptoKey.host),
 		},
-		Detach: true,
+		Detach:              true,
+		LoggingDriver:       "syslog",
+		LoggingDriverConfig: p.context.loggerConfig(p.image),
 	})
 	if err != nil {
 		return nil, err

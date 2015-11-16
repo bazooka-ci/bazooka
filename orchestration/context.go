@@ -3,10 +3,13 @@ package main
 import (
 	"os"
 
+	"fmt"
+
 	"github.com/bazooka-ci/bazooka/commons/mongo"
 )
 
 const (
+	BazookaEnvSyslogUrl     = "BZK_SYSLOG_URL"
 	BazookaEnvHome          = "BZK_HOME"
 	BazookaEnvSrc           = "BZK_SRC"
 	BazookaEnvSCMKeyfile    = "BZK_SCM_KEYFILE"
@@ -22,6 +25,7 @@ const (
 
 type context struct {
 	connector     *mongo.MongoConnector
+	syslogUrl     string
 	scm           string
 	scmUrl        string
 	scmReference  string
@@ -53,6 +57,7 @@ func initContext() *context {
 
 	return &context{
 		connector:     mongo.NewConnector(),
+		syslogUrl:     os.Getenv(BazookaEnvSyslogUrl),
 		scm:           os.Getenv(BazookaEnvSCM),
 		scmUrl:        os.Getenv(BazookaEnvSCMUrl),
 		scmReference:  os.Getenv(BazookaEnvSCMReference),
@@ -71,6 +76,17 @@ func initContext() *context {
 			dockerSock:     path{"/var/run/docker.sock", os.Getenv(BazookaEnvDockerSock)},
 			dockerEndpoint: path{"unix:///var/run/docker.sock", "unix://" + os.Getenv(BazookaEnvDockerSock)},
 		},
+	}
+}
+
+func (c *context) loggerConfig(image string, variantID string) map[string]string {
+	tag := fmt.Sprintf("image=%s;project=%s;job=%s", image, c.projectID, c.jobID)
+	if len(variantID) > 0 {
+		tag += ";variant=" + variantID
+	}
+	return map[string]string{
+		"syslog-address": c.syslogUrl,
+		"syslog-tag":     tag,
 	}
 }
 

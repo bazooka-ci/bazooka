@@ -21,7 +21,7 @@ type Runner struct {
 	client   *docker.Docker
 }
 
-func (r *Runner) Run(logger Logger) error {
+func (r *Runner) Run() error {
 	paths := r.context.paths
 
 	client, err := docker.NewDocker(paths.dockerEndpoint.container)
@@ -38,7 +38,7 @@ func (r *Runner) Run(logger Logger) error {
 		}
 		variant := ivariant
 		par.Submit(func() error {
-			return r.runContainer(logger, variant)
+			return r.runContainer(variant)
 		}, variant)
 	}
 
@@ -59,7 +59,7 @@ func (r *Runner) Run(logger Logger) error {
 	return nil
 }
 
-func (r *Runner) runContainer(logger Logger, vd *variantData) error {
+func (r *Runner) runContainer(vd *variantData) error {
 	paths := r.context.paths
 
 	success := true
@@ -105,14 +105,13 @@ func (r *Runner) runContainer(logger Logger, vd *variantData) error {
 			BazookaEnvJobParameters: r.context.jobParameters,
 			"BZK_VARIANT":           strconv.Itoa(vd.variant.Number),
 		},
-		Detach: true,
+		Detach:              true,
+		LoggingDriver:       "syslog",
+		LoggingDriverConfig: r.context.loggerConfig(vd.imageTag, vd.variant.ID),
 	})
 	if err != nil {
 		return err
 	}
-
-	container.Logs(vd.imageTag)
-	logger(vd.imageTag, vd.variant.ID, container)
 
 	exitCode, err := container.Wait()
 	if err != nil {

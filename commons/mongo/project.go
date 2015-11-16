@@ -2,9 +2,6 @@ package mongo
 
 import (
 	"fmt"
-	"io"
-	"log"
-	"regexp"
 	"strings"
 	"time"
 
@@ -277,47 +274,6 @@ func (c *MongoConnector) GetLog(like *LogExample) ([]lib.LogEntry, error) {
 
 	err := c.database.C("logs").Find(request).All(&result)
 	return result, err
-}
-
-func (c *MongoConnector) FeedLog(r io.Reader, template lib.LogEntry) {
-	go func(reader io.Reader) {
-		scanner := lib.NewScanner(reader)
-		for scanner.Scan() {
-			message := scanner.Text()
-			thisTemplate := template
-
-			regLogLevel, _ := regexp.Compile(`^\s*\[(\S+)\].*$`)  // Eg. [INFO] My message
-			regMeta, _ := regexp.Compile(`^\s*\<(\S+):(.*)>\s*$`) // Eg. <CMD:go test -v ./...>
-
-			switch {
-			case regLogLevel.MatchString(message):
-				submatchs := regLogLevel.FindStringSubmatch(message)
-				logLevel := submatchs[len(submatchs)-1]
-				thisTemplate.Level = logLevel
-				thisTemplate.Message = strings.TrimSpace(message[len(logLevel)+2:])
-			case regMeta.MatchString(message):
-				submatchs := regMeta.FindStringSubmatch(message)
-				instructionType := submatchs[1]
-				instructionValue := submatchs[2]
-				switch instructionType {
-				case "CMD":
-					thisTemplate.Command = instructionValue
-				case "PHASE":
-					thisTemplate.Phase = instructionValue
-				default:
-					thisTemplate.Message = strings.TrimSpace(message)
-				}
-			default:
-				thisTemplate.Message = strings.TrimSpace(message)
-			}
-
-			thisTemplate.Time = time.Now()
-			c.AddLog(&thisTemplate)
-		}
-		if err := scanner.Err(); err != nil {
-			log.Println("There was an error with the scanner", err)
-		}
-	}(r)
 }
 
 func (c *MongoConnector) SetJobOrchestrationId(id string, orchestrationId string) error {

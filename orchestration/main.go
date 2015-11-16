@@ -2,8 +2,6 @@ package main
 
 import (
 	"fmt"
-	"io"
-	"os"
 	"strconv"
 	"time"
 
@@ -26,28 +24,6 @@ func main() {
 	context := initContext()
 	defer context.cleanup()
 
-	var containerLogger Logger = func(image string, variantID string, container *docker.Container) {
-		r, w := io.Pipe()
-		container.StreamLogs(w)
-		context.connector.FeedLog(r, lib.LogEntry{
-			ProjectID: context.projectID,
-			JobID:     context.jobID,
-			VariantID: variantID,
-			Image:     image,
-		})
-	}
-
-	//redirect the log to mongo
-	func() {
-		r, w := io.Pipe()
-		log.SetOutput(io.MultiWriter(os.Stdout, w))
-		context.connector.FeedLog(r, lib.LogEntry{
-			ProjectID: context.projectID,
-			JobID:     context.jobID,
-			Image:     "bazooka/orchestration",
-		})
-	}()
-
 	log.WithFields(log.Fields{
 		"environment": context,
 	}).Info("Starting Orchestration")
@@ -55,11 +31,11 @@ func main() {
 	f := &SCMFetcher{
 		context: context,
 	}
-	err := f.Fetch(containerLogger)
+	err := f.Fetch()
 	if err != nil && context.reuseScm {
 		log.Info("First SCM fetch with bzk.scm.reuse true failed, retrying with a clean SCM fetch")
 		f.update = false
-		err = f.Fetch(containerLogger)
+		err = f.Fetch()
 	}
 	if err != nil {
 		mongoErr := context.connector.FinishJob(context.jobID, lib.JOB_ERRORED, time.Now())
@@ -72,7 +48,7 @@ func main() {
 	p := &Parser{
 		context: context,
 	}
-	parsedVariants, err := p.Parse(containerLogger)
+	parsedVariants, err := p.Parse()
 	if err != nil {
 		mongoErr := context.connector.FinishJob(context.jobID, lib.JOB_ERRORED, time.Now())
 		if mongoErr != nil {
@@ -133,7 +109,7 @@ func main() {
 		context:  context,
 	}
 
-	err = r.Run(containerLogger)
+	err = r.Run()
 	if err != nil {
 		mongoErr := context.connector.FinishJob(context.jobID, lib.JOB_ERRORED, time.Now())
 		if mongoErr != nil {

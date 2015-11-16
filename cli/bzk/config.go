@@ -22,6 +22,7 @@ type Config struct {
 	Auth     string `yaml:"auth"`
 
 	ServerURI  string `yaml:"server_uri"`
+	SyslogURI  string `yaml:"syslog_uri"`
 	Home       string `yaml:"home"`
 	DockerSock string `yaml:"docker_sock"`
 	SCMKey     string `yaml:"scm_key"`
