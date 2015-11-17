@@ -12,7 +12,7 @@ import (
 const (
 	bazookaEnvMongoAddr = "MONGO_PORT_27017_TCP_ADDR"
 	bazookaEnvMongoPort = "MONGO_PORT_27017_TCP_PORT"
-	bazookaEnvMongoURI  = "BZK_MONGO_URI"
+	bazookaEnvMongoURL  = "BZK_MONGO_URL"
 	bazookaMongoBase    = "bazooka"
 )
 
@@ -43,7 +43,7 @@ func (m *ManyFoundError) Error() string {
 }
 
 func NewConnector() *MongoConnector {
-	session, err := mgo.Dial(getMongoUri())
+	session, err := mgo.Dial(getMongoUrl())
 	if err != nil {
 		panic(err)
 	}
@@ -124,10 +124,10 @@ func (m *MongoConnector) selectOneByIdOrName(collection, id string, result inter
 	}
 }
 
-func getMongoUri() string {
-	mongoURI := os.Getenv(bazookaEnvMongoURI)
-	if mongoURI != "" {
-		return mongoURI
+func getMongoUrl() string {
+	mongoURL := os.Getenv(bazookaEnvMongoURL)
+	if mongoURL != "" {
+		return mongoURL
 	}
 	return os.Getenv(bazookaEnvMongoAddr) + ":" + os.Getenv(bazookaEnvMongoPort)
 }

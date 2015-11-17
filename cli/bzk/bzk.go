@@ -8,10 +8,10 @@ import (
 
 var (
 	app    = cli.App("bzk", "Bazooka CI client")
-	bzkApiUri = app.String(cli.StringOpt{
-		Name:   "u bazooka-uri",
-		Desc:   "URI for the bazooka server",
-		EnvVar: "BZK_API_URI",
+	bzkApiUrl = app.String(cli.StringOpt{
+		Name:   "u bazooka-url",
+		Desc:   "URL for the bazooka server",
+		EnvVar: "BZK_API_URL",
 	})
 )
 

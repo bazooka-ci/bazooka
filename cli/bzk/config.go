@@ -21,15 +21,15 @@ type Config struct {
 	Password   string `yaml:"password,omitempty"`
 	Auth       string `yaml:"auth"`
 
-	ApiURI     string `yaml:"api_uri"`
-	SyslogURI  string `yaml:"syslog_uri"`
+	ApiURL     string `yaml:"api_url"`
+	SyslogURL  string `yaml:"syslog_url"`
 	Home       string `yaml:"home"`
 	DockerSock string `yaml:"docker_sock"`
 	SCMKey     string `yaml:"scm_key"`
 	Registry   string `yaml:"registry"`
 	Tag        string `yaml:"tag"`
 
-	MongoURI   string `yaml:"mongo_uri"`
+	MongoURL   string `yaml:"mongo_url"`
 }
 
 func saveConfig(authConfig *Config) error {
