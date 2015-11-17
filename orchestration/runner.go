@@ -81,6 +81,7 @@ func (r *Runner) runContainer(vd *variantData) error {
 		if err != nil {
 			return err
 		}
+		defer commons.RemoveContainer(serviceContainer)
 		serviceContainers = append(serviceContainers, serviceContainer)
 	}
 
@@ -110,6 +111,7 @@ func (r *Runner) runContainer(vd *variantData) error {
 	if err != nil {
 		return err
 	}
+	defer commons.RemoveContainer(container)
 
 	exitCode, err := container.Wait()
 	if err != nil {
@@ -120,21 +122,6 @@ func (r *Runner) runContainer(vd *variantData) error {
 			return fmt.Errorf("Run failed\n Check Docker container logs, id is %s\n", container.ID())
 		}
 		success = false
-	}
-	if err = container.Remove(&docker.RemoveOptions{
-		Force:         true,
-		RemoveVolumes: true,
-	}); err != nil {
-		return err
-	}
-
-	for _, serviceContainer := range serviceContainers {
-		if err = serviceContainer.Remove(&docker.RemoveOptions{
-			Force:         true,
-			RemoveVolumes: true,
-		}); err != nil {
-			return err
-		}
 	}
 
 	if success {

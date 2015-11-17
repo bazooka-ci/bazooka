@@ -76,20 +76,14 @@ func (p *Parser) Parse() ([]*variantData, error) {
 		return nil, err
 	}
 
+	defer lib.RemoveContainer(container)
+
 	exitCode, err := container.Wait()
 	if err != nil {
 		return nil, err
 	}
 	if exitCode != 0 {
 		return nil, fmt.Errorf("Error during execution of Parser container %s/parser\n Check Docker container logs, id is %s\n", image, container.ID())
-	}
-
-	err = container.Remove(&docker.RemoveOptions{
-		Force:         true,
-		RemoveVolumes: true,
-	})
-	if err != nil {
-		return nil, err
 	}
 
 	log.WithFields(log.Fields{

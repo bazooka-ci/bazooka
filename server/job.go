@@ -222,26 +222,16 @@ func (c *context) startJob(params map[string]string, startJob lib.StartJob, comm
 			runningJob.ProjectID, runningJob.ID, err)
 	}
 
-	// remove the container at the end of its execution
-	go func(container *docker.Container) {
-		exitCode, err := container.Wait()
-		if err != nil {
-			log.Errorf("Error while waiting for container %s: %v", container.ID(), err)
-		}
+	defer lib.RemoveContainer(container)
 
-		if exitCode != 0 {
-			log.Errorf("Error during execution of Orchestrator container. Check Docker container logs, id is %s\n", container.ID())
-			return
-		}
+	exitCode, err := container.Wait()
+	if err != nil {
+		return nil, fmt.Errorf("Error while waiting for container %s: %v", container.ID(), err)
+	}
 
-		err = container.Remove(&docker.RemoveOptions{
-			Force:         true,
-			RemoveVolumes: true,
-		})
-		if err != nil {
-			log.Errorf("Cannot remove container %s", container.ID())
-		}
-	}(container)
+	if exitCode != 0 {
+		return nil, fmt.Errorf("Error during execution of orchestration container with id %s, exit code is %d\n", container.ID(), exitCode)
+	}
 
 	runningJob.OrchestrationID = container.ID()
 	log.WithFields(log.Fields{
