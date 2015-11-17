@@ -65,6 +65,8 @@ func (f *SCMFetcher) Fetch() error {
 		return err
 	}
 
+	defer lib.RemoveContainer(container)
+
 	exitCode, err := container.Wait()
 	if err != nil {
 		return err
@@ -76,11 +78,6 @@ func (f *SCMFetcher) Fetch() error {
 	log.WithFields(log.Fields{
 		"checkout_folder": paths.source.host,
 	}).Info("SCM Source Repo Fetched")
-
-	err = container.Remove(&docker.RemoveOptions{
-		Force:         true,
-		RemoveVolumes: true,
-	})
 
 	scmMetadata := &lib.SCMMetadata{}
 

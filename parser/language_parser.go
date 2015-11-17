@@ -48,6 +48,8 @@ func (p *LanguageParser) Parse() ([]*variantData, error) {
 		return nil, err
 	}
 
+	defer lib.RemoveContainer(container)
+
 	container.Logs(p.image)
 
 	exitCode, err := container.Wait()
@@ -58,13 +60,6 @@ func (p *LanguageParser) Parse() ([]*variantData, error) {
 		return nil, fmt.Errorf("Error during execution of Language Parser container %s/parser\n Check Docker container logs, id is %s\n", p.image, container.ID())
 	}
 
-	err = container.Remove(&docker.RemoveOptions{
-		Force:         true,
-		RemoveVolumes: true,
-	})
-	if err != nil {
-		return nil, err
-	}
 	log.Info("Language parsing finished")
 
 	// if all went well, the parser should have generated one or more "sub" .bazooka.*.yml files
