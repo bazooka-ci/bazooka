@@ -43,6 +43,7 @@ func (p *Parser) Parse() ([]*variantData, error) {
 	}).Info("Running Parsing Image on checked-out source")
 
 	env := map[string]string{
+		BazookaEnvApiUrl:        p.context.apiUrl,
 		BazookaEnvSyslogUrl:     p.context.syslogUrl,
 		BazookaEnvHome:          paths.base.host,
 		BazookaEnvSrc:           paths.source.host,

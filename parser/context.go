@@ -6,10 +6,14 @@ import (
 
 	"fmt"
 
+	"log"
+
+	"github.com/bazooka-ci/bazooka/client"
 	lib "github.com/bazooka-ci/bazooka/commons"
 )
 
 const (
+	BazookaEnvApiUrl        = "BZK_API_URL"
 	BazookaEnvSyslogUrl     = "BZK_SYSLOG_URL"
 	BazookaEnvHome          = "BZK_HOME"
 	BazookaEnvSrc           = "BZK_SRC"
@@ -20,6 +24,7 @@ const (
 )
 
 type context struct {
+	client        *client.Client
 	syslogUrl     string
 	projectID     string
 	jobID         string
@@ -42,7 +47,15 @@ type path struct {
 }
 
 func initContext() *context {
+	// Configure Client
+	client, err := client.New(&client.Config{
+		URL: fmt.Sprintf(os.Getenv(BazookaEnvApiUrl)),
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
 	return &context{
+		client:        client,
 		syslogUrl:     os.Getenv(BazookaEnvSyslogUrl),
 		projectID:     os.Getenv(BazookaEnvProjectID),
 		jobID:         os.Getenv(BazookaEnvJobID),
