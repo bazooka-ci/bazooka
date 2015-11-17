@@ -62,7 +62,7 @@ type path struct {
 func initContext() *context {
 	// Configure Client
 	client, err := client.New(&client.Config{
-		URL: fmt.Sprintf(os.Getenv(BazookaEnvApiUrl)),
+		URL: os.Getenv(BazookaEnvApiUrl),
 	})
 	if err != nil {
 		log.Fatal(err)
