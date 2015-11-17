@@ -8,6 +8,7 @@ import (
 	"github.com/bazooka-ci/bazooka/commons/matrix"
 
 	log "github.com/Sirupsen/logrus"
+	"github.com/bazooka-ci/bazooka/client"
 	lib "github.com/bazooka-ci/bazooka/commons"
 	bzklog "github.com/bazooka-ci/bazooka/commons/logs"
 )
@@ -66,7 +67,7 @@ func main() {
 		variants = generateImageVariants(config)
 	} else {
 		// resolve the docker image corresponding to this particular language parser
-		image, err := resolveLanguageParser(config.Language)
+		image, err := resolveLanguageParser(context.client, config.Language)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -335,19 +336,11 @@ func generateEnvForMeta(env []lib.BzkString, cryptoKeyPath string) ([]string, er
 	}
 	return res, nil
 }
-func resolveLanguageParser(language string) (string, error) {
-	parserMap := map[string]string{
-		"golang":  "bazooka/parser-golang",
-		"go":      "bazooka/parser-golang",
-		"java":    "bazooka/parser-java",
-		"python":  "bazooka/parser-python",
-		"ruby":    "bazooka/parser-ruby",
-		"node_js": "bazooka/parser-nodejs",
-		"nodejs":  "bazooka/parser-nodejs",
-		"php":     "bazooka/parser-php",
+
+func resolveLanguageParser(client *client.Client, language string) (string, error) {
+	image, err := client.Image.Get(fmt.Sprintf("parser/%s", language))
+	if err != nil {
+		return "", fmt.Errorf("Error while fetching image for Language Parser %s: %v", language, err)
 	}
-	if val, ok := parserMap[language]; ok {
-		return val, nil
-	}
-	return "", fmt.Errorf("Unable to find Bazooka Docker Image for Language Parser %s\n", language)
+	return image.Image, nil
 }

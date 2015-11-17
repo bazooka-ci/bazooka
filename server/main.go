@@ -97,10 +97,18 @@ func main() {
 
 var (
 	defaultImages = map[string]string{
-		"orchestration": "bazooka/orchestration",
-		"parser":        "bazooka/parser",
-		"scm/fetch/git": "bazooka/scm-git",
-		"scm/fetch/hg":  "bazooka/scm-hg",
+		"orchestration":  "bazooka/orchestration",
+		"parser":         "bazooka/parser",
+		"scm/fetch/git":  "bazooka/scm-git",
+		"scm/fetch/hg":   "bazooka/scm-hg",
+		"parser/golang":  "bazooka/parser-golang",
+		"parser/go":      "bazooka/parser-golang",
+		"parser/java":    "bazooka/parser-java",
+		"parser/python":  "bazooka/parser-python",
+		"parser/ruby":    "bazooka/parser-ruby",
+		"parser/node_js": "bazooka/parser-nodejs",
+		"parser/nodejs":  "bazooka/parser-nodejs",
+		"parser/php":     "bazooka/parser-php",
 	}
 )
 
