@@ -15,6 +15,7 @@ const (
 	BazookaEnvSCMKeyfile = "BZK_SCM_KEYFILE"
 	BazookaEnvHome       = "BZK_HOME"
 	BazookaEnvDockerSock = "BZK_DOCKERSOCK"
+	BazookaEnvApiUrl     = "BZK_API_URL"
 	BazookaEnvSyslogUrl  = "BZK_SYSLOG_URL"
 	BazookaEnvMongoAddr  = "MONGO_PORT_27017_TCP_ADDR"
 	BazookaEnvMongoPort  = "MONGO_PORT_27017_TCP_PORT"
@@ -25,6 +26,7 @@ const (
 )
 
 type context struct {
+	apiUrl    string
 	syslogUrl string
 	mongoAddr string
 	mongoPort string
@@ -47,6 +49,7 @@ type path struct {
 
 func initContext() *context {
 	c := &context{
+		apiUrl:    os.Getenv(BazookaEnvApiUrl),
 		syslogUrl: os.Getenv(BazookaEnvSyslogUrl),
 		mongoAddr: os.Getenv(BazookaEnvMongoAddr),
 		mongoPort: os.Getenv(BazookaEnvMongoPort),

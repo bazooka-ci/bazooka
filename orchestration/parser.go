@@ -149,7 +149,7 @@ func (p *Parser) variantsData() ([]*variantData, error) {
 }
 
 func (f *Parser) resolveImage() (string, error) {
-	image, err := f.context.connector.GetImage("parser")
+	image, err := f.context.client.Image.Get("parser")
 	if err != nil {
 		return "", fmt.Errorf("Unable to find Bazooka Docker Image for parser\n")
 	}

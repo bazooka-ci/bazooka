@@ -5,10 +5,14 @@ import (
 
 	"fmt"
 
+	"log"
+
+	"github.com/bazooka-ci/bazooka/client"
 	"github.com/bazooka-ci/bazooka/commons/mongo"
 )
 
 const (
+	BazookaEnvApiUrl        = "BZK_API_URL"
 	BazookaEnvSyslogUrl     = "BZK_SYSLOG_URL"
 	BazookaEnvHome          = "BZK_HOME"
 	BazookaEnvSrc           = "BZK_SRC"
@@ -25,6 +29,8 @@ const (
 
 type context struct {
 	connector     *mongo.MongoConnector
+	client        *client.Client
+	apiUrl        string
 	syslogUrl     string
 	scm           string
 	scmUrl        string
@@ -54,9 +60,17 @@ type path struct {
 }
 
 func initContext() *context {
+	// Configure Client
+	client, err := client.New(&client.Config{
+		URL: fmt.Sprintf(os.Getenv(BazookaEnvApiUrl)),
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	return &context{
-		connector:     mongo.NewConnector(),
+		client:        client,
+		apiUrl:        os.Getenv(BazookaEnvApiUrl),
 		syslogUrl:     os.Getenv(BazookaEnvSyslogUrl),
 		scm:           os.Getenv(BazookaEnvSCM),
 		scmUrl:        os.Getenv(BazookaEnvSCMUrl),
@@ -88,8 +102,4 @@ func (c *context) loggerConfig(image string, variantID string) map[string]string
 		"syslog-address": c.syslogUrl,
 		"syslog-tag":     tag,
 	}
-}
-
-func (c *context) cleanup() {
-	c.connector.Close()
 }

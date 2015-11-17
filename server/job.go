@@ -125,9 +125,8 @@ func (c *context) startJob(params map[string]string, startJob lib.StartJob, comm
 		"BZK_JOB_ID":         runningJob.ID,
 		"BZK_DOCKERSOCK":     c.paths.dockerSock.host,
 		"BZK_JOB_PARAMETERS": string(jobParameters),
+		BazookaEnvApiUrl:     c.apiUrl,
 		BazookaEnvSyslogUrl:  c.syslogUrl,
-		BazookaEnvMongoAddr:  c.mongoAddr,
-		BazookaEnvMongoPort:  c.mongoPort,
 	}
 
 	projectSSHKey, err := c.connector.GetProjectKey(project.ID)
