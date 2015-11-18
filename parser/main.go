@@ -156,9 +156,9 @@ func main() {
 
 		// transform the .bazooka.x.yml file into a set of dockerfile + shell scripts who perform the actual build
 		g := &Generator{
-			config:       config,
-			outputFolder: context.paths.output.container,
-			index:        parseCounter(file),
+			Config:       config,
+			OutputFolder: context.paths.output.container,
+			Index:        parseCounter(file),
 		}
 		err = g.GenerateDockerfile()
 		if err != nil {
