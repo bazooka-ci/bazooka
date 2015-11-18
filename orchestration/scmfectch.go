@@ -58,6 +58,7 @@ func (f *SCMFetcher) Fetch() error {
 		VolumeBinds:         volumes,
 		Env:                 env,
 		Detach:              true,
+		NetworkMode:         f.context.network,
 		LoggingDriver:       "syslog",
 		LoggingDriverConfig: f.context.loggerConfig(image, ""),
 	})

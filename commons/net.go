@@ -6,8 +6,7 @@ import (
 	"time"
 )
 
-func WaitForTcpConnection(host, port string, retryEvery, timeout time.Duration) error {
-	url := fmt.Sprintf("%s:%s", host, port)
+func WaitForTcpConnection(url string, retryEvery, timeout time.Duration) error {
 	giveUp := time.After(timeout)
 	for {
 		select {
@@ -18,7 +17,7 @@ func WaitForTcpConnection(host, port string, retryEvery, timeout time.Duration) 
 				return nil
 			}
 		case <-giveUp:
-			return fmt.Errorf("Coudln't establish a connection to %s:%s after %v", host, port, timeout)
+			return fmt.Errorf("Coudln't establish a connection to %s after %v", url, timeout)
 		}
 	}
 }

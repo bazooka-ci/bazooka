@@ -222,7 +222,6 @@ func (ctx *context) mkInternalApiHandler(f func(*request) (*response, error)) fu
 	}
 }
 
-
 func (ctx *context) userAuthentication(email string, password string) bool {
 	return ctx.connector.ComparePassword(email, password)
 }

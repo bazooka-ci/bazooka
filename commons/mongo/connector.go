@@ -3,7 +3,6 @@ package mongo
 import (
 	"crypto/rand"
 	"fmt"
-	"os"
 
 	mgo "gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
@@ -42,8 +41,8 @@ func (m *ManyFoundError) Error() string {
 	return fmt.Sprintf("%s[%s:%s] returned %d results", m.Collection, m.Field, m.Value, m.Count)
 }
 
-func NewConnector() *MongoConnector {
-	session, err := mgo.Dial(getMongoUrl())
+func NewConnector(url string) *MongoConnector {
+	session, err := mgo.Dial(url)
 	if err != nil {
 		panic(err)
 	}
@@ -122,12 +121,4 @@ func (m *MongoConnector) selectOneByIdOrName(collection, id string, result inter
 	default:
 		return err
 	}
-}
-
-func getMongoUrl() string {
-	mongoURL := os.Getenv(bazookaEnvMongoURL)
-	if mongoURL != "" {
-		return mongoURL
-	}
-	return os.Getenv(bazookaEnvMongoAddr) + ":" + os.Getenv(bazookaEnvMongoPort)
 }

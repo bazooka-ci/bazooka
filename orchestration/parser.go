@@ -45,6 +45,7 @@ func (p *Parser) Parse() ([]*variantData, error) {
 	env := map[string]string{
 		BazookaEnvApiUrl:        p.context.apiUrl,
 		BazookaEnvSyslogUrl:     p.context.syslogUrl,
+		BazookaEnvNetwork:       p.context.network,
 		BazookaEnvHome:          paths.base.host,
 		BazookaEnvSrc:           paths.source.host,
 		BazookaEnvProjectID:     p.context.projectID,
@@ -69,6 +70,7 @@ func (p *Parser) Parse() ([]*variantData, error) {
 		Env:                 env,
 		VolumeBinds:         volumes,
 		Detach:              true,
+		NetworkMode:         p.context.network,
 		LoggingDriver:       "syslog",
 		LoggingDriverConfig: p.context.loggerConfig(image, ""),
 	})
