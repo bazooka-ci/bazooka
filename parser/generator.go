@@ -49,7 +49,7 @@ func (g *Generator) GenerateDockerfile() error {
 			commands:  g.config.Setup,
 			beforeCmd: []string{"set -e"},
 			runCmd: []string{
-				"./bazooka_setup.sh",
+				fmt.Sprintf("%s/bazooka_setup.sh", bzkBuildDir),
 				"rc=$?",
 				"if [[ $rc != 0 ]] ; then",
 				"    exit 42",
@@ -61,7 +61,7 @@ func (g *Generator) GenerateDockerfile() error {
 			commands:  g.config.BeforeInstall,
 			beforeCmd: []string{"set -e"},
 			runCmd: []string{
-				"./bazooka_before_install.sh",
+				fmt.Sprintf("%s/bazooka_before_install.sh", bzkBuildDir),
 				"rc=$?",
 				"if [[ $rc != 0 ]] ; then",
 				"    exit 42",
@@ -73,7 +73,7 @@ func (g *Generator) GenerateDockerfile() error {
 			commands:  g.config.Install,
 			beforeCmd: []string{"set -e"},
 			runCmd: []string{
-				"./bazooka_install.sh",
+				fmt.Sprintf("%s/bazooka_install.sh", bzkBuildDir),
 				"rc=$?",
 				"if [[ $rc != 0 ]] ; then",
 				"    exit 42",
@@ -85,7 +85,7 @@ func (g *Generator) GenerateDockerfile() error {
 			commands:  g.config.BeforeScript,
 			beforeCmd: []string{"set -e"},
 			runCmd: []string{
-				"./bazooka_before_script.sh",
+				fmt.Sprintf("%s/bazooka_before_script.sh", bzkBuildDir),
 				"rc=$?",
 				"if [[ $rc != 0 ]] ; then",
 				"    exit 42",
@@ -97,7 +97,7 @@ func (g *Generator) GenerateDockerfile() error {
 			commands:  g.config.Script,
 			beforeCmd: []string{"set -e"},
 			runCmd: []string{
-				"./bazooka_script.sh",
+				fmt.Sprintf("%s/bazooka_script.sh", bzkBuildDir),
 				"exitCode=$?",
 			},
 		},
@@ -110,7 +110,7 @@ func (g *Generator) GenerateDockerfile() error {
 			commands: archiveCommands(g.config.ArchiveSuccess),
 			runCmd: []string{
 				"if [[ $exitCode == 0 ]] ; then",
-				"  ./bazooka_archive_success.sh",
+				fmt.Sprintf("  %s/bazooka_archive_success.sh", bzkBuildDir),
 				"fi",
 			},
 		},
@@ -119,7 +119,7 @@ func (g *Generator) GenerateDockerfile() error {
 			commands: archiveCommands(g.config.ArchiveFailure),
 			runCmd: []string{
 				"if [[ $exitCode != 0 ]] ; then",
-				"  ./bazooka_archive_failure.sh",
+				fmt.Sprintf("  %s/bazooka_archive_failure.sh", bzkBuildDir),
 				"fi",
 			},
 		},
@@ -129,7 +129,7 @@ func (g *Generator) GenerateDockerfile() error {
 			beforeCmd: []string{"set -e"},
 			runCmd: []string{
 				"if [[ $exitCode == 0 ]] ; then",
-				"  ./bazooka_after_success.sh",
+				fmt.Sprintf("  %s/bazooka_after_success.sh", bzkBuildDir),
 				"fi",
 			},
 		},
@@ -139,7 +139,7 @@ func (g *Generator) GenerateDockerfile() error {
 			beforeCmd: []string{"set -e"},
 			runCmd: []string{
 				"if [[ $exitCode != 0 ]] ; then",
-				"  ./bazooka_after_failure.sh",
+				fmt.Sprintf("  %s/bazooka_after_failure.sh", bzkBuildDir),
 				"fi"},
 		},
 		&buildPhase{
@@ -162,6 +162,7 @@ func (g *Generator) GenerateDockerfile() error {
 
 	for _, phase := range phases {
 		if len(phase.commands) > 0 {
+			bufferRun.WriteString("source /.bzkenv\n")
 			var phaseBuffer bytes.Buffer
 			phaseBuffer.WriteString("#!/bin/bash\n\n")
 			phaseBuffer.WriteString(fmt.Sprintf("echo %s\n", strconv.Quote(fmt.Sprintf("<PHASE:%s>", phase.name))))
@@ -172,6 +173,8 @@ func (g *Generator) GenerateDockerfile() error {
 				phaseBuffer.WriteString(fmt.Sprintf("echo %s\n", strconv.Quote(fmt.Sprintf("<CMD:%s>", action))))
 				phaseBuffer.WriteString(fmt.Sprintf("%s\n", action))
 			}
+			phaseBuffer.WriteString(`echo "cd \"$(pwd)\"" > /.bzkenv`)
+			phaseBuffer.WriteString("\n")
 			err = ioutil.WriteFile(fmt.Sprintf("%s/%s/bazooka_%s.sh", g.outputFolder, g.index, phase.name), phaseBuffer.Bytes(), 0644)
 			if err != nil {
 				return fmt.Errorf("Phase [%s/%s]: writing file failed: %v", g.index, phase.name, err)
@@ -181,13 +184,14 @@ func (g *Generator) GenerateDockerfile() error {
 			dockerBuffer.WriteString(fmt.Sprintf("RUN  chmod +x %s/bazooka_%s.sh\n\n", bzkBuildDir, phase.name))
 
 			if len(phase.runCmd) == 0 {
-				bufferRun.WriteString(fmt.Sprintf("./bazooka_%s.sh\n", phase.name))
+				bufferRun.WriteString(fmt.Sprintf("%s/bazooka_%s.sh\n", bzkBuildDir, phase.name))
 			} else {
 				for _, action := range phase.runCmd {
 					bufferRun.WriteString(fmt.Sprintf("%s\n", action))
 				}
 			}
 		} else if phase.always {
+			bufferRun.WriteString("source /.bzkenv\n")
 			for _, action := range phase.runCmd {
 				bufferRun.WriteString(fmt.Sprintf("%s\n", action))
 			}
@@ -205,7 +209,7 @@ func (g *Generator) GenerateDockerfile() error {
 
 	dockerBuffer.WriteString(fmt.Sprintf("WORKDIR %s\n\n", bzkBuildDir))
 
-	dockerBuffer.WriteString("CMD  ./bazooka_run.sh\n")
+	dockerBuffer.WriteString(fmt.Sprintf("CMD  %s/bazooka_run.sh\n", bzkBuildDir))
 
 	err = ioutil.WriteFile(fmt.Sprintf("%s/%s/Dockerfile", g.outputFolder, g.index), dockerBuffer.Bytes(), 0644)
 	if err != nil {
