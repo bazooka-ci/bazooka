@@ -97,7 +97,7 @@ func (f *SCMFetcher) Fetch() error {
 func (f *SCMFetcher) resolveImage() (string, error) {
 	image, err := f.context.client.Image.Get(fmt.Sprintf("scm/fetch/%s", f.context.scm))
 	if err != nil {
-		return "", fmt.Errorf("Unable to find Bazooka Docker Image for SCM %s\n", f.context.scm)
+		return "", fmt.Errorf("Unable to find Bazooka Docker Image for SCM %s\n, error is %v", f.context.scm, err)
 	}
 	return image.Image, nil
 }
