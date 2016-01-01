@@ -1,9 +1,24 @@
 package main
 
 type BitbucketPayload struct {
-	Commits []BitbucketCommit `json:"commits"`
+	Push BitbucketPush `json:"push"`
 }
 
-type BitbucketCommit struct {
-	RawNode string `json:"raw_node"`
+type BitbucketPush struct {
+	Changes []BitbucketChanges `json:"changes"`
+}
+
+type BitbucketChanges struct {
+	New BitbucketNew `json:"new"`
+}
+
+type BitbucketNew struct {
+	Type   string          `json:"type"`
+	Name   string          `json:"name"`
+	Target BitbucketTarget `json:"hash"`
+}
+
+type BitbucketTarget struct {
+	Type string `json:"type"`
+	Hash string `json:"hash"`
 }

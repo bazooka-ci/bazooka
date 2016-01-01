@@ -36,7 +36,6 @@ func main() {
 	r.HandleFunc("/project", context.mkAuthHandler(context.getProjects)).Methods("GET")
 	r.HandleFunc("/project/{id}", context.mkAuthHandler(context.getProject)).Methods("GET")
 	r.HandleFunc("/project/{id}/job", context.mkAuthHandler(context.startStandardJob)).Methods("POST")
-	r.HandleFunc("/project/{id}/bitbucket", context.mkAuthHandler(context.startBitbucketJob)).Methods("POST")
 	r.HandleFunc("/project/{id}/job", context.mkAuthHandler(context.getJobs)).Methods("GET")
 
 	r.HandleFunc("/project/{id}/config", context.mkAuthHandler(context.getProjectConfig)).Methods("GET")
@@ -65,6 +64,7 @@ func main() {
 	r.HandleFunc("/user", context.mkAuthHandler(context.createUser)).Methods("POST")
 	r.HandleFunc("/user/{id}", context.mkAuthHandler(context.getUser)).Methods("GET")
 
+	r.HandleFunc("/project/{id}/bitbucket", context.mkAuthHandler(context.startBitbucketJob)).Methods("POST")
 	r.HandleFunc("/project/{id}/github", context.mkGithubAuthHandler(context.startGithubJob)).Methods("POST")
 
 	{
