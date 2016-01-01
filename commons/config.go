@@ -3,6 +3,8 @@ package bazooka
 import (
 	"errors"
 	"fmt"
+	"os"
+	"path/filepath"
 )
 
 const (
@@ -47,7 +49,20 @@ type ConfigMatrix struct {
 }
 
 func ResolveConfigFile(source string) (string, error) {
-	bazookaPath := fmt.Sprintf("%s/%s", source, bazookaConfigFile)
+	customPath := os.Getenv("BZK_FILE")
+	if len(customPath) > 0 {
+		bazookaPath := filepath.Join(source, customPath)
+		exist, err := FileExists(bazookaPath)
+		if err != nil {
+			return "", err
+		}
+		if !exist {
+			return "", fmt.Errorf("The custom config file %s does not exist", customPath)
+		}
+		return bazookaPath, nil
+	}
+
+	bazookaPath := filepath.Join(source, bazookaConfigFile)
 	exist, err := FileExists(bazookaPath)
 	if err != nil {
 		return "", err
@@ -56,7 +71,7 @@ func ResolveConfigFile(source string) (string, error) {
 		return bazookaPath, nil
 	}
 
-	travisPath := fmt.Sprintf("%s/%s", source, travisConfigFile)
+	travisPath := filepath.Join(source, travisConfigFile)
 	exist, err = FileExists(travisPath)
 	if err != nil {
 		return "", err

@@ -14,8 +14,6 @@ import (
 )
 
 const (
-	BazookaConfigFile       = ".bazooka.yml"
-	TravisConfigFile        = ".travis.yml"
 	MX_ENV_PREFIX           = "env::"
 	BazookaEnvJobParameters = "BZK_JOB_PARAMETERS"
 )

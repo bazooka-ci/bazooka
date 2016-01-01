@@ -51,6 +51,7 @@ func (p *Parser) Parse() ([]*variantData, error) {
 		BazookaEnvProjectID:     p.context.projectID,
 		BazookaEnvJobID:         p.context.jobID,
 		BazookaEnvJobParameters: p.context.jobParameters,
+		BazookaFile:             p.context.confFile,
 	}
 
 	volumes := []string{

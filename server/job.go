@@ -264,6 +264,7 @@ func (c *context) runJob(startJob *lib.StartJob, runningJob *lib.Job, commitID s
 		"BZK_JOB_ID":         runningJob.ID,
 		"BZK_DOCKERSOCK":     c.paths.dockerSock.host,
 		"BZK_JOB_PARAMETERS": string(jobParameters),
+		"BZK_FILE":           project.Config["bzk.file"],
 	}
 
 	projectSSHKey, err := c.connector.GetProjectKey(project.ID)

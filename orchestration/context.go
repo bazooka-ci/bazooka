@@ -25,6 +25,7 @@ const (
 	BazookaEnvProjectID     = "BZK_PROJECT_ID"
 	BazookaEnvJobID         = "BZK_JOB_ID"
 	BazookaEnvJobParameters = "BZK_JOB_PARAMETERS"
+	BazookaFile             = "BZK_FILE"
 )
 
 type context struct {
@@ -38,6 +39,7 @@ type context struct {
 	projectID     string
 	jobID         string
 	jobParameters string
+	confFile      string
 	reuseScm      bool
 	paths         paths
 }
@@ -80,6 +82,7 @@ func initContext() *context {
 		projectID:     os.Getenv(BazookaEnvProjectID),
 		jobID:         os.Getenv(BazookaEnvJobID),
 		jobParameters: os.Getenv(BazookaEnvJobParameters),
+		confFile:      os.Getenv(BazookaFile),
 		reuseScm:      os.Getenv("BZK_REUSE_SCM_CHECKOUT") != "",
 		paths: paths{
 			base:           path{"/bazooka", os.Getenv(BazookaEnvHome)},

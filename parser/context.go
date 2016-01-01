@@ -21,6 +21,7 @@ const (
 	BazookaEnvDockerSock    = "BZK_DOCKERSOCK"
 	BazookaEnvProjectID     = "BZK_PROJECT_ID"
 	BazookaEnvJobID         = "BZK_JOB_ID"
+	BazookaFile             = "BZK_FILE"
 )
 
 type context struct {
@@ -31,6 +32,7 @@ type context struct {
 	projectID     string
 	jobID         string
 	jobParameters string
+	confFile      string
 	paths         paths
 }
 
@@ -64,6 +66,7 @@ func initContext() *context {
 		projectID:     os.Getenv(BazookaEnvProjectID),
 		jobID:         os.Getenv(BazookaEnvJobID),
 		jobParameters: os.Getenv(BazookaEnvJobParameters),
+		confFile:      os.Getenv(BazookaFile),
 		paths: paths{
 			source:         path{"/bazooka", os.Getenv(BazookaEnvSrc)},
 			output:         path{"/bazooka-output", os.Getenv(BazookaEnvHome) + "/work"},
