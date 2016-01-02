@@ -163,7 +163,7 @@ gulp.task('serve', ['css:sass'], function() {
             return [(function() {
                 var url = require('url');
                 var proxy = require('proxy-middleware');
-                var options = url.parse(process.env.BZK_API_URI);
+                var options = url.parse(process.env.BZK_API_URL);
                 options.route = '/api';
                 return proxy(options);
             })()];
