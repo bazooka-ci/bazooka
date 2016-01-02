@@ -34,7 +34,6 @@ func (c *MongoConnector) GetUsers() ([]*lib.User, error) {
 	for _, user := range result {
 		user.Password = ""
 	}
-	fmt.Printf("retrieve users: %#v\n", result)
 	return result, err
 }
 
