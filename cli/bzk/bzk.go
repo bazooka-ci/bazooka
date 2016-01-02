@@ -57,14 +57,6 @@ func main() {
 
 	app.Command("encrypt", "Encrypt some data", encryptData)
 
-	app.Command("service", "Manage bazooka service (start, stop, status, upgrade...)", func(cmd *cli.Cmd) {
-		cmd.Command("start", "Start bazooka", startService)
-		cmd.Command("restart", "Restart bazooka", restartService)
-		cmd.Command("upgrade", "Upgrade bazooka to the latest version", upgradeService)
-		cmd.Command("stop", "Stop bazooka", stopService)
-		cmd.Command("status", "Get bazooka status", statusService)
-	})
-
 	app.Command("login", "Log in to the bazooka server", login)
 
 	app.Run(os.Args)
