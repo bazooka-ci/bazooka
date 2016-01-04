@@ -1,0 +1,215 @@
+.variants {
+    width: 100%;
+    overflow: hidden;
+    margin: 0 0 10px 0;
+
+    $height: 36px;
+
+    .p1 {
+        list-style-type: none;
+        padding: 0;
+        margin: 0;
+        width: 30%;
+        float: left;
+
+        li {
+            height: $height;
+            line-height: $height;
+            margin: 0 0 4px 0;
+            border-right: 4px solid #fff;
+            border-left: 8px solid #fff;
+            background: $line-background-color;
+
+            .job-status {
+                font-size: 16px;
+                line-height: $height;
+                padding: 0 4px;
+
+                &.success {
+                    color: $success-bg;
+                }
+
+                &.failed {
+                    color: $failed-bg;
+                }
+
+                &.errored {
+                    color: $errored-bg;
+                }
+
+                &.running {
+                    color: $running-bg;
+                }
+            }
+
+            &.success {
+                border-left-color: $success-bg;
+
+                h4 {
+                    color: $success-bg;
+                }
+            }
+
+            &.failed {
+                border-left-color: $failed-bg;
+
+                h4 {
+                    color: $failed-bg;
+                }
+            }
+
+            &.errored {
+                border-left-color: $errored-bg;
+
+                h4 {
+                    color: $errored-bg;
+                }
+            }
+
+            &.running {
+                border-left-color: $running-bg;
+
+                h4 {
+                    color: $running-bg;
+                }
+            }
+
+            &.selected {
+                &.success {
+                    background: $line-background-selected-success-color;
+                }
+
+                &.failed {
+                    background: $line-background-selected-failed-color;
+                }
+
+                &.errored {
+                    background: $line-background-selected-errored-color;
+                }
+
+                &.running {
+                    background: $line-background-selected-running-color;
+                }
+            }
+
+            &.unselected {
+                opacity: 0.7;
+            }
+
+            a {
+                display: block;
+                position: relative;
+                padding: 0 10px;
+                text-decoration: none;
+
+                &:hover {
+                    text-decoration: none;
+                }
+            }
+
+            h4 {
+                display: inline-block;
+                margin: 0;
+                padding: 0;
+                font-weight: bold;
+                font-size: 16px;
+                line-height: $height;
+
+                span {
+                    &:before {
+                        content: "·";
+                        padding: 0 4px;
+                        color: #999;
+                    }
+                }
+            }
+
+            .duration {
+                color: #999;
+                position: absolute;
+                right: 10px;
+                top: 0;
+                text-align: right;
+            }
+        }
+    }
+
+    .p2 {
+        width: 70%;
+        float: left;
+        overflow-x: auto;
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+            width: auto;
+
+            li {
+                width: auto;
+                height: $height;
+                margin: 0 0 4px 0;
+                white-space: nowrap;
+                background: $line-background-color;
+
+                &.selected {
+                    &.success {
+                        background: $line-background-selected-success-color;
+
+                        .meta {
+                            background: $line-background-selected-success-color;
+                        }
+                    }
+
+                    &.failed {
+                        background: $line-background-selected-failed-color;
+
+                        .meta {
+                            background: $line-background-selected-failed-color;
+                        }
+                    }
+
+                    &.errored {
+                        background: $line-background-selected-success-color;
+
+                        .meta {
+                            background: $line-background-selected-errored-color;
+                        }
+                    }
+
+                    &.running {
+                        background: $line-background-selected-running-color;
+
+                        .meta {
+                            background: $line-background-selected-running-color;
+                        }
+                    }
+                }
+
+                &.unselected {
+                    opacity: 0.7;
+                }
+
+                .meta {
+                    display: inline-block;
+                    width: 200px;
+                    height: $height;
+                    line-height: $height;
+                    border-right: 4px solid #fff;
+                    padding: 0 8px;
+                    overflow: hidden;
+                    background: $line-background-color;
+
+                    span:first-child {
+                        color: #999;
+                        font-weight: bold;
+                    }
+
+                    span:last-child {
+                        text-overflow: ellipsis;
+                    }
+                }
+            }
+        }
+    }
+}

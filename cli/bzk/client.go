@@ -1,12 +1,6 @@
 package main
 
-import (
-	"fmt"
-	"log"
-	"runtime"
-
-	"github.com/bazooka-ci/bazooka/client"
-)
+import "github.com/bazooka-ci/bazooka/client"
 
 func NewClient() (*client.Client, error) {
 	cliConfig, err := loadConfig()
@@ -15,27 +9,8 @@ func NewClient() (*client.Client, error) {
 	}
 
 	return client.New(&client.Config{
-		URL:      checkServerURI(*bzkUri, cliConfig),
+		URL:      *bzkApiUrl,
 		Username: cliConfig.Username,
 		Password: cliConfig.Password,
 	})
-}
-
-func checkServerURI(endpoint string, cliConfig *Config) string {
-	if len(endpoint) == 0 {
-		if len(cliConfig.ServerURI) == 0 {
-			var defaultURI = "http://localhost:3000"
-			if runtime.GOOS == "darwin" {
-				defaultURI = "http://192.168.59.103:3000"
-			}
-			endpoint = interactiveInput("Bazooka Server URI", defaultURI)
-			cliConfig.ServerURI = endpoint
-
-			if err := saveConfig(cliConfig); err != nil {
-				log.Fatal(fmt.Errorf("Unable to save Bazooka config, reason is: %v\n", err))
-			}
-		}
-		return cliConfig.ServerURI
-	}
-	return endpoint
 }

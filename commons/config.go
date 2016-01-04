@@ -21,13 +21,19 @@ type Config struct {
 	AfterScript    Commands     `yaml:"after_script,omitempty"`
 	AfterSuccess   Commands     `yaml:"after_success,omitempty"`
 	AfterFailure   Commands     `yaml:"after_failure,omitempty"`
-	Services       []string     `yaml:"services,omitempty"`
+	Services       []Service    `yaml:"services,omitempty"`
 	Env            []BzkString  `yaml:"env,omitempty"`
 	FromImage      string       `yaml:"from"`
 	Matrix         ConfigMatrix `yaml:"matrix,omitempty"`
 	Archive        Globs        `yaml:"archive,omitempty"`
 	ArchiveSuccess Globs        `yaml:"archive_success,omitempty"`
 	ArchiveFailure Globs        `yaml:"archive_failure,omitempty"`
+}
+
+// Service is the representation of a a linked Docker container for the build
+type Service struct {
+	Image string `yaml:"image"`
+	Alias string `yaml:"alias,omitempty"`
 }
 
 type Images []string

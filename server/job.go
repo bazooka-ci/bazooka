@@ -3,22 +3,14 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
-	"os"
+	"strconv"
 	"strings"
 	"time"
 
 	log "github.com/Sirupsen/logrus"
 
 	lib "github.com/bazooka-ci/bazooka/commons"
-	"github.com/bazooka-ci/bazooka/commons/mongo"
-	docker "github.com/bywan/go-dockercommand"
-)
-
-const (
-	buildFolderPattern        = "%s/build/%s/%s"     // $bzk_home/build/$projectId/$buildId
-	sharedSourceFolderPattern = "%s/build/%s/source" // $bzk_home/build/$projectId/source
-	logFolderPattern          = "%s/build/%s/%s/log" // $bzk_home/build/$projectId/$buildId/log
+	"github.com/bazooka-ci/bazooka/server/db"
 )
 
 func (c *context) startBitbucketJob(r *request) (*response, error) {
@@ -26,20 +18,30 @@ func (c *context) startBitbucketJob(r *request) (*response, error) {
 
 	r.parseBody(&bitbucketPayload)
 
-	if len(bitbucketPayload.Commits) == 0 {
-		return badRequest("no commit found in Bitbucket payload")
+	if len(bitbucketPayload.Push.Changes) == 0 {
+		return badRequest("no changes found in Bitbucket payload")
 	}
 
-	//TODO(julienvey) Order by timestamp to find the last commit instead of trusting
-	// Bitbucket to give us the commits in the right order
-
-	if len(bitbucketPayload.Commits[0].RawNode) == 0 {
-		return badRequest("RawNode is empty in Bitbucket payload")
+	// Making the choice to return the result of the last change only
+	// In most of the cases, there will be only 1 change
+	var lastJobLaunchResponse *response
+	var lastJobLaunchErr error
+	for _, change := range bitbucketPayload.Push.Changes {
+		changeType := change.New.Type
+		if changeType == "annotated_tag" || changeType == "tag" {
+			lastJobLaunchResponse, lastJobLaunchErr = c.startJob(r.vars, lib.StartJob{
+				ScmReference: change.New.Name,
+			}, "")
+		} else if changeType == "branch" {
+			lastJobLaunchResponse, lastJobLaunchErr = c.startJob(r.vars, lib.StartJob{
+				ScmReference: change.New.Name,
+			}, change.New.Target.Hash)
+		} else {
+			lastJobLaunchResponse, lastJobLaunchErr = badRequest(fmt.Sprintf("Change type %s unknow for Bitbucket payload", changeType))
+		}
 	}
 
-	return c.startJob(r.vars, lib.StartJob{
-		ScmReference: bitbucketPayload.Commits[0].RawNode,
-	}, "")
+	return lastJobLaunchResponse, lastJobLaunchErr
 
 }
 
@@ -66,184 +68,43 @@ func (c *context) startJob(params map[string]string, startJob lib.StartJob, comm
 		return notFound("project not found")
 	}
 
-	client, err := docker.NewDocker(c.paths.dockerEndpoint.container)
-	if err != nil {
-		return nil, err
-	}
-
-	orchestrationImage, err := c.connector.GetImage("orchestration")
-	if err != nil {
-		return nil, &errorResponse{500, fmt.Sprintf("Failed to retrieve the orchestration image: %v", err)}
-	}
-
-	runningJob := &lib.Job{
-		ProjectID:  project.ID,
-		Started:    time.Now(),
-		Parameters: startJob.Parameters,
-		SCMMetadata: lib.SCMMetadata{
-			Reference: startJob.ScmReference,
-		},
-	}
-
-	if err := c.connector.AddJob(runningJob); err != nil {
-		return nil, err
-	}
-
-	var parametersAsBzkString []lib.BzkString
 	for _, v := range startJob.Parameters {
 		if !strings.Contains(v, "=") {
 			return nil, &errorResponse{400, fmt.Sprintf("Environment variable %v is empty", v)}
 		}
-		name, value := lib.SplitNameValue(v)
-		parametersAsBzkString = append(parametersAsBzkString, lib.BzkString{
-			Name: name, Value: value, Secured: false,
-		})
 	}
-	jobParameters, err := json.Marshal(parametersAsBzkString)
+
+	runningJob := &lib.Job{
+		Status:     lib.JOB_PENDING,
+		ProjectID:  project.ID,
+		Submitted:  time.Now(),
+		Parameters: startJob.Parameters,
+		SCMMetadata: lib.SCMMetadata{
+			Reference: startJob.ScmReference,
+			CommitID:  commitID,
+		},
+	}
+
+	if err := c.connector.AddJob(runningJob); err != nil {
+		return nil, fmt.Errorf("Failed to store job: %v", err)
+	}
+
+	jobBody, err := json.Marshal(runningJob)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Failed to marshal job: %v", err)
 	}
 
-	var refToBuild string
-	if len(commitID) > 0 {
-		refToBuild = commitID
-	} else {
-		refToBuild = startJob.ScmReference
-	}
-
-	buildFolder := path{
-		host:      fmt.Sprintf(buildFolderPattern, c.paths.home.host, runningJob.ProjectID, runningJob.ID),
-		container: fmt.Sprintf(buildFolderPattern, c.paths.home.container, runningJob.ProjectID, runningJob.ID),
-	}
-	orchestrationEnv := map[string]string{
-		"BZK_SCM":            project.ScmType,
-		"BZK_SCM_URL":        project.ScmURI,
-		"BZK_SCM_REFERENCE":  refToBuild,
-		"BZK_HOME":           buildFolder.host,
-		"BZK_SRC":            buildFolder.host + "/source",
-		"BZK_PROJECT_ID":     project.ID,
-		"BZK_JOB_ID":         runningJob.ID,
-		"BZK_DOCKERSOCK":     c.paths.dockerSock.host,
-		"BZK_JOB_PARAMETERS": string(jobParameters),
-		BazookaEnvMongoAddr:  c.mongoAddr,
-		BazookaEnvMongoPort:  c.mongoPort,
-	}
-
-	projectSSHKey, err := c.connector.GetProjectKey(project.ID)
-	if err != nil {
-		_, keyNotFound := err.(*mongo.NotFoundError)
-		if !keyNotFound {
-			return nil, err
-		}
-		//Use Global Key if provided
-		if len(c.paths.scmKey.host) > 0 {
-			orchestrationEnv[BazookaEnvSCMKeyfile] = c.paths.scmKey.host
-		}
-	} else {
-		err = os.MkdirAll(buildFolder.container, 0644)
-		if err != nil {
-			return nil, err
-		}
-
-		err = ioutil.WriteFile(fmt.Sprintf("%s/key", buildFolder.container), []byte(projectSSHKey.Content), 0600)
-		if err != nil {
-			return nil, err
-		}
-		orchestrationEnv[BazookaEnvSCMKeyfile] = fmt.Sprintf("%s/key", buildFolder.host)
-	}
-
-	projectCryptoKey, err := c.connector.GetProjectCryptoKey(project.ID)
+	qid, err := c.queue.Put(jobBody, 0, 0*time.Second, 30*time.Second)
 
 	if err != nil {
-		_, keyNotFound := err.(*mongo.NotFoundError)
-		if !keyNotFound {
-			return nil, err
-		}
-	} else {
-		err = os.MkdirAll(buildFolder.container, 0644)
-		if err != nil {
-			return nil, err
-		}
-
-		err = ioutil.WriteFile(fmt.Sprintf("%s/crypto-key", buildFolder.container), []byte(projectCryptoKey.Content), 0600)
-		if err != nil {
-			return nil, err
-		}
-		orchestrationEnv["BZK_CRYPTO_KEYFILE"] = fmt.Sprintf("%s/crypto-key", buildFolder.host)
+		return nil, fmt.Errorf("Failed to put job in queue: %v", err)
 	}
 
-	orchestrationVolumes := []string{
-		fmt.Sprintf("%s:/bazooka", buildFolder.host),
-		fmt.Sprintf("%s:/var/run/docker.sock", c.paths.dockerSock.host),
-	}
-
-	reuseScmCheckout := project.Config["bzk.scm.reuse"] == "true"
-	if reuseScmCheckout {
-		sharedSourceFolder := path{
-			host:      fmt.Sprintf(sharedSourceFolderPattern, c.paths.home.host, runningJob.ProjectID),
-			container: fmt.Sprintf(sharedSourceFolderPattern, c.paths.home.container, runningJob.ProjectID),
-		}
-
-		_, err := os.Stat(sharedSourceFolder.container)
-		if err != nil {
-			if os.IsNotExist(err) {
-				err = os.MkdirAll(sharedSourceFolder.container, 0644)
-				if err != nil {
-					return nil, fmt.Errorf("Failed to create a shared source directory for project %s, job %s: %v",
-						runningJob.ProjectID, runningJob.ID, err)
-				}
-			} else {
-				return nil, fmt.Errorf("Failed to stat the shared source directory for project %s, job %s: %v",
-					runningJob.ProjectID, runningJob.ID, err)
-			}
-		}
-
-		orchestrationEnv["BZK_SRC"] = sharedSourceFolder.host
-		orchestrationEnv["BZK_REUSE_SCM_CHECKOUT"] = "1"
-
-		orchestrationVolumes = append(orchestrationVolumes, fmt.Sprintf("%s:/bazooka/source", sharedSourceFolder.host))
-	}
-
-	container, err := client.Run(&docker.RunOptions{
-		Image:       orchestrationImage,
-		VolumeBinds: orchestrationVolumes,
-		Env:         orchestrationEnv,
-		Detach:      true,
-	})
-
-	// remove the container at the end of its execution
-	go func(container *docker.Container) {
-		exitCode, err := container.Wait()
-		if err != nil {
-			log.Errorf("Error while listening container %s", container.ID, err)
-		}
-
-		if exitCode != 0 {
-			log.Errorf("Error during execution of Orchestrator container. Check Docker container logs, id is %s\n", container.ID())
-			return
-		}
-
-		err = container.Remove(&docker.RemoveOptions{
-			Force:         true,
-			RemoveVolumes: true,
-		})
-		if err != nil {
-			log.Errorf("Cannot remove container %s", container.ID)
-		}
-	}(container)
-
-	runningJob.OrchestrationID = container.ID()
 	log.WithFields(log.Fields{
-		"job_id":           runningJob.ID,
-		"project_id":       runningJob.ProjectID,
-		"orchestration_id": runningJob.OrchestrationID,
-	}).Info("Starting job")
-
-	err = c.connector.SetJobOrchestrationId(runningJob.ID, container.ID())
-	if err != nil {
-		log.Error(err.Error())
-		return nil, err
-	}
+		"job_id":     runningJob.ID,
+		"queue_id":   strconv.FormatUint(qid, 10),
+		"project_id": runningJob.ProjectID,
+	}).Info("Submitted job")
 
 	return accepted(runningJob, "/job/"+runningJob.ID)
 }
@@ -301,7 +162,7 @@ func (c *context) getJobLog(r *request) (*response, error) {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	logOutput := json.NewEncoder(w)
 
-	query := &mongo.LogExample{
+	query := &db.LogExample{
 		JobID: jid,
 	}
 
@@ -350,6 +211,7 @@ func (c *context) getJobLog(r *request) (*response, error) {
 				writtenEntries++
 			}
 			flushResponse(w)
+			continue
 		}
 		job, err := c.connector.GetJobByID(jid)
 		if err != nil {

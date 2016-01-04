@@ -1,4 +1,4 @@
-package mongo
+package db
 
 import (
 	lib "github.com/bazooka-ci/bazooka/commons"
@@ -12,11 +12,11 @@ func (c *MongoConnector) HasImage(name string) (bool, error) {
 	return count > 0, err
 }
 
-func (c *MongoConnector) GetImage(name string) (string, error) {
+func (c *MongoConnector) GetImage(name string) (*lib.Image, error) {
 	request := bson.M{"name": name}
 	im := lib.Image{}
 	err := c.database.C("images").Find(request).One(&im)
-	return im.Image, err
+	return &im, err
 }
 
 func (c *MongoConnector) SetImage(name, image string) error {

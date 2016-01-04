@@ -13,7 +13,7 @@ type SCMFetcher struct {
 	update  bool
 }
 
-func (f *SCMFetcher) Fetch(logger Logger) error {
+func (f *SCMFetcher) Fetch() error {
 	log.WithFields(log.Fields{
 		"source": f.context.scmUrl,
 	}).Info("Fetching SCM From Source Repository")
@@ -54,34 +54,32 @@ func (f *SCMFetcher) Fetch(logger Logger) error {
 	}
 
 	container, err := client.Run(&docker.RunOptions{
-		Image:       image,
-		VolumeBinds: volumes,
-		Env:         env,
-		Detach:      true,
+		Image:               image,
+		VolumeBinds:         volumes,
+		Env:                 env,
+		Detach:              true,
+		NetworkMode:         f.context.network,
+		LoggingDriver:       "syslog",
+		LoggingDriverConfig: f.context.loggerConfig(image, ""),
 	})
 	if err != nil {
-		return err
+		return fmt.Errorf("Failed to run the scm container: %v", err)
 	}
 
-	container.Logs(image)
-	logger(image, "", container)
+	defer lib.RemoveContainer(container)
 
 	exitCode, err := container.Wait()
 	if err != nil {
 		return err
 	}
 	if exitCode != 0 {
-		return fmt.Errorf("Error during execution of SCM container %s\n Check Docker container logs, id is %s\n", image, container.ID())
+		return fmt.Errorf("Error during execution of SCM container %s, exit code %d\n Check Docker container logs, id is %s\n",
+			image, exitCode, container.ID())
 	}
 
 	log.WithFields(log.Fields{
 		"checkout_folder": paths.source.host,
 	}).Info("SCM Source Repo Fetched")
-
-	err = container.Remove(&docker.RemoveOptions{
-		Force:         true,
-		RemoveVolumes: true,
-	})
 
 	scmMetadata := &lib.SCMMetadata{}
 
@@ -91,7 +89,7 @@ func (f *SCMFetcher) Fetch(logger Logger) error {
 		return err
 	}
 
-	err = f.context.connector.AddJobSCMMetadata(f.context.jobID, scmMetadata)
+	err = f.context.client.Internal.AddJobSCMMetadata(f.context.jobID, scmMetadata)
 	if err != nil {
 		return err
 	}
@@ -99,9 +97,9 @@ func (f *SCMFetcher) Fetch(logger Logger) error {
 }
 
 func (f *SCMFetcher) resolveImage() (string, error) {
-	image, err := f.context.connector.GetImage(fmt.Sprintf("scm/fetch/%s", f.context.scm))
+	image, err := f.context.client.Image.Get(fmt.Sprintf("scm/fetch/%s", f.context.scm))
 	if err != nil {
-		return "", fmt.Errorf("Unable to find Bazooka Docker Image for SCM %s\n", f.context.scm)
+		return "", fmt.Errorf("Unable to find Bazooka Docker Image for SCM %s\n, error is %v", f.context.scm, err)
 	}
-	return image, nil
+	return image.Image, nil
 }

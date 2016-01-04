@@ -2,4 +2,5 @@
 parser/parser
 server/server
 orchestration/orchestration
+worker/worker
 site

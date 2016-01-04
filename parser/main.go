@@ -8,15 +8,15 @@ import (
 	"github.com/bazooka-ci/bazooka/commons/matrix"
 
 	log "github.com/Sirupsen/logrus"
+	"github.com/bazooka-ci/bazooka/client"
 	lib "github.com/bazooka-ci/bazooka/commons"
 	bzklog "github.com/bazooka-ci/bazooka/commons/logs"
 )
 
 const (
-	BazookaConfigFile       = ".bazooka.yml"
-	TravisConfigFile        = ".travis.yml"
-	MX_ENV_PREFIX           = "env::"
-	BazookaEnvJobParameters = "BZK_JOB_PARAMETERS"
+	BazookaConfigFile = ".bazooka.yml"
+	TravisConfigFile  = ".travis.yml"
+	MX_ENV_PREFIX     = "env::"
 )
 
 func init() {
@@ -26,7 +26,6 @@ func init() {
 	if err != nil {
 		log.Fatal(err)
 	}
-
 }
 
 func main() {
@@ -66,7 +65,7 @@ func main() {
 		variants = generateImageVariants(config)
 	} else {
 		// resolve the docker image corresponding to this particular language parser
-		image, err := resolveLanguageParser(config.Language)
+		image, err := resolveLanguageParser(context.client, config.Language)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -155,13 +154,13 @@ func main() {
 
 		// transform the .bazooka.x.yml file into a set of dockerfile + shell scripts who perform the actual build
 		g := &Generator{
-			config:       config,
-			outputFolder: context.paths.output.container,
-			index:        parseCounter(file),
+			Config:       config,
+			OutputFolder: context.paths.output.container,
+			Index:        parseCounter(file),
 		}
 		err = g.GenerateDockerfile()
 		if err != nil {
-			log.Fatal("Error while generating a dockerfile: %v", err)
+			log.Fatalf("Error while generating a dockerfile: %v", err)
 		}
 	}
 	log.Info("Dockerfiles all created successfully")
@@ -177,7 +176,7 @@ func handlePermutation(context *context, permutation map[string]string, config *
 
 	// Insert BZK_BUILD_DIR if not present
 	if _, ok := envMap["BZK_BUILD_DIR"]; !ok {
-		envMap["BZK_BUILD_DIR"] = lib.BzkString{"BZK_BUILD_DIR", "/bazooka", false}
+		envMap["BZK_BUILD_DIR"] = lib.BzkString{Name: "BZK_BUILD_DIR", Value: "/bazooka", Secured: false}
 	}
 
 	newConfig.Env = mapValues(envMap)
@@ -228,7 +227,7 @@ func feedMatrix(extra map[string]interface{}, mx *matrix.Matrix) error {
 				for _, envVar := range converted {
 					if strEnvVar, ok := envVar.(string); ok {
 						n, v := lib.SplitNameValue(strEnvVar)
-						envVars = append(envVars, lib.BzkString{n, v, false})
+						envVars = append(envVars, lib.BzkString{Name: n, Value: v, Secured: false})
 					} else {
 						return fmt.Errorf("Invalid config: env should contain a sequence of strings: found a non string value %v:%T", envVar, envVar)
 
@@ -237,7 +236,7 @@ func feedMatrix(extra map[string]interface{}, mx *matrix.Matrix) error {
 				mx.Merge(groupByName(envVars, MX_ENV_PREFIX))
 			case string:
 				n, v := lib.SplitNameValue(converted)
-				mx.Merge(groupByName([]lib.BzkString{lib.BzkString{n, v, false}}, MX_ENV_PREFIX))
+				mx.Merge(groupByName([]lib.BzkString{lib.BzkString{Name: n, Value: v, Secured: false}}, MX_ENV_PREFIX))
 			default:
 				return fmt.Errorf("Invalid config: env should contain a sequence of strings: %v:%T", v, v)
 			}
@@ -304,7 +303,7 @@ func findOrCreateBzkString(name, value string, env []lib.BzkString) lib.BzkStrin
 			return e
 		}
 	}
-	return lib.BzkString{name, value, false}
+	return lib.BzkString{Name: name, Value: value, Secured: false}
 }
 
 func mapValues(m map[string]lib.BzkString) []lib.BzkString {
@@ -335,19 +334,11 @@ func generateEnvForMeta(env []lib.BzkString, cryptoKeyPath string) ([]string, er
 	}
 	return res, nil
 }
-func resolveLanguageParser(language string) (string, error) {
-	parserMap := map[string]string{
-		"golang":  "bazooka/parser-golang",
-		"go":      "bazooka/parser-golang",
-		"java":    "bazooka/parser-java",
-		"python":  "bazooka/parser-python",
-		"ruby":    "bazooka/parser-ruby",
-		"node_js": "bazooka/parser-nodejs",
-		"nodejs":  "bazooka/parser-nodejs",
-		"php":     "bazooka/parser-php",
+
+func resolveLanguageParser(client *client.Client, language string) (string, error) {
+	image, err := client.Image.Get(fmt.Sprintf("parser/%s", language))
+	if err != nil {
+		return "", fmt.Errorf("Error while fetching image for Language Parser %s: %v", language, err)
 	}
-	if val, ok := parserMap[language]; ok {
-		return val, nil
-	}
-	return "", fmt.Errorf("Unable to find Bazooka Docker Image for Language Parser %s\n", language)
+	return image.Image, nil
 }

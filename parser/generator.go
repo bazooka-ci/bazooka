@@ -1,225 +1,110 @@
 package main
 
 import (
-	"bytes"
 	"fmt"
-	"io/ioutil"
 	"os"
-	"strconv"
+	"text/template"
 
 	lib "github.com/bazooka-ci/bazooka/commons"
 )
 
 type Generator struct {
-	config       *lib.Config
-	outputFolder string
-	index        string
+	Config       *lib.Config
+	OutputFolder string
+	Index        string
+}
+
+type TemplateValues struct {
+	Generator   *Generator
+	BzkBuildDir string
+	Phases      []*BuildPhase
+}
+
+type BuildPhase struct {
+	Name               string
+	Commands           []string
+	ContinueOnCmdError bool
 }
 
 func (g *Generator) GenerateDockerfile() error {
-	err := os.MkdirAll(fmt.Sprintf("%s/%s", g.outputFolder, g.index), 0755)
+	err := os.MkdirAll(fmt.Sprintf("%s/%s", g.OutputFolder, g.Index), 0755)
 	if err != nil {
 		return err
 	}
 
-	var dockerBuffer bytes.Buffer
-
-	dockerBuffer.WriteString(fmt.Sprintf("FROM %s\n\n", g.config.FromImage))
-
-	envMap := lib.GetEnvMap(g.config.Env)
-
-	bzkBuildDir := envMap["BZK_BUILD_DIR"][0].Value
-
-	dockerBuffer.WriteString(fmt.Sprintf("COPY source %s/\n\n", bzkBuildDir))
-
-	dockerBuffer.WriteString(fmt.Sprintf("COPY work/%s/bazooka_run.sh %s/\n", g.index, bzkBuildDir))
-	dockerBuffer.WriteString(fmt.Sprintf("RUN  chmod +x %s/bazooka_run.sh\n\n", bzkBuildDir))
-
-	type buildPhase struct {
-		name      string
-		commands  []string
-		beforeCmd []string
-		runCmd    []string
-		always    bool
-	}
-
-	phases := []*buildPhase{
-		&buildPhase{
-			name:      "setup",
-			commands:  g.config.Setup,
-			beforeCmd: []string{"set -e"},
-			runCmd: []string{
-				"./bazooka_setup.sh",
-				"rc=$?",
-				"if [[ $rc != 0 ]] ; then",
-				"    exit 42",
-				"fi",
-			},
+	phases := []*BuildPhase{
+		&BuildPhase{
+			Name:     "before_install",
+			Commands: g.Config.BeforeInstall,
 		},
-		&buildPhase{
-			name:      "before_install",
-			commands:  g.config.BeforeInstall,
-			beforeCmd: []string{"set -e"},
-			runCmd: []string{
-				"./bazooka_before_install.sh",
-				"rc=$?",
-				"if [[ $rc != 0 ]] ; then",
-				"    exit 42",
-				"fi",
-			},
+		&BuildPhase{
+			Name:     "install",
+			Commands: g.Config.Install,
 		},
-		&buildPhase{
-			name:      "install",
-			commands:  g.config.Install,
-			beforeCmd: []string{"set -e"},
-			runCmd: []string{
-				"./bazooka_install.sh",
-				"rc=$?",
-				"if [[ $rc != 0 ]] ; then",
-				"    exit 42",
-				"fi",
-			},
+		&BuildPhase{
+			Name:     "before_script",
+			Commands: g.Config.BeforeScript,
 		},
-		&buildPhase{
-			name:      "before_script",
-			commands:  g.config.BeforeScript,
-			beforeCmd: []string{"set -e"},
-			runCmd: []string{
-				"./bazooka_before_script.sh",
-				"rc=$?",
-				"if [[ $rc != 0 ]] ; then",
-				"    exit 42",
-				"fi",
-			},
+		&BuildPhase{
+			Name:     "script",
+			Commands: g.Config.Script,
 		},
-		&buildPhase{
-			name:      "script",
-			commands:  g.config.Script,
-			beforeCmd: []string{"set -e"},
-			runCmd: []string{
-				"./bazooka_script.sh",
-				"exitCode=$?",
-			},
+		&BuildPhase{
+			Name:               "archive",
+			Commands:           archiveCommands(g.Config.Archive),
+			ContinueOnCmdError: true,
 		},
-		&buildPhase{
-			name:     "archive",
-			commands: archiveCommands(g.config.Archive),
+		&BuildPhase{
+			Name:               "archive_success",
+			Commands:           archiveCommands(g.Config.ArchiveSuccess),
+			ContinueOnCmdError: true,
 		},
-		&buildPhase{
-			name:     "archive_success",
-			commands: archiveCommands(g.config.ArchiveSuccess),
-			runCmd: []string{
-				"if [[ $exitCode == 0 ]] ; then",
-				"  ./bazooka_archive_success.sh",
-				"fi",
-			},
+		&BuildPhase{
+			Name:               "archive_failure",
+			Commands:           archiveCommands(g.Config.ArchiveFailure),
+			ContinueOnCmdError: true,
 		},
-		&buildPhase{
-			name:     "archive_failure",
-			commands: archiveCommands(g.config.ArchiveFailure),
-			runCmd: []string{
-				"if [[ $exitCode != 0 ]] ; then",
-				"  ./bazooka_archive_failure.sh",
-				"fi",
-			},
+		&BuildPhase{
+			Name:     "after_success",
+			Commands: g.Config.AfterSuccess,
 		},
-		&buildPhase{
-			name:      "after_success",
-			commands:  g.config.AfterSuccess,
-			beforeCmd: []string{"set -e"},
-			runCmd: []string{
-				"if [[ $exitCode == 0 ]] ; then",
-				"  ./bazooka_after_success.sh",
-				"fi",
-			},
+		&BuildPhase{
+			Name:     "after_failure",
+			Commands: g.Config.AfterFailure,
 		},
-		&buildPhase{
-			name:      "after_failure",
-			commands:  g.config.AfterFailure,
-			beforeCmd: []string{"set -e"},
-			runCmd: []string{
-				"if [[ $exitCode != 0 ]] ; then",
-				"  ./bazooka_after_failure.sh",
-				"fi"},
-		},
-		&buildPhase{
-			name:      "after_script",
-			commands:  g.config.AfterScript,
-			beforeCmd: []string{"set -e"},
-			runCmd:    []string{},
-		},
-		&buildPhase{
-			name:   "end",
-			always: true,
-			runCmd: []string{
-				"exit $exitCode",
-			},
+		&BuildPhase{
+			Name:     "after_script",
+			Commands: g.Config.AfterScript,
 		},
 	}
 
-	var bufferRun bytes.Buffer
-	bufferRun.WriteString("#!/bin/bash\n")
+	templateValues := &TemplateValues{
+		Generator:   g,
+		BzkBuildDir: lib.GetEnvMap(g.Config.Env)["BZK_BUILD_DIR"][0].Value,
+		Phases:      phases,
+	}
+
+	err = writeTemplate(templateValues, "/template/Dockerfile", fmt.Sprintf("%s/%s/Dockerfile", g.OutputFolder, g.Index))
+	if err != nil {
+		return err
+	}
+
+	err = writeTemplate(templateValues, "/template/bazooka_run.sh", fmt.Sprintf("%s/%s/bazooka_run.sh", g.OutputFolder, g.Index))
+	if err != nil {
+		return err
+	}
 
 	for _, phase := range phases {
-		if len(phase.commands) > 0 {
-			var phaseBuffer bytes.Buffer
-			phaseBuffer.WriteString("#!/bin/bash\n\n")
-			phaseBuffer.WriteString(fmt.Sprintf("echo %s\n", strconv.Quote(fmt.Sprintf("<PHASE:%s>", phase.name))))
-			for _, action := range phase.beforeCmd {
-				phaseBuffer.WriteString(fmt.Sprintf("%s\n", action))
-			}
-			for _, action := range phase.commands {
-				phaseBuffer.WriteString(fmt.Sprintf("echo %s\n", strconv.Quote(fmt.Sprintf("<CMD:%s>", action))))
-				phaseBuffer.WriteString(fmt.Sprintf("%s\n", action))
-			}
-			err = ioutil.WriteFile(fmt.Sprintf("%s/%s/bazooka_%s.sh", g.outputFolder, g.index, phase.name), phaseBuffer.Bytes(), 0644)
-			if err != nil {
-				return fmt.Errorf("Phase [%d/%s]: writing file failed: %v", g.index, phase.name, err)
-			}
-
-			dockerBuffer.WriteString(fmt.Sprintf("COPY work/%s/bazooka_%s.sh %s/\n", g.index, phase.name, bzkBuildDir))
-			dockerBuffer.WriteString(fmt.Sprintf("RUN  chmod +x %s/bazooka_%s.sh\n\n", bzkBuildDir, phase.name))
-
-			if len(phase.runCmd) == 0 {
-				bufferRun.WriteString(fmt.Sprintf("./bazooka_%s.sh\n", phase.name))
-			} else {
-				for _, action := range phase.runCmd {
-					bufferRun.WriteString(fmt.Sprintf("%s\n", action))
-				}
-			}
-		} else if phase.always {
-			for _, action := range phase.runCmd {
-				bufferRun.WriteString(fmt.Sprintf("%s\n", action))
-			}
-		}
-	}
-
-	err = ioutil.WriteFile(fmt.Sprintf("%s/%s/bazooka_run.sh", g.outputFolder, g.index), bufferRun.Bytes(), 0644)
-	if err != nil {
-		return fmt.Errorf("Phase [%d/run]: writing file failed: %v", g.index, err)
-	}
-
-	for _, env := range g.config.Env {
-		dockerBuffer.WriteString(fmt.Sprintf("ENV  %s %s\n", env.Name, env.Value))
-	}
-
-	dockerBuffer.WriteString(fmt.Sprintf("WORKDIR %s\n\n", bzkBuildDir))
-
-	dockerBuffer.WriteString("CMD  ./bazooka_run.sh\n")
-
-	err = ioutil.WriteFile(fmt.Sprintf("%s/%s/Dockerfile", g.outputFolder, g.index), dockerBuffer.Bytes(), 0644)
-	if err != nil {
-		return fmt.Errorf("Phase [%d/docker]: writing file failed: %v", g.index, err)
-	}
-
-	if len(g.config.Services) > 0 {
-		var servicesBuffer bytes.Buffer
-		for _, service := range g.config.Services {
-			servicesBuffer.WriteString(fmt.Sprintf("%s\n", service))
-		}
-		err = ioutil.WriteFile(fmt.Sprintf("%s/%s/services", g.outputFolder, g.index), servicesBuffer.Bytes(), 0644)
+		err = writeTemplate(phase, "/template/bazooka_phase.sh", fmt.Sprintf("%s/%s/bazooka_%s.sh", g.OutputFolder, g.Index, phase.Name))
 		if err != nil {
-			return fmt.Errorf("Phase [%d/services]: writing file failed: %v", g.index, err)
+			return err
+		}
+	}
+
+	if len(g.Config.Services) > 0 {
+		err = lib.Flush(g.Config.Services, fmt.Sprintf("%s/%s/services", g.OutputFolder, g.Index))
+		if err != nil {
+			return fmt.Errorf("Phase [%s/services]: writing file failed: %v", g.Index, err)
 		}
 	}
 	return nil
@@ -228,7 +113,26 @@ func (g *Generator) GenerateDockerfile() error {
 func archiveCommands(globs lib.Globs) []string {
 	res := make([]string, len(globs))
 	for i, pat := range globs {
-		res[i] = fmt.Sprintf("cp -R %s /artifacts/", pat)
+		res[i] = fmt.Sprintf("cp -R \"%s\" /artifacts/", pat)
 	}
 	return res
+}
+
+func writeTemplate(t interface{}, templateFile, outputFile string) error {
+	tmpl, err := template.ParseFiles(templateFile)
+	if err != nil {
+		return fmt.Errorf("Error parsing template file %s: %v", templateFile, err)
+	}
+
+	file, err := os.Create(outputFile)
+	if err != nil {
+		return fmt.Errorf("Error creating file %s: %v", outputFile, err)
+	}
+
+	err = tmpl.Execute(file, t)
+	if err != nil {
+		return fmt.Errorf("Error executing template file %s: %v", templateFile, err)
+	}
+
+	return nil
 }

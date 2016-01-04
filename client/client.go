@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+
+	"github.com/racker/perigee"
 )
 
 type Config struct {
@@ -14,11 +16,12 @@ type Config struct {
 }
 
 type Client struct {
-	Project *Project
-	Job     *Job
-	Variant *Variant
-	Image   *Image
-	User    *User
+	Project  *Project
+	Job      *Job
+	Variant  *Variant
+	Image    *Image
+	User     *User
+	Internal *Internal
 }
 
 func New(config *Config) (*Client, error) {
@@ -28,11 +31,21 @@ func New(config *Config) (*Client, error) {
 			Key:    &ProjectKey{config},
 			Config: &ProjectConfig{config},
 		},
-		Job:     &Job{config},
-		Variant: &Variant{config},
-		Image:   &Image{config},
-		User:    &User{config},
+		Job:      &Job{config},
+		Variant:  &Variant{config},
+		Image:    &Image{config},
+		User:     &User{config},
+		Internal: &Internal{config},
 	}, nil
+}
+
+func IsNotFound(err error) bool {
+	switch err := err.(type) {
+	case *perigee.UnexpectedResponseCodeError:
+		return err.Actual == http.StatusNotFound
+	default:
+		return false
+	}
 }
 
 func (c *Config) authenticateRequest(r *http.Request) error {

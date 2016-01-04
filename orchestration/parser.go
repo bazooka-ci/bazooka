@@ -23,9 +23,10 @@ type variantData struct {
 	scripts    []string
 	variant    *lib.Variant
 	imageTag   string
+	services   []lib.Service
 }
 
-func (p *Parser) Parse(logger Logger) ([]*variantData, error) {
+func (p *Parser) Parse() ([]*variantData, error) {
 	paths := p.context.paths
 	client, err := docker.NewDocker(paths.dockerEndpoint.container)
 	if err != nil {
@@ -42,6 +43,9 @@ func (p *Parser) Parse(logger Logger) ([]*variantData, error) {
 	}).Info("Running Parsing Image on checked-out source")
 
 	env := map[string]string{
+		BazookaEnvApiUrl:        p.context.apiUrl,
+		BazookaEnvSyslogUrl:     p.context.syslogUrl,
+		BazookaEnvNetwork:       p.context.network,
 		BazookaEnvHome:          paths.base.host,
 		BazookaEnvSrc:           paths.source.host,
 		BazookaEnvProjectID:     p.context.projectID,
@@ -62,17 +66,19 @@ func (p *Parser) Parse(logger Logger) ([]*variantData, error) {
 	}
 
 	container, err := client.Run(&docker.RunOptions{
-		Image:       image,
-		Env:         env,
-		VolumeBinds: volumes,
-		Detach:      true,
+		Image:               image,
+		Env:                 env,
+		VolumeBinds:         volumes,
+		Detach:              true,
+		NetworkMode:         p.context.network,
+		LoggingDriver:       "syslog",
+		LoggingDriverConfig: p.context.loggerConfig(image, ""),
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	container.Logs(image)
-	logger(image, "", container)
+	defer lib.RemoveContainer(container)
 
 	exitCode, err := container.Wait()
 	if err != nil {
@@ -80,14 +86,6 @@ func (p *Parser) Parse(logger Logger) ([]*variantData, error) {
 	}
 	if exitCode != 0 {
 		return nil, fmt.Errorf("Error during execution of Parser container %s/parser\n Check Docker container logs, id is %s\n", image, container.ID())
-	}
-
-	err = container.Remove(&docker.RemoveOptions{
-		Force:         true,
-		RemoveVolumes: true,
-	})
-	if err != nil {
-		return nil, err
 	}
 
 	log.WithFields(log.Fields{
@@ -114,11 +112,19 @@ func (p *Parser) variantsData() ([]*variantData, error) {
 			}
 			for _, file := range files {
 				fullName := fmt.Sprintf("%s/%s/%s", workFolder, dir.Name(), file.Name())
-				if file.Name() == "Dockerfile" {
+				switch file.Name() {
+				case "Dockerfile":
 					vf.dockerFile = fullName
-					continue
+				case "services":
+					servicesList := []lib.Service{}
+					err := lib.Parse(fullName, &servicesList)
+					if err != nil {
+						return nil, fmt.Errorf("Failed to parse services file %s: %v", fullName, err)
+					}
+					vf.services = servicesList
+				default:
+					vf.scripts = append(vf.scripts, fullName)
 				}
-				vf.scripts = append(vf.scripts, fullName)
 			}
 			if len(vf.dockerFile) == 0 {
 				return nil, fmt.Errorf("The variant %s has no Dockerfile", dir.Name())
@@ -140,11 +146,11 @@ func (p *Parser) variantsData() ([]*variantData, error) {
 }
 
 func (f *Parser) resolveImage() (string, error) {
-	image, err := f.context.connector.GetImage("parser")
+	image, err := f.context.client.Image.Get("parser")
 	if err != nil {
 		return "", fmt.Errorf("Unable to find Bazooka Docker Image for parser\n")
 	}
-	return image, nil
+	return image.Image, nil
 }
 
 func parseMeta(file string, vf *variantData) error {

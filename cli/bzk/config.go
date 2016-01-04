@@ -21,13 +21,11 @@ type Config struct {
 	Password string `yaml:"password,omitempty"`
 	Auth     string `yaml:"auth"`
 
-	ServerURI  string `yaml:"server_uri"`
-	Home       string `yaml:"home"`
-	DockerSock string `yaml:"docker_sock"`
-	SCMKey     string `yaml:"scm_key"`
-	Registry   string `yaml:"registry"`
+	Registry string `yaml:"registry"`
+	Tag      string `yaml:"tag"`
 
-	MongoURI string `yaml:"mongo_uri"`
+	DbURL    string `yaml:"db_url"`
+	QueueURL string `yaml:"queue_url"`
 }
 
 func saveConfig(authConfig *Config) error {

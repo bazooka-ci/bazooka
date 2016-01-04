@@ -13,9 +13,8 @@ type ProjectKey struct {
 	config *Config
 }
 
-func (c *ProjectKey) List(projectID string) ([]*lib.SSHKey, error) {
-
-	var keys []*lib.SSHKey
+func (c *ProjectKey) Get(projectID string) (*lib.SSHKey, error) {
+	var key lib.SSHKey
 
 	requestURL, err := c.config.getRequestURL(fmt.Sprintf("project/%s/key", url.QueryEscape(projectID)))
 	if err != nil {
@@ -23,18 +22,18 @@ func (c *ProjectKey) List(projectID string) ([]*lib.SSHKey, error) {
 	}
 
 	err = perigee.Get(requestURL, perigee.Options{
-		Results:    &keys,
+		Results:    &key,
 		OkCodes:    []int{200},
 		SetHeaders: c.config.authenticateRequest,
 	})
 
-	return keys, err
+	return &key, err
 }
 
-func (c *ProjectKey) Add(projectID, keyPath string) (*lib.SSHKey, error) {
+func (c *ProjectKey) Set(projectID, keyPath string) error {
 	fileContent, err := ioutil.ReadFile(keyPath)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	sshKey := &lib.SSHKey{
@@ -44,45 +43,14 @@ func (c *ProjectKey) Add(projectID, keyPath string) (*lib.SSHKey, error) {
 
 	requestURL, err := c.config.getRequestURL(fmt.Sprintf("project/%s/key", url.QueryEscape(projectID)))
 	if err != nil {
-		return nil, err
+		return err
 	}
-
-	createdKey := &lib.SSHKey{}
-
-	err = perigee.Post(requestURL, perigee.Options{
-		ReqBody:    &sshKey,
-		Results:    &createdKey,
-		OkCodes:    []int{201},
-		SetHeaders: c.config.authenticateRequest,
-	})
-
-	return createdKey, err
-}
-
-func (c *ProjectKey) Update(projectID, keyPath string) (*lib.SSHKey, error) {
-	fileContent, err := ioutil.ReadFile(keyPath)
-	if err != nil {
-		return nil, err
-	}
-
-	sshKey := &lib.SSHKey{
-		ProjectID: projectID,
-		Content:   string(fileContent),
-	}
-
-	requestURL, err := c.config.getRequestURL(fmt.Sprintf("project/%s/key", url.QueryEscape(projectID)))
-	if err != nil {
-		return nil, err
-	}
-
-	updatedKey := &lib.SSHKey{}
 
 	err = perigee.Put(requestURL, perigee.Options{
 		ReqBody:    &sshKey,
-		Results:    &updatedKey,
-		OkCodes:    []int{200},
+		OkCodes:    []int{204},
 		SetHeaders: c.config.authenticateRequest,
 	})
 
-	return updatedKey, err
+	return err
 }

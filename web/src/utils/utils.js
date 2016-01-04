@@ -8,12 +8,33 @@ angular.module('bzk.utils').factory('EventBus', function($rootScope) {
             $rootScope.$emit(key, value);
         },
         on: function(key, callback) {
-            return $rootScope.$on(key, function(event, args){
+            return $rootScope.$on(key, function(event, args) {
                 callback(event.name, args);
             });
         }
     };
 });
+
+angular.module('bzk.utils').factory('BzkProjectsCache', function(BzkApi) {
+    var projects;
+
+    var cache = {
+        byId: function(projectID) {
+            return _.findWhere(projects, {
+                id: projectID
+            });
+        },
+        refresh: function() {
+            BzkApi.project.list().success(function(res) {
+                projects = res;
+            });
+        }
+    };
+
+    cache.refresh();
+    return cache;
+});
+
 
 angular.module('bzk.utils').filter('bzkStatus', function() {
     var st2class = {
@@ -50,16 +71,14 @@ angular.module('bzk.utils').filter('bzkDate', function() {
     return function(d) {
         if (d) {
             var m = moment(d);
-            return m.year() == 1 ? '-' : m.format('HH:mm:ss - DD MMM YYYY');
+            return m.year() == 1 ? '-' : m.format('HH:mm - DD MMM YYYY');
         }
     };
 });
 
 angular.module('bzk.utils').filter('bzkDuration', function() {
     function fmt(from, to) {
-        return moment.duration(from.diff(to), 'milliseconds').format('hh:mm:ss', {
-            trim: false
-        });
+        return moment.duration(from.diff(to), 'milliseconds').format('h [hours] m [mins] s [secs]');
     }
 
     return function(job) {
@@ -109,52 +128,83 @@ angular.module('bzk.utils').factory('Scroll', function($window) {
     };
 });
 
-angular.module('bzk.utils').directive('bzkLog', function() {
+angular.module('bzk.utils').directive('bzkLog', function($interval) {
     return {
         restrict: 'A',
         scope: {
-            sink: '=bzkLog'
+            loader: '&bzkLog'
         },
         template: '<pre></pre>',
         link: function($scope, elem, attrs) {
 
             function isAtBottom() {
-                return $(window).scrollTop() + $(window).height() == $(document).height();
+                return false; //$(window).scrollTop() + $(window).height() == $(document).height();
             }
 
-            var row = 1;
-            var into = $(elem).find('pre');
-            var marker;
+            var row = 1,
+                into = $(elem).find('pre'),
+                marker;
 
-            $scope.sink = {
-                prepare: function() {
-                    this.clear();
-                    into.append('<p class="loading-marker"><span></span><img src="/images/loading.gif"></img></p>');
-                    marker = $(elem).find('.loading-marker');
-                },
-                finish: function(lines) {
-                    this.append(lines);
-                    marker.remove();
-                },
-                append: function(lines) {
-                    var scroll = isAtBottom();
-                    var data = '';
-                    _.each(lines, function(line) {
-                        data += '<p><span>' + row + '</span>' + (_.escape(line.msg) || '&nbsp;') + '</p>';
-                        row++;
-                    });
-                    $(data).insertBefore(marker);
-                    
-                    if (scroll) {
-                        $('body').scrollTop(into.height());
-                    }
-                },
-                clear: function() {
-                    row = 1;
-                    into.empty();
-                    into.scrollTop(0);
+            var periodicFlusher;
+            function prepare() {
+                clear();
+                into.append('<p class="loading-marker"><span></span><img src="/images/loading.gif"></img></p>');
+                marker = $(elem).find('.loading-marker');
+                periodicFlusher = $interval(flush, 500);
+            }
+
+            function finish() {
+                flush();
+                $interval.cancel(periodicFlusher);
+                marker.remove();
+            }
+
+            function append(line) {
+                var scroll = isAtBottom(),
+                    data = '';
+
+                data += '<p><span>' + row + '</span>' + (_.escape(line.msg) || '&nbsp;') + '</p>';
+                row++;
+
+                $(data).insertBefore(marker);
+
+                if (scroll) {
+                    $('body').scrollTop(into.height());
                 }
-            };
+            }
+
+            var lines = [];
+            function lazy_append(line) {
+                lines.push(line);
+            }
+
+            function flush() {
+                var scroll = isAtBottom(),
+                    data = '';
+
+                _.each(lines, function(line) {
+                    data += '<p><span>' + row + '</span>' + (_.escape(line.msg) || '&nbsp;') + '</p>';
+                    row++;
+                });
+
+                $(data).insertBefore(marker);
+                lines = [];
+
+                if (scroll) {
+                    $('body').scrollTop(into.height());
+                }
+            }
+
+            function clear() {
+                row = 1;
+                into.empty();
+                into.scrollTop(0);
+            }
+
+
+            prepare();
+            $scope.loader()(lazy_append, finish);
+
         }
     };
 });

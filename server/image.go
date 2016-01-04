@@ -1,5 +1,7 @@
 package main
 
+import "strings"
+
 func (c *context) getImage(r *request) (*response, error) {
 	image, err := c.connector.GetImage(r.vars["name"])
 	if err != nil {
@@ -13,22 +15,24 @@ func (c *context) getImage(r *request) (*response, error) {
 }
 
 func (c *context) getImages(r *request) (*response, error) {
-	variants, err := c.connector.GetImages()
+	images, err := c.connector.GetImages()
 	if err != nil {
 		return nil, err
 	}
 
-	return ok(&variants)
+	return ok(&images)
 }
 
 func (c *context) setImage(r *request) (*response, error) {
-	b := map[string]string{}
+	b := struct {
+		Image string `json:"image" validate:"required"`
+	}{}
 	r.parseBody(&b)
-	image, ex := b["image"]
-	if !ex {
+	b.Image = strings.TrimSpace(b.Image)
+	if len(b.Image) == 0 {
 		return badRequest("image is required")
 	}
-	err := c.connector.SetImage(r.vars["name"], image)
+	err := c.connector.SetImage(r.vars["name"], b.Image)
 	if err != nil {
 		return nil, err
 	}

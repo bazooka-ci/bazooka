@@ -1,11 +1,12 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strconv"
+	"strings"
 	"time"
 
 	log "github.com/Sirupsen/logrus"
@@ -21,7 +22,7 @@ type Runner struct {
 	client   *docker.Docker
 }
 
-func (r *Runner) Run(logger Logger) error {
+func (r *Runner) Run() error {
 	paths := r.context.paths
 
 	client, err := docker.NewDocker(paths.dockerEndpoint.container)
@@ -38,7 +39,7 @@ func (r *Runner) Run(logger Logger) error {
 		}
 		variant := ivariant
 		par.Submit(func() error {
-			return r.runContainer(logger, variant)
+			return r.runContainer(variant)
 		}, variant)
 	}
 
@@ -59,30 +60,28 @@ func (r *Runner) Run(logger Logger) error {
 	return nil
 }
 
-func (r *Runner) runContainer(logger Logger, vd *variantData) error {
+func (r *Runner) runContainer(vd *variantData) error {
 	paths := r.context.paths
 
 	success := true
-	servicesFile := fmt.Sprintf("%s/%d/services", paths.work.container, vd.counter)
-
-	servicesList, err := listServices(servicesFile)
-	if err != nil {
-		return err
-	}
 
 	serviceContainers := []*docker.Container{}
 	containerLinks := []string{}
-	for _, service := range servicesList {
-		name := fmt.Sprintf("service-%s-%s-%d", r.context.projectID, r.context.jobID, vd.variant.Number)
-		containerLinks = append(containerLinks, fmt.Sprintf("%s:%s", name, service))
+	for sidx, service := range vd.services {
+		name := fmt.Sprintf("bazooka-service-%s-%s-%d-%d", r.context.projectID, r.context.jobID, vd.variant.Number, sidx)
+		if len(service.Alias) == 0 {
+			service.Alias = safeDockerAlias(strings.Split(service.Image, ":")[0])
+		}
+		containerLinks = append(containerLinks, fmt.Sprintf("%s:%s", name, service.Alias))
 		serviceContainer, err := r.client.Run(&docker.RunOptions{
 			Name:   name,
-			Image:  service,
+			Image:  service.Image,
 			Detach: true,
 		})
 		if err != nil {
 			return err
 		}
+		defer commons.RemoveContainer(serviceContainer)
 		serviceContainers = append(serviceContainers, serviceContainer)
 	}
 
@@ -105,14 +104,14 @@ func (r *Runner) runContainer(logger Logger, vd *variantData) error {
 			BazookaEnvJobParameters: r.context.jobParameters,
 			"BZK_VARIANT":           strconv.Itoa(vd.variant.Number),
 		},
-		Detach: true,
+		Detach:              true,
+		LoggingDriver:       "syslog",
+		LoggingDriverConfig: r.context.loggerConfig(vd.imageTag, vd.variant.ID),
 	})
 	if err != nil {
 		return err
 	}
-
-	container.Logs(vd.imageTag)
-	logger(vd.imageTag, vd.variant.ID, container)
+	defer commons.RemoveContainer(container)
 
 	exitCode, err := container.Wait()
 	if err != nil {
@@ -123,21 +122,6 @@ func (r *Runner) runContainer(logger Logger, vd *variantData) error {
 			return fmt.Errorf("Run failed\n Check Docker container logs, id is %s\n", container.ID())
 		}
 		success = false
-	}
-	if err = container.Remove(&docker.RemoveOptions{
-		Force:         true,
-		RemoveVolumes: true,
-	}); err != nil {
-		return err
-	}
-
-	for _, serviceContainer := range serviceContainers {
-		if err = serviceContainer.Remove(&docker.RemoveOptions{
-			Force:         true,
-			RemoveVolumes: true,
-		}); err != nil {
-			return err
-		}
 	}
 
 	if success {
@@ -172,24 +156,7 @@ func (r *Runner) runContainer(logger Logger, vd *variantData) error {
 	return nil
 }
 
-func listServices(servicesFile string) ([]string, error) {
-	file, err := os.Open(servicesFile)
-	if err != nil {
-		if os.IsNotExist(err) {
-			return []string{}, nil
-		}
-		return nil, err
-	}
-	defer file.Close()
-
-	scanner := bufio.NewScanner(file)
-	var services []string
-	for scanner.Scan() {
-		services = append(services, scanner.Text())
-	}
-
-	if err := scanner.Err(); err != nil {
-		return nil, err
-	}
-	return services, nil
+func safeDockerAlias(unsafeAlias string) string {
+	re := regexp.MustCompile("(/|;|:|-|\\.)")
+	return re.ReplaceAllString(unsafeAlias, "_")
 }

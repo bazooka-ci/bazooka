@@ -39,8 +39,7 @@ func createProjectCommand(cmd *cli.Cmd) {
 			log.Fatal(err)
 		}
 		if len(*scmKey) > 0 {
-			_, err = client.Project.Key.Add(res.ID, *scmKey)
-			if err != nil {
+			if err = client.Project.Key.Set(res.ID, *scmKey); err != nil {
 				log.Fatal(err)
 			}
 		}

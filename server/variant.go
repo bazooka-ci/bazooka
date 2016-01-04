@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/bazooka-ci/bazooka/commons/mongo"
+	"github.com/bazooka-ci/bazooka/server/db"
 
 	log "github.com/Sirupsen/logrus"
 
@@ -54,7 +54,7 @@ func (c *context) getVariantLog(r *request) (*response, error) {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	logOutput := json.NewEncoder(w)
 
-	query := &mongo.LogExample{
+	query := &db.LogExample{
 		VariantID: vid,
 	}
 

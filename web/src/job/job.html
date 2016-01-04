@@ -1,31 +1,46 @@
 <div id="job">
-	<bzk-breadcrumbs project="project" job="job"></bzk-breadcrumbs>
-	<bzk-job-info job="job"></bzk-job-info>
-	<table class="table" ng-if="variants.length > 0">
-		<thead>
-			<tr>
-				<th width="60">Status</th>
-				<th>Variant</th>
-				<th>Duration</th>
-				<th>Finished</th>
-				<th ng-repeat="m in metaList" class="meta">{{m.label}}</th>
-			</tr>
-		</thead>
-
-		<tbody ng-repeat="variant in variants | orderBy:'number'">
-			<tr ng-show="variant" class="{{variant.status | lowercase}}">
-				<td>
-					<span bzk-job-status="variant.status"></span>
-				</td>
-				<td><a ng-href="#/p/{{project | bzkId}}/{{job | bzkId}}/{{variant | bzkId}}">{{job.number}}.{{variant.number}}</a></td>
-				<td>{{variant | bzkDuration}}</td>
-				<td>{{variant | bzkFinished}}</td>
-				<td ng-repeat="m in metaList" class="meta" ng-style="{'color': metaColor(variant.metaMap[m.name])}">{{variant.metaMap[m.name].value}}</td>
-			</tr>
-		</tbody>
-	</table>
-
-	<div ng-controller="JobLogsController">
-		<div class="logs" bzk-log="logger.job"></div>
+	<bzk-breadcrumbs project="project" job="job" variant="selectedVariant"></bzk-breadcrumbs>
+	<div class="pad">
+		<div bzk-job-info="job" bzk-detailed="true"></div>
+		<div class="variants" ng-controller="VariantsController">
+			<ul class="p1" >
+				<li ng-repeat="variant in variants | orderBy:'number'"
+					class="{{variant.status | lowercase}}" ng-class="{selected: variant.id==selectedVariant.id, unselected: selectedVariant.id && variant.id!=selectedVariant.id}">
+					<a ng-href="#/p/{{project | bzkId}}/{{job | bzkId}}/{{variant | bzkId}}">
+						<span bzk-job-status="variant.status"></span>
+						<h4>{{job.number}}<span>{{variant.number}}</span></h4>
+						<div class="duration">
+							<span class="glyphicon glyphicon-hourglass"></span>
+							{{variant | bzkDuration}}
+						</div>
+					</a>
+				</li>
+			</ul>
+			<div  class="p2">
+				<ul>
+					<li  ng-repeat="variant in variants | orderBy:'number'"
+						class="{{variant.status | lowercase}}" ng-class="{selected: variant.id==selectedVariant.id, unselected: selectedVariant.id && variant.id!=selectedVariant.id}">
+						<div ng-repeat="m in metaList" class="meta" ng-style="{width: m.len+'px'}">
+							<span ng-if="variant.metaMap[m.name].value">{{m.label}}: </span>
+							<span ng-style="{'color': metaColor(variant.metaMap[m.name])}">{{variant.metaMap[m.name].value}}</span>
+						</div>
+					</li>
+				</ul>
+			</div>
+		</div>
 	</div>
+
+	<div class="pad" ng-if="selectedVariant.artifacts.length">
+		<ul class="artifacts">
+			<li ng-repeat="artifact in selectedVariant.artifacts">
+				<a ng-href="/api/variant/{{selectedVariant.id}}/artifacts/{{artifact}}">
+					<span class='glyphicon glyphicon-download'></span>
+					{{artifact}}
+				</a>
+			</li>
+		</ul>
+	</div>
+
+	<div class="logs" bzk-log="loadLogs"></div>
+
 </div>

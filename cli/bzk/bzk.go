@@ -7,11 +7,11 @@ import (
 )
 
 var (
-	app    = cli.App("bzk", "Bazooka CI client")
-	bzkUri = app.String(cli.StringOpt{
-		Name:   "u bazooka-uri",
-		Desc:   "URI for the bazooka server",
-		EnvVar: "BZK_URI",
+	app       = cli.App("bzk", "Bazooka CI client")
+	bzkApiUrl = app.String(cli.StringOpt{
+		Name:   "u bazooka-url",
+		Desc:   "URL for the bazooka server",
+		EnvVar: "BZK_API_URL",
 	})
 )
 
@@ -40,13 +40,13 @@ func main() {
 	})
 
 	app.Command("key", "Actions on projects keys", func(cmd *cli.Cmd) {
-		cmd.Command("list", "list Keys for the bazooka project", listKeysCommand)
-		cmd.Command("add", "Add SSH Key for the bazooka project", addKeyCommand)
-		cmd.Command("update", "Update SSH Key for the bazooka project", updateKeyCommand)
+		cmd.Command("get", "list Keys for the bazooka project", getKeyCommand)
+		cmd.Command("set", "Add SSH Key for the bazooka project", setKeyCommand)
 	})
 
 	app.Command("image", "Actions on images", func(cmd *cli.Cmd) {
 		cmd.Command("list", "List the registered docker images", listImagesCommand)
+		cmd.Command("get", "View a registered docker image", getImageCommand)
 		cmd.Command("register", "Register a docker image", setImageCommand)
 	})
 

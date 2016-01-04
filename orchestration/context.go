@@ -3,10 +3,17 @@ package main
 import (
 	"os"
 
-	"github.com/bazooka-ci/bazooka/commons/mongo"
+	"fmt"
+
+	"log"
+
+	"github.com/bazooka-ci/bazooka/client"
 )
 
 const (
+	BazookaEnvApiUrl        = "BZK_API_URL"
+	BazookaEnvSyslogUrl     = "BZK_SYSLOG_URL"
+	BazookaEnvNetwork       = "BZK_NETWORK"
 	BazookaEnvHome          = "BZK_HOME"
 	BazookaEnvSrc           = "BZK_SRC"
 	BazookaEnvSCMKeyfile    = "BZK_SCM_KEYFILE"
@@ -21,7 +28,10 @@ const (
 )
 
 type context struct {
-	connector     *mongo.MongoConnector
+	client        *client.Client
+	apiUrl        string
+	syslogUrl     string
+	network       string
 	scm           string
 	scmUrl        string
 	scmReference  string
@@ -50,9 +60,20 @@ type path struct {
 }
 
 func initContext() *context {
+	// Configure Client
+	apiUrl := os.Getenv(BazookaEnvApiUrl)
+	client, err := client.New(&client.Config{
+		URL: apiUrl,
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	return &context{
-		connector:     mongo.NewConnector(),
+		client:        client,
+		apiUrl:        os.Getenv(BazookaEnvApiUrl),
+		syslogUrl:     os.Getenv(BazookaEnvSyslogUrl),
+		network:       os.Getenv(BazookaEnvNetwork),
 		scm:           os.Getenv(BazookaEnvSCM),
 		scmUrl:        os.Getenv(BazookaEnvSCMUrl),
 		scmReference:  os.Getenv(BazookaEnvSCMReference),
@@ -74,6 +95,13 @@ func initContext() *context {
 	}
 }
 
-func (c *context) cleanup() {
-	c.connector.Close()
+func (c *context) loggerConfig(image string, variantID string) map[string]string {
+	tag := fmt.Sprintf("image=%s;project=%s;job=%s", image, c.projectID, c.jobID)
+	if len(variantID) > 0 {
+		tag += ";variant=" + variantID
+	}
+	return map[string]string{
+		"syslog-address": c.syslogUrl,
+		"syslog-tag":     tag,
+	}
 }

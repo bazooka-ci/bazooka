@@ -24,6 +24,7 @@ const (
 	JOB_FAILED            = "FAILED"
 	JOB_ERRORED           = "ERRORED"
 	JOB_RUNNING           = "RUNNING"
+	JOB_PENDING           = "PENDING"
 )
 
 type Job struct {
@@ -31,6 +32,7 @@ type Job struct {
 	Number          int         `bson:"number" json:"number"`
 	ProjectID       string      `bson:"project_id" json:"project_id"`
 	OrchestrationID string      `bson:"orchestration_id" json:"orchestration_id"`
+	Submitted       time.Time   `bson:"submitted" json:"submitted"`
 	Started         time.Time   `bson:"started" json:"started"`
 	Completed       time.Time   `bson:"completed" json:"completed"`
 	Status          JobStatus   `bson:"status" json:"status"`
@@ -43,7 +45,7 @@ type Variant struct {
 	Started    time.Time     `bson:"started" json:"started"`
 	Completed  time.Time     `bson:"completed" json:"completed"`
 	BuildImage string        `bson:"image" json:"image"`
-	ProjectID  string        `bson:"project_id" json:"job_id"`
+	ProjectID  string        `bson:"project_id" json:"project_id"`
 	JobID      string        `bson:"job_id" json:"job_id"`
 	Number     int           `bson:"number" json:"number"`
 	ID         string        `bson:"id" json:"id"`
@@ -92,6 +94,12 @@ type SCMMetadata struct {
 	Committer Person   `bson:"committer" json:"committer" yaml:"committer"`
 	Date      YamlTime `bson:"time" json:"date" yaml:"date"`
 	Message   string   `bson:"message" json:"message" yaml:"message"`
+}
+
+type FinishData struct {
+	Status    JobStatus `json:"status"`
+	Time      time.Time `json:"time,omitempty"`
+	Artifacts []string  `json:"artifacts,omitempty"`
 }
 
 func (ms *VariantMetas) Append(m *VariantMeta) { *ms = append(*ms, m) }

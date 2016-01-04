@@ -1,5 +1,5 @@
-set BZK_URI to the endpoint of Bazooka
-e.g. : BZK_URI=http://192.168.59.103:3000
+set BZK_API_URI to the endpoint of Bazooka
+e.g. : BZK_API_URI=http://192.168.59.103:3000
 
 # Create a Project
 

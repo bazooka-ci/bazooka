@@ -8,7 +8,7 @@ angular.module('bzk.utils').directive('bzkJobsList', function() {
         },
         templateUrl: 'utils/jobs-list.html',
         controller: function($scope, BzkApi) {
-            $scope.only = function(status) {
+            $scope.only = function(status) {   
                 return function(job) {
                     return job.status === status;
                 };
@@ -19,18 +19,6 @@ angular.module('bzk.utils').directive('bzkJobsList', function() {
                     return job.status !== status;
                 };
             };
-
-            BzkApi.project.list().success(function(projects) {
-                $scope.projectName = function(projectID) {
-                    var project = _.findWhere(projects, {
-                        id: projectID
-                    });
-                    if (project) {
-                        return project.name;
-                    }
-                    return projectID;
-                };
-            });
         }
     };
 });

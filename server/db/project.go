@@ -1,10 +1,7 @@
-package mongo
+package db
 
 import (
 	"fmt"
-	"io"
-	"log"
-	"regexp"
 	"strings"
 	"time"
 
@@ -27,7 +24,7 @@ func (c *MongoConnector) HasProject(name string) (bool, error) {
 
 func (c *MongoConnector) GetProjectById(id string) (*lib.Project, error) {
 	result := &lib.Project{}
-	if err := c.ByIdOrName("projects", id, result); err != nil {
+	if err := c.selectOneByIdOrName("projects", id, result); err != nil {
 		return nil, err
 	}
 	result.Config = unescapeDotsInMap(result.Config)
@@ -279,47 +276,6 @@ func (c *MongoConnector) GetLog(like *LogExample) ([]lib.LogEntry, error) {
 	return result, err
 }
 
-func (c *MongoConnector) FeedLog(r io.Reader, template lib.LogEntry) {
-	go func(reader io.Reader) {
-		scanner := lib.NewScanner(reader)
-		for scanner.Scan() {
-			message := scanner.Text()
-			thisTemplate := template
-
-			regLogLevel, _ := regexp.Compile(`^\s*\[(\S+)\].*$`)  // Eg. [INFO] My message
-			regMeta, _ := regexp.Compile(`^\s*\<(\S+):(.*)>\s*$`) // Eg. <CMD:go test -v ./...>
-
-			switch {
-			case regLogLevel.MatchString(message):
-				submatchs := regLogLevel.FindStringSubmatch(message)
-				logLevel := submatchs[len(submatchs)-1]
-				thisTemplate.Level = logLevel
-				thisTemplate.Message = strings.TrimSpace(message[len(logLevel)+2:])
-			case regMeta.MatchString(message):
-				submatchs := regMeta.FindStringSubmatch(message)
-				instructionType := submatchs[1]
-				instructionValue := submatchs[2]
-				switch instructionType {
-				case "CMD":
-					thisTemplate.Command = instructionValue
-				case "PHASE":
-					thisTemplate.Phase = instructionValue
-				default:
-					thisTemplate.Message = strings.TrimSpace(message)
-				}
-			default:
-				thisTemplate.Message = strings.TrimSpace(message)
-			}
-
-			thisTemplate.Time = time.Now()
-			c.AddLog(&thisTemplate)
-		}
-		if err := scanner.Err(); err != nil {
-			log.Println("There was an error with the scanner", err)
-		}
-	}(r)
-}
-
 func (c *MongoConnector) SetJobOrchestrationId(id string, orchestrationId string) error {
 	selector := bson.M{
 		"id": id,
@@ -332,14 +288,38 @@ func (c *MongoConnector) SetJobOrchestrationId(id string, orchestrationId string
 	return err
 }
 
-func (c *MongoConnector) FinishJob(id string, status lib.JobStatus, completed time.Time) error {
+func (c *MongoConnector) MarkJobAsStarted(id string, started time.Time) error {
+	request := bson.M{
+		"$set": bson.M{
+			"status":  lib.JOB_RUNNING,
+			"started": started,
+		},
+	}
+	return c.database.C("jobs").Update(c.fieldStartsWith("id", id), request)
+}
+
+func (c *MongoConnector) MarkJobAsFinished(id string, status lib.JobStatus, completed time.Time) error {
 	request := bson.M{
 		"$set": bson.M{
 			"status":    status,
 			"completed": completed,
 		},
 	}
-	return c.database.C("jobs").Update(c.idLike(id), request)
+	return c.database.C("jobs").Update(c.fieldStartsWith("id", id), request)
+}
+
+func (c *MongoConnector) ResetJob(id string) error {
+	request := bson.M{
+		"$set": bson.M{
+			"status": lib.JOB_PENDING,
+		},
+		"$unset": bson.M{
+			"started":      "",
+			"completed":    "",
+			"scm_metadata": "",
+		},
+	}
+	return c.database.C("jobs").Update(c.fieldStartsWith("id", id), request)
 }
 
 func (c *MongoConnector) AddJobSCMMetadata(id string, metadata *lib.SCMMetadata) error {
@@ -372,12 +352,12 @@ func (c *MongoConnector) FinishVariant(id string, status lib.JobStatus, complete
 			"artifacts": artifacts,
 		},
 	}
-	return c.database.C("variants").Update(c.idLike(id), request)
+	return c.database.C("variants").Update(c.fieldStartsWith("id", id), request)
 }
 
 func (c *MongoConnector) GetJobByID(id string) (*lib.Job, error) {
 	result := &lib.Job{}
-	if err := c.ById("jobs", id, result); err != nil {
+	if err := c.selectOneByFieldLike("jobs", "id", id, result); err != nil {
 		return nil, err
 	}
 	return result, nil
@@ -385,7 +365,7 @@ func (c *MongoConnector) GetJobByID(id string) (*lib.Job, error) {
 
 func (c *MongoConnector) GetVariantByID(id string) (*lib.Variant, error) {
 	result := &lib.Variant{}
-	if err := c.ById("variants", id, result); err != nil {
+	if err := c.selectOneByFieldLike("variants", "id", id, result); err != nil {
 		return nil, err
 	}
 	return result, nil

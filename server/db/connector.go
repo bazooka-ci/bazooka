@@ -1,19 +1,15 @@
-package mongo
+package db
 
 import (
 	"crypto/rand"
 	"fmt"
-	"os"
 
 	mgo "gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )
 
 const (
-	bazookaEnvMongoAddr = "MONGO_PORT_27017_TCP_ADDR"
-	bazookaEnvMongoPort = "MONGO_PORT_27017_TCP_PORT"
-	bazookaEnvMongoURI  = "BZK_MONGO_URI"
-	bazookaMongoBase    = "bazooka"
+	bazookaMongoBase = "bazooka"
 )
 
 type MongoConnector struct {
@@ -42,8 +38,8 @@ func (m *ManyFoundError) Error() string {
 	return fmt.Sprintf("%s[%s:%s] returned %d results", m.Collection, m.Field, m.Value, m.Count)
 }
 
-func NewConnector() *MongoConnector {
-	session, err := mgo.Dial(getMongoUri())
+func NewConnector(url string) *MongoConnector {
+	session, err := mgo.Dial(url)
 	if err != nil {
 		panic(err)
 	}
@@ -62,10 +58,10 @@ func (c *MongoConnector) Close() {
 	c.session.Close()
 }
 
-func (m *MongoConnector) idLike(id string) bson.M {
+func (m *MongoConnector) fieldStartsWith(field, value string) bson.M {
 	return bson.M{
-		"id": bson.M{
-			"$regex":   "^" + id,
+		field: bson.M{
+			"$regex":   "^" + value,
 			"$options": "i",
 		},
 	}
@@ -80,7 +76,7 @@ func (m *MongoConnector) randomId() (string, error) {
 	return fmt.Sprintf("%x%x%x%x%x", b[0:4], b[4:6], b[6:8], b[8:10], b[10:]), nil
 }
 
-func (m *MongoConnector) ByField(collection, fieldName string, fieldValue string, result interface{}) error {
+func (m *MongoConnector) selectOneByField(collection, fieldName string, fieldValue string, result interface{}) error {
 	q := m.database.C(collection).Find(bson.M{fieldName: fieldValue})
 	count, err := q.Count()
 	if err != nil {
@@ -97,38 +93,29 @@ func (m *MongoConnector) ByField(collection, fieldName string, fieldValue string
 	}
 }
 
-func (m *MongoConnector) ById(collection, id string, result interface{}) error {
-	q := m.database.C(collection).Find(m.idLike(id))
+func (m *MongoConnector) selectOneByFieldLike(collection, fieldName string, fieldValue string, result interface{}) error {
+	q := m.database.C(collection).Find(m.fieldStartsWith(fieldName, fieldValue))
 	count, err := q.Count()
 	if err != nil {
 		return err
 	}
 	switch count {
 	case 0:
-		return &NotFoundError{collection, "id", id}
+		return &NotFoundError{collection, fieldName, fieldValue}
 	case 1:
 		return q.One(result)
 
 	default:
-		return &ManyFoundError{collection, "id", id, count}
+		return &ManyFoundError{collection, fieldName, fieldValue, count}
 	}
 }
 
-func (m *MongoConnector) ByIdOrName(collection, id string, result interface{}) error {
-	err := m.ById(collection, id, result)
+func (m *MongoConnector) selectOneByIdOrName(collection, id string, result interface{}) error {
+	err := m.selectOneByFieldLike(collection, "id", id, result)
 	switch err.(type) {
 	case *NotFoundError:
-		return m.ByField(collection, "name", id, result)
+		return m.selectOneByField(collection, "name", id, result)
 	default:
 		return err
 	}
-
-}
-
-func getMongoUri() string {
-	mongoURI := os.Getenv(bazookaEnvMongoURI)
-	if mongoURI != "" {
-		return mongoURI
-	}
-	return os.Getenv(bazookaEnvMongoAddr) + ":" + os.Getenv(bazookaEnvMongoPort)
 }

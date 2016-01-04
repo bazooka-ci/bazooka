@@ -3,7 +3,7 @@ set -e
 
 : ${GOPATH:?"GOPATH has to be set. See https://golang.org/doc/code.html#GOPATH for more information."}
 
-go_projects=( "parser" "orchestration" "server")
+go_projects=( "parser" "orchestration" "server" "worker")
 
 for project in "${go_projects[@]}"
 do
