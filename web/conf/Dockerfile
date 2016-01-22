@@ -3,7 +3,7 @@ FROM nginx
 COPY web/ /usr/share/nginx/html/
 
 COPY bzk-web.conf /etc/nginx/conf.d/default.conf
-COPY substitute.sh /
-RUN chmod +x /substitute.sh
+COPY wait-for-server.sh /
+RUN chmod +x /wait-for-server.sh
 
-ENTRYPOINT ["/substitute.sh"]
+ENTRYPOINT ["/wait-for-server.sh"]

@@ -25,7 +25,9 @@ const (
 
 type context struct {
 	client        *client.Client
+	apiUrl        string
 	syslogUrl     string
+	network       string
 	projectID     string
 	jobID         string
 	jobParameters string
@@ -47,15 +49,17 @@ type path struct {
 }
 
 func initContext() *context {
+	apiUrl := os.Getenv(BazookaEnvApiUrl)
 	// Configure Client
 	client, err := client.New(&client.Config{
-		URL: os.Getenv(BazookaEnvApiUrl),
+		URL: apiUrl,
 	})
 	if err != nil {
 		log.Fatal(err)
 	}
 	return &context{
 		client:        client,
+		apiUrl:        apiUrl,
 		syslogUrl:     os.Getenv(BazookaEnvSyslogUrl),
 		projectID:     os.Getenv(BazookaEnvProjectID),
 		jobID:         os.Getenv(BazookaEnvJobID),

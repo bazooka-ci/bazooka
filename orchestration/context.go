@@ -8,12 +8,12 @@ import (
 	"log"
 
 	"github.com/bazooka-ci/bazooka/client"
-	"github.com/bazooka-ci/bazooka/commons/mongo"
 )
 
 const (
 	BazookaEnvApiUrl        = "BZK_API_URL"
 	BazookaEnvSyslogUrl     = "BZK_SYSLOG_URL"
+	BazookaEnvNetwork       = "BZK_NETWORK"
 	BazookaEnvHome          = "BZK_HOME"
 	BazookaEnvSrc           = "BZK_SRC"
 	BazookaEnvSCMKeyfile    = "BZK_SCM_KEYFILE"
@@ -28,10 +28,10 @@ const (
 )
 
 type context struct {
-	connector     *mongo.MongoConnector
 	client        *client.Client
 	apiUrl        string
 	syslogUrl     string
+	network       string
 	scm           string
 	scmUrl        string
 	scmReference  string
@@ -61,8 +61,9 @@ type path struct {
 
 func initContext() *context {
 	// Configure Client
+	apiUrl := os.Getenv(BazookaEnvApiUrl)
 	client, err := client.New(&client.Config{
-		URL: os.Getenv(BazookaEnvApiUrl),
+		URL: apiUrl,
 	})
 	if err != nil {
 		log.Fatal(err)
@@ -72,6 +73,7 @@ func initContext() *context {
 		client:        client,
 		apiUrl:        os.Getenv(BazookaEnvApiUrl),
 		syslogUrl:     os.Getenv(BazookaEnvSyslogUrl),
+		network:       os.Getenv(BazookaEnvNetwork),
 		scm:           os.Getenv(BazookaEnvSCM),
 		scmUrl:        os.Getenv(BazookaEnvSCMUrl),
 		scmReference:  os.Getenv(BazookaEnvSCMReference),

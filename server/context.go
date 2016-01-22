@@ -5,20 +5,18 @@ import (
 	"os"
 	"time"
 
-	"fmt"
-
 	lib "github.com/bazooka-ci/bazooka/commons"
 	"github.com/bazooka-ci/bazooka/commons/mongo"
 )
 
 const (
+	BazookaEnvApiUrl     = "BZK_API_URL"
+	BazookaEnvSyslogUrl  = "BZK_SYSLOG_URL"
+	BazookaEnvDbUrl      = "BZK_DB_URL"
+	BazookaEnvNetwork    = "BZK_NETWORK"
 	BazookaEnvSCMKeyfile = "BZK_SCM_KEYFILE"
 	BazookaEnvHome       = "BZK_HOME"
 	BazookaEnvDockerSock = "BZK_DOCKERSOCK"
-	BazookaEnvApiUrl     = "BZK_API_URL"
-	BazookaEnvSyslogUrl  = "BZK_SYSLOG_URL"
-	BazookaEnvMongoAddr  = "MONGO_PORT_27017_TCP_ADDR"
-	BazookaEnvMongoPort  = "MONGO_PORT_27017_TCP_PORT"
 
 	DockerSock     = "/var/run/docker.sock"
 	DockerEndpoint = "unix://" + DockerSock
@@ -28,8 +26,8 @@ const (
 type context struct {
 	apiUrl    string
 	syslogUrl string
-	mongoAddr string
-	mongoPort string
+	dbUrl     string
+	network   string
 	connector *mongo.MongoConnector
 	paths     paths
 }
@@ -51,8 +49,8 @@ func initContext() *context {
 	c := &context{
 		apiUrl:    os.Getenv(BazookaEnvApiUrl),
 		syslogUrl: os.Getenv(BazookaEnvSyslogUrl),
-		mongoAddr: os.Getenv(BazookaEnvMongoAddr),
-		mongoPort: os.Getenv(BazookaEnvMongoPort),
+		dbUrl:     os.Getenv(BazookaEnvDbUrl),
+		network:   os.Getenv(BazookaEnvNetwork),
 		paths: paths{
 			home:           path{BazookaHome, os.Getenv(BazookaEnvHome)},
 			scmKey:         path{"", os.Getenv(BazookaEnvSCMKeyfile)},
@@ -61,12 +59,10 @@ func initContext() *context {
 		},
 	}
 
-	if err := lib.WaitForTcpConnection(c.mongoAddr, c.mongoPort, 100*time.Millisecond, 5*time.Second); err != nil {
+	if err := lib.WaitForTcpConnection(c.dbUrl, 100*time.Millisecond, 5*time.Second); err != nil {
 		log.Fatalf("Cannot connect to the database: %v", err)
 	}
-	c.connector = mongo.NewConnector()
-
-	fmt.Printf("server init, context=%#v\n", c)
+	c.connector = mongo.NewConnector(c.dbUrl)
 	return c
 }
 

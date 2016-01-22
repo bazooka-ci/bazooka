@@ -7,7 +7,7 @@ import (
 )
 
 var (
-	app    = cli.App("bzk", "Bazooka CI client")
+	app       = cli.App("bzk", "Bazooka CI client")
 	bzkApiUrl = app.String(cli.StringOpt{
 		Name:   "u bazooka-url",
 		Desc:   "URL for the bazooka server",
