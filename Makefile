@@ -43,6 +43,6 @@ test: errcheck devimages # Include errcheck in build phase
 push-bintray:
 	./scripts/push-bintray.sh
 
-cli-gox:
-	gox -os="linux" github.com/bazooka-ci/bazooka/cli/bzk
-	gox -os="darwin" github.com/bazooka-ci/bazooka/cli/bzk
+cli-multiplatform:
+	GOOS=linux  GOARCH=amd64 go build -o=bzk_linux_amd64  github.com/bazooka-ci/bazooka/cli/bzk
+	GOOS=darwin GOARCH=amd64 go build -o=bzk_darwin_amd64 github.com/bazooka-ci/bazooka/cli/bzk

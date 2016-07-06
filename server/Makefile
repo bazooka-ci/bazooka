@@ -1,7 +1,7 @@
 default: docker
 
-docker: gox
+docker: go
 	docker build -t bazooka/server -f Dockerfile .
 
-gox:
-	gox -osarch="linux/amd64" -output="main"
+go:
+	GOOS=linux GOARCH=amd64 go build -o=main

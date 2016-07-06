@@ -1,6 +1,6 @@
 #!/bin/bash
 
-versions=( "linux_amd64" "linux_386" "linux_arm" "darwin_amd64" "darwin_386")
+versions=( "linux_amd64" "darwin_amd64")
 
 if [ -n "$DO_PUSH" ]; then
   if [ -z "$BZK_VERSION" ]; then
