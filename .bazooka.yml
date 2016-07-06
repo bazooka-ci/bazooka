@@ -6,7 +6,7 @@ install:
 script:
   - go test -v ./...
   - make errcheck
-  - make cli-gox
+  - make cli-multiplatform
   - make images
   - make push-bintray
   - make push

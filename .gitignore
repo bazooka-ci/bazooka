@@ -3,3 +3,6 @@ parser/parser
 server/server
 orchestration/orchestration
 site
+bzk
+bzk_linux_amd64
+bzk_darwin_amd64
