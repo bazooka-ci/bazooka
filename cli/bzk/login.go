@@ -27,7 +27,11 @@ func login(cmd *cli.Cmd) {
 
 		if len(*password) == 0 {
 			fmt.Printf("Password: ")
-			*password = string(gopass.GetPasswd())
+			bs, err:=gopass.GetPasswd()
+			if err != nil {
+				log.Fatal(err)
+			}
+			*password = string(bs)
 		}
 
 		_, err := NewClient()

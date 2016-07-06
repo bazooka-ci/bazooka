@@ -30,7 +30,11 @@ func createUserCommand(cmd *cli.Cmd) {
 		}
 		if len(*password) == 0 {
 			fmt.Printf("Enter user password: ")
-			*password = string(gopass.GetPasswd())
+			bs, err:=gopass.GetPasswd()
+			if err != nil {
+				log.Fatal(err)
+			}
+			*password = string(bs)
 		}
 
 		res, err := client.User.Create(*email, *password)
