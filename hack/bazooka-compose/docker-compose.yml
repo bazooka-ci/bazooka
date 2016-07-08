@@ -13,9 +13,9 @@ services:
     environment:
     - "BZK_DOCKERSOCK=/var/run/docker.sock"
     - "BZK_API_URL=http://bzk_server:3000"
-    - "BZK_SYSLOG_URL=tcp://${BZK_HOST}:3001"
+    - "BZK_SYSLOG_URL=tcp://0.0.0.0:3001"
     - "BZK_DB_URL=bzk_db:27017"
-    - "BZK_NETWORK=bazookacompose"
+    - "BZK_NETWORK=bazookacompose_bazooka"
     - "BZK_SCM_KEYFILE=${BZK_SCM_KEYFILE}"
     - "BZK_HOME=${BZK_HOME}"
     networks:
