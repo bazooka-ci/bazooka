@@ -1,29 +1,50 @@
-server:
-  container_name: bzk_server
-  image: bazooka/server
-  ports:
-  - "3000:3000"
-  - "3001:3001"
-  volumes:
-  - "${BZK_HOME}:/bazooka"
-  - "/var/run/docker.sock:/var/run/docker.sock"
-  environment:
-  - "BZK_DOCKERSOCK=/var/run/docker.sock"
-  - "BZK_API_URL=http://bzk_server:3000"
-  - "BZK_SYSLOG_URL=tcp://${BZK_HOST}:3001"
-  - "BZK_DB_URL=bzk_db:27017"
-  - "BZK_NETWORK=bazookacompose"
-  - "BZK_SCM_KEYFILE=${BZK_SCM_KEYFILE}"
-  - "BZK_HOME=${BZK_HOME}"
+version: '2'
 
-web:
-  container_name: bzk_web
-  image: bazooka/web
-  ports:
-  - "8000:80"
-  environment:
-  - "BZK_SERVER_HOST=bzk_server"
+services:
+  server:
+    container_name: bzk_server
+    image: bazooka/server
+    ports:
+    - "3000:3000"
+    - "3001:3001"
+    volumes:
+    - "${BZK_HOME}:/bazooka"
+    - "/var/run/docker.sock:/var/run/docker.sock"
+    environment:
+    - "BZK_DOCKERSOCK=/var/run/docker.sock"
+    - "BZK_API_URL=http://bzk_server:3000"
+    - "BZK_SYSLOG_URL=tcp://0.0.0.0:3001"
+    - "BZK_DB_URL=bzk_db:27017"
+    - "BZK_NETWORK=bazookacompose_bazooka"
+    - "BZK_SCM_KEYFILE=${BZK_SCM_KEYFILE}"
+    - "BZK_HOME=${BZK_HOME}"
+    networks:
+      bazooka:
+        aliases:
+        - bzk_server
+    depends_on:
+    - db
+  web:
+    container_name: bzk_web
+    image: bazooka/web
+    ports:
+    - "8000:80"
+    environment:
+    - "BZK_SERVER_HOST=bzk_server"
+    networks:
+      bazooka:
+        aliases:
+        - bzk_web
+    depends_on:
+    - server
 
-db:
-  container_name: bzk_db
-  image: "mongo:3.1"
+  db:
+    container_name: bzk_db
+    image: "mongo:3.1"
+    networks:
+      bazooka:
+        aliases:
+        - bzk_db
+
+networks:
+  bazooka: {}
